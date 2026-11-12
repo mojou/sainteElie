@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Encaisser{% endblock %}
+{% block contenu %}
+<div class="entete"><div>
+  <h1>Encaisser · {{ sejour.client }}</h1>
+  <p>Chambre {{ sejour.chambre.numero }} · reste à payer {{ sejour.reste_a_payer|fcfa }} · session n°{{ session.pk }} ({{ session.get_shift_display }})</p>
+</div></div>
+<div class="carte">
+  <form method="post" novalidate>{% csrf_token %}
+    {% include "partials/champs.html" %}
+    <p class="aide">Carte et chèque : la référence est obligatoire. Un virement ne s'encaisse pas ici : il est enregistré par le gérant quand il arrive sur le compte.</p>
+    <div class="actions">
+      <button class="btn" type="submit">Enregistrer et imprimer le reçu</button>
+      <a class="btn secondaire" href="{% url 'hotel:sejour' sejour.pk %}">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

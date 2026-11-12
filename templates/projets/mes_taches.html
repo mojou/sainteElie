@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load static gestion %}
+{% block titre %}Mes tâches{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Mes tâches</h1><p>{{ nb }} tâche{{ nb|pluralize }} confiée{{ nb|pluralize }} à vous. Touchez une tâche pour la voir, écrire un message ou changer son étape.</p></div></div>
+<div class="kanban" data-kanban>
+  {% for c in colonnes %}
+  <section class="kanban-colonne etape-{{ c.statut }}" data-statut="{{ c.statut }}" aria-label="{{ c.libelle }}">
+    <header class="kanban-tete"><h2>{{ c.libelle }}</h2><span class="kanban-nombre">{{ c.taches|length }}</span></header>
+    <div class="kanban-cartes">
+      {% for t in c.taches %}{% include "projets/_carte_tache.html" with avec_projet=True %}{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/kanban.js' %}?v={{ version_statique }}"></script>{% endblock %}

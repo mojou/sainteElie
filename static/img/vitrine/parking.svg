@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bcd3ec"/><stop offset="1" stop-color="#eef2f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#ciel)"/>
+  <!-- Façade de l'hôtel au fond -->
+  <rect x="0" y="54" width="170" height="110" fill="#12305a"/>
+  <rect x="0" y="48" width="178" height="10" fill="#0b1f3a"/>
+  <g fill="#f3d58c">
+    <rect x="18" y="74" width="24" height="18" rx="2"/><rect x="58" y="74" width="24" height="18" rx="2" fill="#dbe6f3"/>
+    <rect x="98" y="74" width="24" height="18" rx="2"/><rect x="138" y="74" width="20" height="18" rx="2" fill="#dbe6f3"/>
+    <rect x="18" y="110" width="24" height="18" rx="2" fill="#dbe6f3"/><rect x="58" y="110" width="24" height="18" rx="2"/>
+    <rect x="98" y="110" width="24" height="18" rx="2" fill="#dbe6f3"/><rect x="138" y="110" width="20" height="18" rx="2"/>
+  </g>
+  <!-- Arbres -->
+  <circle cx="226" cy="132" r="30" fill="#4f9460"/><circle cx="252" cy="140" r="24" fill="#3f7d4e"/>
+  <rect x="234" y="150" width="8" height="20" fill="#8a6a3d"/>
+  <!-- Sol -->
+  <rect x="0" y="164" width="480" height="156" fill="#5f6a7a"/>
+  <rect x="0" y="160" width="480" height="8" fill="#c9cfd6"/>
+  <g stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".9">
+    <path d="M70 186 L52 300"/><path d="M190 186 L184 300"/><path d="M310 186 L316 300"/><path d="M430 186 L448 300"/>
+  </g>
+  <!-- Voiture dorée -->
+  <g transform="translate(86 214)">
+    <path d="M6 44 V30 C6 24 10 20 16 18 L30 4 C34 0 38 0 44 0 H70 C76 0 80 2 84 6 L96 18 C102 20 104 24 104 30 V44Z" fill="#d4a94c"/>
+    <path d="M34 8 H50 V20 H24Z M56 8 H70 C74 8 76 10 80 14 L86 20 H56Z" fill="#e5eef8"/>
+    <circle cx="26" cy="46" r="12" fill="#1b2433"/><circle cx="26" cy="46" r="5" fill="#c9cfd6"/>
+    <circle cx="84" cy="46" r="12" fill="#1b2433"/><circle cx="84" cy="46" r="5" fill="#c9cfd6"/>
+  </g>
+  <!-- Voiture bleue -->
+  <g transform="translate(206 220)">
+    <path d="M4 42 V28 C4 22 8 18 14 16 L28 4 C32 0 36 0 42 0 H66 C72 0 76 2 80 6 L92 16 C98 18 100 22 100 28 V42Z" fill="#1d5a96"/>
+    <path d="M32 8 H48 V18 H22Z M54 8 H66 C70 8 72 10 76 14 L80 18 H54Z" fill="#e5eef8"/>
+    <circle cx="24" cy="44" r="12" fill="#1b2433"/><circle cx="24" cy="44" r="5" fill="#c9cfd6"/>
+    <circle cx="80" cy="44" r="12" fill="#1b2433"/><circle cx="80" cy="44" r="5" fill="#c9cfd6"/>
+  </g>
+  <!-- Panneau P -->
+  <rect x="396" y="70" width="7" height="118" fill="#9aa3ad"/>
+  <rect x="368" y="36" width="62" height="62" rx="10" fill="#1d5a96" stroke="#ffffff" stroke-width="4"/>
+  <text x="399" y="84" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#ffffff"
+        text-anchor="middle">P</text>
+  <!-- Lampadaire -->
+  <rect x="330" y="96" width="5" height="70" fill="#0b1f3a"/>
+  <path d="M332 98 C332 86 346 82 354 86" stroke="#0b1f3a" stroke-width="5" fill="none"/>
+  <ellipse cx="356" cy="90" rx="10" ry="5" fill="#f2c96b"/>
+</svg>

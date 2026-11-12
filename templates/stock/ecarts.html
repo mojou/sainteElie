@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Écarts d'inventaire{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Écarts d'inventaire · {{ mois|date:"F Y" }}</h1>
+  <p>Ce que le comptage a trouvé en moins (ou en plus) par rapport au stock calculé. Un manquant répété sur le même
+    article mérite une enquête : casse non déclarée, vente non saisie, vol.</p></div>
+  <div class="actions"><a class="btn secondaire" href="?mois={{ precedent }}">← Mois précédent</a>
+    <a class="btn secondaire" href="?mois={{ suivant }}">Mois suivant →</a></div></div>
+<div class="chiffres">
+  <div class="chiffre {% if d.manque_ventes %}danger{% endif %}"><div class="valeur">{{ d.manque_ventes|nombre }}</div><div class="libelle">Manquants, au prix de vente (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ d.manque_cout|nombre }}</div><div class="libelle">Manquants, au coût d'achat (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ d.surplus }}</div><div class="libelle">Unités trouvées en plus</div></div>
+</div>
+<div class="tableau"><table>
+  <tr><th>Journée</th><th>Article</th><th class="nombre">Écart</th><th class="nombre">Au coût</th><th class="nombre">Au prix de vente</th><th>Compté par</th><th>Motif</th></tr>
+  {% for x in d.lignes %}
+  <tr><td>{{ x.mouvement.journee|date:"d/m/Y" }}</td><td><a href="{% url 'stock:article' x.article.pk %}">{{ x.article }}</a></td>
+    <td class="nombre {% if x.ecart < 0 %}rouge{% endif %}">{{ x.ecart|stringformat:"+d" }}</td>
+    <td class="nombre">{{ x.cout|nombre }}</td><td class="nombre">{{ x.ventes|nombre }}</td>
+    <td>{{ x.mouvement.saisi_par }}</td><td>{{ x.mouvement.motif }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucun écart ce mois-ci.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

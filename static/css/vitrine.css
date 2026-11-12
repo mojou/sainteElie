@@ -1,0 +1,285 @@
+/* Site public (page d'accueil, connexion, inscription) et espace client. S'ajoute à app.css. */
+.vitrine { background: #fbfaf7; }
+.vitrine main.v-principal { padding: 0; max-width: none; display: block; }
+.v-conteneur { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+.v-messages { padding-top: 1rem; }
+
+/* En-tête */
+.v-entete { position: sticky; top: 0; z-index: 30; background: rgba(11, 31, 58, .97); border-bottom: 3px solid var(--or);
+  backdrop-filter: blur(6px); }
+.v-entete-ligne { display: flex; align-items: center; gap: 1.25rem; min-height: 64px; }
+.v-marque { display: flex; align-items: center; gap: .65rem; color: #fff; text-decoration: none; font-weight: 800;
+  font-size: 1.12rem; letter-spacing: .01em; white-space: nowrap; }
+.v-marque .logo { width: 38px; height: 38px; font-size: 1.1rem; }
+.v-nav { display: flex; gap: 1.3rem; margin-left: auto; }
+.v-nav a { color: #d6e0ec; text-decoration: none; font-weight: 600; font-size: .95rem; }
+.v-nav a:hover { color: var(--or); }
+.v-boutons { display: flex; gap: .5rem; align-items: center; margin-left: auto; }
+.v-nav + .v-boutons { margin-left: 0; }
+.btn.v-fantome { background: transparent; border-color: rgba(255, 255, 255, .45); color: #fff; }
+.btn.v-fantome:hover { background: rgba(255, 255, 255, .1); filter: none; }
+.btn.or:hover { filter: brightness(1.06); }
+@media (max-width: 900px) { .v-nav { display: none; } }
+@media (max-width: 520px) {
+  .v-marque span:last-child { display: none; }
+  .v-boutons .btn { padding: .4rem .6rem; font-size: .85rem; }
+}
+
+/* Bandeau d'accueil */
+.v-hero { position: relative; overflow: hidden; color: #fff; padding: 4.5rem 0 5rem;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(212, 169, 76, .28), transparent 42%),
+    radial-gradient(circle at 10% 90%, rgba(29, 90, 150, .55), transparent 45%),
+    linear-gradient(160deg, #0b1f3a 0%, #12305a 55%, #173d6e 100%); }
+.v-hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .07;
+  background-image: repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 22px); }
+.v-hero-grille { position: relative; z-index: 2; display: grid; gap: 3rem; align-items: center;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); }
+@media (max-width: 860px) { .v-hero { padding: 3rem 0 3.5rem; } .v-hero-grille { grid-template-columns: 1fr; gap: 2rem; } }
+.v-surtitre { margin: 0 0 .6rem; font-size: .82rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--or); }
+.v-hero h1 { color: #fff; font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.05; margin: 0 0 .6rem; letter-spacing: -.02em; }
+.v-slogan { font-size: clamp(1.1rem, 2.2vw, 1.4rem); color: #f3e6c4; margin: 0 0 1rem; font-weight: 600; }
+.v-intro { font-size: 1.05rem; color: #d6e0ec; max-width: 36rem; margin: 0 0 1.6rem; line-height: 1.6; }
+.v-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.v-petit { margin-top: 1rem; font-size: .9rem; color: #b9c7d8; }
+
+/* Aperçu de l'espace client (exemple) */
+.v-apercu { background: #fff; color: var(--texte); border-radius: 16px; padding: 1.3rem; box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  transform: rotate(1.2deg); max-width: 400px; justify-self: center; width: 100%; }
+.v-apercu-tete { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--discret);
+  font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; }
+.v-apercu-chambre { font-size: 1.4rem; font-weight: 800; color: var(--marine); margin: .6rem 0 .2rem; }
+.v-apercu-dates { color: var(--discret); font-size: .92rem; margin: 0 0 1rem; }
+.v-apercu-chiffres { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: 1rem; }
+.v-apercu-chiffres div { background: var(--fond); border-radius: 10px; padding: .7rem .8rem; }
+.v-apercu-chiffres small { display: block; color: var(--discret); font-size: .78rem; }
+.v-apercu-chiffres strong { font-size: 1.15rem; }
+.v-apercu-chiffres .reste { background: var(--or-clair); }
+.v-apercu-chiffres .reste strong { color: #8a6416; }
+.v-apercu ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--bord); }
+.v-apercu li { display: flex; justify-content: space-between; gap: .5rem; padding: .55rem 0; border-bottom: 1px solid var(--bord); font-size: .9rem; }
+.v-apercu li span { font-weight: 700; white-space: nowrap; }
+
+/* Sections */
+.v-section { padding: 4rem 0; }
+.v-section.v-sable { background: #f3efe5; }
+.v-section h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0 0 .5rem; letter-spacing: -.01em; }
+.v-sous-titre { color: var(--discret); font-size: 1.05rem; max-width: 40rem; margin: 0 0 2rem; }
+.v-cartes { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.v-carte { background: #fff; border: 1px solid var(--bord); border-radius: 14px; padding: 1.4rem; box-shadow: var(--ombre);
+  transition: transform .15s, box-shadow .15s; }
+.v-carte:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(16, 41, 74, .1); }
+.v-carte h3 { margin: .8rem 0 .35rem; font-size: 1.15rem; color: var(--marine); }
+.v-carte.avec-photo { padding-top: 0; overflow: hidden; }
+.v-carte-photo { display: block; width: calc(100% + 2.8rem); height: 170px; object-fit: cover; margin: 0 -1.4rem .2rem; }
+.v-carte p { margin: 0; color: var(--discret); }
+.v-icone { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--or-clair); color: var(--or-fonce); }
+.v-icone svg { width: 26px; height: 26px; }
+.v-prix { margin-top: .8rem !important; color: var(--texte) !important; }
+.v-prix strong { color: var(--marine); font-size: 1.15rem; }
+.v-paiements { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
+.v-paiements span { background: var(--fond); border-radius: 999px; padding: .15rem .6rem; font-size: .82rem; font-weight: 600; color: var(--texte); }
+
+/* Galerie « En images » : photos du gérant, ou illustrations tant qu'il n'y en a pas */
+.v-galerie { display: grid; gap: 1rem; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 210px;
+  grid-auto-flow: dense; }
+.v-tuile { position: relative; margin: 0; border-radius: 14px; overflow: hidden; background: #f3efe5; box-shadow: var(--ombre); }
+.v-tuile.grande { grid-column: span 2; grid-row: span 2; }
+.v-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .45s; }
+.v-tuile:hover img { transform: scale(1.04); }
+.v-tuile figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.4rem 1.1rem .95rem; color: #fff;
+  background: linear-gradient(180deg, rgba(11, 31, 58, 0), rgba(11, 31, 58, .9)); }
+.v-tuile figcaption strong { display: block; font-size: 1.08rem; }
+.v-tuile figcaption span { font-size: .9rem; color: #e3e9f1; }
+.v-tuile.grande figcaption strong { font-size: 1.35rem; }
+@media (max-width: 860px) { .v-galerie { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 170px; } }
+@media (max-width: 520px) {
+  .v-galerie { grid-template-columns: 1fr; grid-auto-rows: 200px; }
+  .v-tuile.grande { grid-column: auto; grid-row: span 1; }
+}
+/* Diaporama du bandeau : les photos de l'administration défilent en fondu, avec un léger zoom */
+.v-diaporama { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.v-diapo { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0;
+  transition: opacity 1.6s ease; }
+.v-diapo.active { opacity: 1; animation: v-zoom 9s ease-out forwards; }
+@keyframes v-zoom { from { transform: scale(1); } to { transform: scale(1.09); } }
+.v-hero.avec-photo::before { content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(160deg, rgba(11, 31, 58, .93) 0%, rgba(18, 48, 90, .78) 55%, rgba(18, 48, 90, .5) 100%); }
+.v-hero.avec-photo::after { display: none; }
+
+/* Ruban des prix les plus bas, sous le bandeau : il défile sans fin, s'arrête quand on pose le doigt ou la souris */
+.v-defile { background: var(--or); color: var(--marine-fonce); overflow: hidden; box-shadow: 0 4px 14px rgba(11, 31, 58, .15);
+  position: relative; z-index: 3; }
+.v-defile-piste { display: flex; width: max-content; animation: v-defile linear infinite; }
+.v-defile:hover .v-defile-piste, .v-defile:active .v-defile-piste { animation-play-state: paused; }
+.v-defile ul { display: flex; list-style: none; margin: 0; padding: .8rem 0; }
+.v-defile li { white-space: nowrap; padding: 0 1.4rem; font-size: 1.02rem; font-weight: 600; }
+.v-defile li::before { content: "◆"; font-size: .7rem; margin-right: 1.4rem; opacity: .55; vertical-align: middle; }
+.v-defile strong { font-weight: 800; }
+@keyframes v-defile { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* L'aperçu de l'espace client flotte doucement */
+.v-apercu { animation: v-flotte 6s ease-in-out infinite; }
+@keyframes v-flotte { 0%, 100% { transform: rotate(1.2deg) translateY(0); } 50% { transform: rotate(.4deg) translateY(-10px); } }
+
+/* Apparition des blocs au défilement (seulement si JavaScript est actif) */
+.js .v-apparait { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+.js .v-apparait.visible { opacity: 1; transform: none; }
+
+/* Téléphone : la galerie devient un ruban qui défile tout seul et se fait glisser au doigt */
+@media (max-width: 860px) {
+  .v-galerie { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: .8rem; padding-bottom: .4rem;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .v-galerie::-webkit-scrollbar { display: none; }
+  .v-galerie .v-tuile, .v-galerie .v-tuile.grande { flex: 0 0 84%; height: 240px; scroll-snap-align: center; }
+}
+
+/* Moins de mouvement si la personne l'a demandé dans les réglages de son téléphone */
+@media (prefers-reduced-motion: reduce) {
+  .v-diapo, .v-diapo.active, .v-apercu, .v-tuile img { animation: none !important; transition: none !important; }
+  .v-defile-piste { animation: none !important; width: auto; }
+  .v-defile ul { flex-wrap: wrap; justify-content: center; }
+  .v-defile ul[aria-hidden] { display: none; }
+  .js .v-apparait { opacity: 1; transform: none; transition: none; }
+}
+
+/* La carte de la cuisine */
+.v-plats-photo { margin-bottom: 2rem; }
+.v-menu { columns: 2 340px; column-gap: 2.5rem; }
+.v-menu-rubrique { break-inside: avoid; margin-bottom: 1.8rem; background: #fff; border: 1px solid var(--bord);
+  border-radius: 14px; padding: 1.2rem 1.4rem; box-shadow: var(--ombre); }
+.v-menu-rubrique h3 { margin: 0 0 .7rem; color: var(--marine); font-size: 1.15rem; padding-bottom: .5rem;
+  border-bottom: 2px solid var(--or); display: inline-block; }
+.v-menu ul { list-style: none; margin: 0; padding: 0; }
+.v-menu li { display: flex; align-items: baseline; gap: .5rem; padding: .38rem 0; }
+.v-menu-nom { display: flex; flex-direction: column; }
+.v-menu-nom small { color: var(--discret); font-size: .82rem; }
+.v-menu-points { flex: 1; border-bottom: 2px dotted #d8d2c4; transform: translateY(-.25rem); min-width: 1rem; }
+.v-menu li strong { color: var(--marine); white-space: nowrap; }
+
+/* Étapes de l'espace client */
+.v-etapes { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); counter-reset: etape; margin-bottom: 2rem; }
+.v-etape { background: #fff; border-radius: 14px; padding: 1.4rem 1.4rem 1.4rem 4.3rem; position: relative; border: 1px solid var(--bord); }
+.v-etape::before { counter-increment: etape; content: counter(etape); position: absolute; left: 1.2rem; top: 1.25rem;
+  width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center; font-weight: 800;
+  background: var(--marine); color: var(--or); }
+.v-etape strong { display: block; color: var(--marine); margin-bottom: .2rem; font-size: 1.05rem; }
+.v-etape p { margin: 0; color: var(--discret); }
+
+/* Contact */
+.v-contact { display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
+  background: linear-gradient(135deg, var(--marine-fonce), var(--marine)); color: #fff; border-radius: 18px; padding: 2.4rem; }
+.v-contact h2 { color: #fff; }
+.v-contact p { color: #d6e0ec; margin: .25rem 0; }
+.v-contact dl { margin: 0; display: grid; gap: .8rem; }
+.v-contact dt { font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--or); font-weight: 800; }
+.v-contact dd { margin: 0; font-size: 1.1rem; font-weight: 600; }
+.v-contact a { color: #fff; }
+@media (max-width: 760px) { .v-contact { grid-template-columns: 1fr; padding: 1.6rem; } }
+
+/* Pied de page */
+.v-pied { background: var(--marine-fonce); color: #b9c7d8; padding: 2.5rem 0 1.2rem; margin-top: 0; }
+.v-pied-grille { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.v-pied strong { color: #fff; display: block; margin-bottom: .4rem; }
+.v-pied p { margin: .3rem 0; }
+.v-pied a { color: #d6e0ec; }
+.v-copyright { border-top: 1px solid rgba(255, 255, 255, .1); margin-top: 1.5rem; padding-top: 1rem; font-size: .85rem; }
+
+/* Connexion, inscription, formulaires simples */
+.v-page-formulaire { padding: 3rem 0 4rem; min-height: calc(100vh - 67px - 220px);
+  background: linear-gradient(180deg, #eef1f6 0%, #fbfaf7 70%); }
+.v-boite { max-width: 460px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 18px 50px rgba(16, 41, 74, .12);
+  border-top: 5px solid var(--or); }
+.v-boite h1 { margin-bottom: .3rem; }
+.v-boite > p { color: var(--discret); margin-top: 0; }
+.v-boite form input, .v-boite form select { max-width: none; }
+.v-boite .btn { width: 100%; text-align: center; margin-top: .3rem; }
+.v-lien-bas { text-align: center; margin: 1.2rem 0 0; color: var(--discret); }
+.v-double { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); max-width: 940px; margin: 0 auto;
+  border-radius: 16px; overflow: hidden; box-shadow: 0 18px 50px rgba(16, 41, 74, .12); background: #fff; }
+.v-double .v-boite { box-shadow: none; border-radius: 0; max-width: none; border-top: none; }
+.v-avantages { background: linear-gradient(160deg, var(--marine-fonce), var(--marine)); color: #fff; padding: 2rem; }
+.v-avantages h2 { color: #fff; margin-top: 0; }
+.v-avantages ul { list-style: none; padding: 0; margin: 1.2rem 0 0; display: grid; gap: .9rem; }
+.v-avantages li { padding-left: 1.9rem; position: relative; color: #d6e0ec; }
+.v-avantages li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 1.3rem; height: 1.3rem; border-radius: 50%;
+  background: var(--or); color: var(--marine-fonce); display: grid; place-items: center; font-size: .8rem; font-weight: 900; }
+@media (max-width: 760px) { .v-double { grid-template-columns: 1fr; } .v-boite { padding: 1.4rem; } }
+
+/* Espace client */
+.v-espace { padding: 2.2rem 0 3.5rem; }
+.v-espace-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+.v-espace-tete h1 { font-size: 1.9rem; }
+.v-espace-tete p { margin: .2rem 0 0; color: var(--discret); }
+.v-attente { border-left: 6px solid var(--or); }
+.v-sejour { border-top: 5px solid var(--marine); }
+.v-sejour h2 { margin: .4rem 0 .2rem; font-size: 1.4rem; }
+.v-sejour .v-dates { color: var(--discret); margin: 0 0 1rem; }
+.v-sejour .chiffre .valeur { font-size: 1.5rem; }
+.chiffre.v-reste { border-top-color: var(--or); background: var(--or-clair); }
+.chiffre.v-solde { border-top-color: var(--ok); background: var(--ok-clair); }
+
+
+/* Réserver en ligne : le formulaire du bandeau, les chambres libres, les coordonnées, la confirmation */
+.v-reserver h2 { margin: 0 0 .3rem; color: var(--marine); font-size: 1.35rem; }
+.v-recherche { display: grid; gap: .7rem; margin: 0; }
+.v-recherche-champs { display: grid; grid-template-columns: 1fr 1fr 90px; gap: .5rem; }
+.v-recherche label { display: flex; flex-direction: column; gap: .25rem; font-size: .82rem; font-weight: 700; color: var(--discret); }
+.v-recherche input, .v-recherche select { width: 100%; max-width: none; font-size: 16px; }
+.v-recherche-bouton { width: 100%; justify-content: center; text-align: center; }
+.v-petit-gris { font-size: .85rem; color: var(--discret); margin: .7rem 0 0; }
+.v-carte-reserver { margin-top: .6rem; }
+.v-resa h1 { margin: .4rem 0 1rem; }
+.v-boite-large { max-width: 760px; margin: 0 0 1.4rem; }
+.v-boite-large .v-recherche { grid-template-columns: 1fr auto; align-items: end; }
+.v-boite-large .v-recherche .message { grid-column: 1 / -1; }
+.v-etapes-resa { display: grid; grid-template-columns: repeat(4, 1fr); gap: .3rem; max-width: 760px; margin: 0 0 1rem; padding: 0;
+  list-style: none; }
+.v-etapes-resa li { padding-top: .4rem; border-top: 5px solid var(--bord); font-size: .82rem; color: var(--discret); text-align: center; }
+.v-etapes-resa li.fait { border-top-color: var(--ok); color: var(--ok); }
+.v-etapes-resa li.actif { border-top-color: var(--or); color: var(--marine); font-weight: 800; }
+.v-resume-resa { font-size: 1.05rem; margin: 0 0 1rem; }
+.v-types { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.v-type { display: flex; flex-direction: column; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(16, 41, 74, .1); }
+.v-type img { width: 100%; height: 170px; object-fit: cover; background: var(--or-clair); }
+.v-type-corps { display: flex; flex-direction: column; gap: .3rem; padding: 1rem 1.1rem 1.2rem; flex: 1; }
+.v-type h3 { margin: 0; font-size: 1.2rem; color: var(--marine); }
+.v-type-infos { margin: 0; color: var(--discret); font-size: .9rem; }
+.v-plus-que { margin: 0; color: var(--danger); font-weight: 700; font-size: .88rem; }
+.v-type-prix { margin: .3rem 0 0; font-size: 1.05rem; }
+.v-type-total { margin: 0; color: var(--discret); }
+.v-type-total strong { color: var(--texte); }
+.v-type-choisir { margin-top: auto; width: 100%; justify-content: center; text-align: center; }
+.v-complet { max-width: 640px; }
+.v-resa-double { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; gap: 1.5rem; }
+.v-recap { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(16, 41, 74, .1); padding-bottom: 1rem; }
+.v-recap img { width: 100%; height: 180px; object-fit: cover; background: var(--or-clair); }
+.v-recap h2, .v-recap dl, .v-recap p { margin-left: 1.1rem; margin-right: 1.1rem; }
+.v-recap h2 { color: var(--marine); }
+.v-recap dl { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1rem; }
+.v-recap dt { color: var(--discret); }
+.v-recap dd { margin: 0; font-weight: 600; }
+.v-recap-total { font-size: 1.2rem; color: var(--marine); }
+.v-envoyee { max-width: 620px; text-align: left; }
+.v-envoyee .v-coche { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--ok); color: #fff;
+  font-size: 2.2rem; font-weight: 800; margin-bottom: .6rem; }
+.v-envoyee-texte { font-size: 1.05rem; color: var(--texte) !important; }
+.v-envoyee-recap { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1rem; margin: 1rem 0; }
+.v-envoyee-recap dt { color: var(--discret); }
+.v-envoyee-recap dd { margin: 0; }
+.v-envoyee .v-actions .btn { width: auto; }
+@media (max-width: 760px) {
+  .v-resa-double { grid-template-columns: 1fr; }
+  .v-boite-large .v-recherche { grid-template-columns: 1fr; }
+  .v-etapes-resa li { font-size: .72rem; }
+}
+@media (max-width: 420px) { .v-recherche-champs { grid-template-columns: 1fr 1fr; } .v-recherche-champs label:last-child { grid-column: 1 / -1; } }
+/* Le formulaire de réservation reste droit et immobile : on y tape des dates */
+.v-apercu.v-reserver { transform: none; animation: none; max-width: 440px; }
+.v-recherche-champs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(64px, 84px); }
+.v-recherche label { min-width: 0; }
+.v-recherche input[type=date] { min-width: 0; padding-left: .5rem; padding-right: .3rem; }
+@media (max-width: 420px) {
+  .v-recherche-champs { grid-template-columns: minmax(0, 1fr); }
+  .v-recherche-champs label:last-child { grid-column: auto; }
+}

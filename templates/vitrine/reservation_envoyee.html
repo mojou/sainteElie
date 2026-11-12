@@ -1,0 +1,29 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}Demande envoyée · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section v-resa">
+  <div class="v-conteneur">
+    <ol class="v-etapes-resa" aria-label="Étapes de la réservation">
+  <li class="fait">Vos dates</li><li class="fait">La chambre</li><li class="fait">Vos coordonnées</li><li class="actif">C'est envoyé</li>
+</ol>
+    <div class="v-boite v-envoyee">
+      <div class="v-coche" aria-hidden="true">✓</div>
+      <h1>Demande n°{{ demande.pk }} envoyée</h1>
+      <p class="v-envoyee-texte">Merci {{ demande.nom }}. La réception vous appelle au <strong>{{ demande.telephone }}</strong> pour confirmer votre réservation.</p>
+      <dl class="v-envoyee-recap">
+        <dt>Chambre</dt><dd>{{ demande.libelle_type }} · {{ demande.tarif_nuit|fcfa }} la nuit</dd>
+        <dt>Du</dt><dd>{{ arrivee_texte }}</dd>
+        <dt>Au</dt><dd>{{ depart_texte }}</dd>
+        <dt>Total</dt><dd><strong>{{ demande.total_prevu|fcfa }}</strong> pour {{ demande.nb_nuits }} nuit{{ demande.nb_nuits|pluralize }}</dd>
+        <dt>Où en est-elle ?</dt><dd><span class="badge {% if demande.statut == 'CONFIRMEE' %}ok{% elif demande.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ demande.get_statut_display }}</span>{% if demande.motif and demande.statut == 'REFUSEE' %} · {{ demande.motif }}{% endif %}</dd>
+      </dl>
+      <p>Rien à payer maintenant : vous réglez à l'hôtel, en espèces, Orange Money ou MTN MoMo.</p>
+      {% if etab.telephone %}<p>Une question ? Appelez la réception : <a href="tel:{{ etab.telephone|cut:' ' }}">{{ etab.telephone }}</a>.</p>{% endif %}
+      <div class="v-actions">
+        {% if not user.is_authenticated %}<a class="btn grand" href="{% url 'vitrine:inscription' %}">Créer mon compte pour suivre mes séjours</a>{% endif %}
+        <a class="btn secondaire grand" href="{% url 'vitrine:site' %}">Retour à l'accueil</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

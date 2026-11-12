@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Ma caisse{% endblock %}
+{% block contenu %}
+<div class="entete">
+  <div><h1>Ma caisse · {{ session.get_shift_display }}</h1>
+    <p>Ouverte le {{ session.ouverte_le|date:"d/m à H:i" }} · caisse {{ session.tiroir }} ·
+      argent compté à l'ouverture : {{ session.especes_ouverture_comptees|fcfa }}</p></div>
+  <div class="actions">
+    <a class="btn" href="{% url 'caisse:ventes' %}">{% if session.tiroir.poste == "BAR" %}Restaurant · Bar{% else %}Boutique{% endif %}</a>
+    {% if session.tiroir.poste == "RECEPTION" %}<a class="btn secondaire" href="{% url 'hotel:sejours' %}">Encaisser un séjour</a>{% endif %}
+    <a class="btn secondaire" href="{% url 'caisse:sortie_nouvelle' %}">Sortir de l'argent</a>
+    <a class="btn ok" href="{% url 'caisse:remise_comptage' %}">Fermer ma caisse</a>
+  </div>
+</div>
+<h2>Argent reçu depuis l'ouverture</h2>
+<div class="chiffres">
+  {% for m in moyens %}{% if m.montant or m.cle != "CARTE" and m.cle != "CHEQUE" %}
+  <div class="chiffre"><div class="valeur">{{ m.montant|nombre }}</div><div class="libelle">{{ m.libelle }}</div></div>
+  {% endif %}{% endfor %}
+  <div class="chiffre"><div class="valeur">{{ session.total_encaisse|nombre }}</div><div class="libelle">Total reçu</div></div>
+</div>
+<p class="discret">Ce que la caisse devrait contenir s'affiche seulement quand vous la fermez, après votre comptage.
+  · <a href="{% url 'caisse:credits' %}">Crédits clients</a> · <a href="{% url 'caisse:sessions' %}">Mes caisses précédentes</a></p>
+
+<h2>Paiements reçus</h2>
+<div class="tableau"><table>
+  <tr><th>Reçu</th><th>Heure</th><th>Pour quoi</th><th>Type</th><th>Payé en</th><th class="nombre">Montant</th></tr>
+  {% for e in encaissements %}
+  <tr class="{% if e.est_annule %}annule{% endif %}"><td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"H:i" }}</td>
+    <td>{% if e.sejour %}<a href="{% url 'hotel:sejour' e.sejour.pk %}">{{ e.libelle }}</a>{% else %}{{ e.libelle }}{% endif %}</td>
+    <td>{{ e.get_nature_display }}</td><td>{{ e.moyen_libelle }}</td>
+    <td class="nombre">{{ e.montant_signe|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="vide">Aucun paiement pour l'instant.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Argent sorti de la caisse {% aide "sortie" %}</h2>
+<div class="tableau"><table>
+  <tr><th>Heure</th><th>Pour quoi</th><th>Motif</th><th>État</th><th class="nombre">Montant</th></tr>
+  {% for s in sorties %}<tr><td>{{ s.date|date:"H:i" }}</td><td>{{ s.get_type_display }}</td><td>{{ s.motif }}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td class="nombre">{{ s.montant|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="vide">Aucun argent sorti.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Message pour la personne suivante {% aide "consignes" %}</h2>
+<div class="carte">
+  {% for c in consignes %}<p><small>{{ c.date|date:"H:i" }}</small> {{ c.texte|linebreaksbr }}</p>{% endfor %}
+  <form method="post" action="{% url 'caisse:consigne_ajouter' %}">{% csrf_token %}
+    <div class="champ"><textarea name="texte" rows="2" placeholder="Ex. : chambre 204 signale une fuite"></textarea></div>
+    <button class="btn secondaire petit">Enregistrer le message</button>
+  </form>
+</div>
+{% endblock %}

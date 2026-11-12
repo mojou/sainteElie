@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Acomptes{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Acomptes sur salaire</h1><p>Ce mois-ci : {{ total_mois|fcfa }}. Chaque acompte est déduit de la fiche de paie de son mois.</p></div></div>
+<div class="carte"><form method="post" novalidate>{% csrf_token %}<div class="ligne-champs">{% include "partials/champs.html" %}</div><button class="btn">Enregistrer l'acompte</button></form></div>
+<div class="tableau"><table><tr><th>Date</th><th>Employé</th><th>Motif</th><th>Saisi par</th><th class="nombre">Montant</th></tr>
+  {% for a in acomptes %}<tr><td>{{ a.date|date:"d/m/Y" }}</td><td>{{ a.employe }}</td><td>{{ a.motif }}</td><td>{{ a.saisi_par }}</td><td class="nombre">{{ a.montant|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="vide">Aucun acompte.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

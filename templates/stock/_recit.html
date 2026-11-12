@@ -1,0 +1,19 @@
+{% for g in groupes %}
+<section class="jour-mouvements">
+  <h3>{{ g.titre }} <small class="discret">{% for libelle, n in g.resume.items %}{{ n }} {{ libelle|lower }}{% if not forloop.last %} · {% endif %}{% endfor %}</small></h3>
+  <ol class="recit">
+    {% for m in g.mouvements %}
+    <li class="recit-ligne {{ m.recit.sens }}">
+      <span class="recit-icone" aria-hidden="true">{{ m.recit.icone }}</span>
+      <div class="recit-texte">
+        <div><strong>{{ m.recit.titre }}</strong>{% if avec_article %} — <a href="{% url 'stock:article' m.article_id %}">{{ m.article }}</a>{% endif %}</div>
+        <small>{{ m.date|date:"H:i" }}{% if m.recit.detail %} · {{ m.recit.detail }}{% endif %}</small>
+      </div>
+      <span class="recit-variation">{{ m.quantite|stringformat:"+d" }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% empty %}
+<p class="vide">Aucun mouvement.</p>
+{% endfor %}

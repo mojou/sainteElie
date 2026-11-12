@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titre %}{% if sejour %}Modifier le séjour{% else %}Nouvelle réservation{% endif %}{% endblock %}
+{% block contenu %}
+<div class="entete"><div>
+  <h1>{% if sejour %}Modifier le séjour{% else %}Nouvelle réservation{% endif %}</h1>
+  <p>Le tarif vient de la fiche chambre. Un autre tarif doit être motivé ; une forte remise doit être validée.</p>
+</div></div>
+<form method="post" novalidate class="carte">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+  {% with f=form %}
+  <h3>Client</h3>
+  <div class="ligne-champs">
+    {% for field in f %}{% if field.name == "client" or field.name == "nouveau_client_nom" or field.name == "nouveau_client_telephone" %}
+      <div class="champ{% if field.errors %} en-erreur{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for e in field.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    {% endif %}{% endfor %}
+  </div>
+  <h3>Chambre et dates</h3>
+  <div class="ligne-champs">
+    {% for field in f %}{% if field.name == "chambre" or field.name == "date_arrivee" or field.name == "date_depart" or field.name == "nb_personnes" %}
+      <div class="champ{% if field.errors %} en-erreur{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for e in field.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    {% endif %}{% endfor %}
+  </div>
+  <h3>Tarif</h3>
+  <div class="ligne-champs">
+    {% for field in f %}{% if field.name == "gratuite" or field.name == "tarif_nuit" or field.name == "motif_tarif" or field.name == "valideur" or field.name == "valideur_pin" %}
+      <div class="champ{% if field.errors %} en-erreur{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="aide">{{ field.help_text }}</span>{% endif %}{% for e in field.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    {% endif %}{% endfor %}
+  </div>
+  <div class="champ"><label for="{{ f.notes.id_for_label }}">Notes</label>{{ f.notes }}</div>
+  {% endwith %}
+  <div class="actions">
+    <button class="btn" type="submit">Enregistrer</button>
+    <a class="btn secondaire" href="{% if sejour %}{% url 'hotel:sejour' sejour.pk %}{% else %}{% url 'hotel:sejours' %}{% endif %}">Annuler</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}Écran verrouillé · {{ etablissement_nom }}{% endblock %}
+{% block navigation %}{% endblock %}
+{% block boutons_entete %}{% endblock %}
+{% block contenu %}
+<section class="v-page-formulaire verrou">
+  <div class="v-conteneur">
+    <div class="v-boite">
+      <p class="v-surtitre">Écran verrouillé {% aide "verrouillage" %}</p>
+      {% if qui %}
+        <h1>Bonjour {{ qui.first_name|default:qui.username }}</h1>
+        <p>Tapez <strong>votre</strong> code PIN pour prendre l'écran.</p>
+      {% else %}
+        <h1>{{ user.first_name|default:user.username }}, c'est vous ?</h1>
+        <p>Tapez votre {% if par_pin %}code PIN{% else %}mot de passe{% endif %} pour reprendre là où vous étiez.</p>
+      {% endif %}
+      {% if erreur %}<div class="message error">{{ erreur }}</div>{% endif %}
+      <form method="post" novalidate>{% csrf_token %}
+        <input type="hidden" name="suite" value="{{ suite }}">
+        {% if qui %}<input type="hidden" name="qui" value="{{ qui.pk }}">{% endif %}
+        <label class="sr-only" for="id_secret">{% if par_pin %}Code PIN{% else %}Mot de passe{% endif %}</label>
+        <input id="id_secret" name="secret" type="password" autofocus autocomplete="off" required
+               {% if par_pin %}class="code-pin" inputmode="numeric" maxlength="6" placeholder="• • • •"{% endif %}>
+        <button class="btn grand ok bouton-plein" type="submit">{% if qui %}Prendre l'écran{% else %}Reprendre{% endif %}</button>
+      </form>
+      {% if qui %}
+        <p class="v-lien-bas"><a href="{% url 'accounts:verrouille' %}?suite={{ suite|urlencode }}">← Ce n'est pas moi</a></p>
+      {% elif collegues %}
+        <h2 class="releve-titre">Ce n'est pas {{ user.first_name|default:user.username }} ? Touchez votre prénom :</h2>
+        <div class="releve">
+          {% for c in collegues %}
+            <a class="btn secondaire grand" href="{% url 'accounts:verrouille' %}?qui={{ c.pk }}">{{ c.first_name|default:c.username }}</a>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <form method="post" action="{% url 'accounts:deconnexion' %}" class="v-lien-bas">{% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'accounts:connexion' %}">
+        <button class="lien" type="submit">Se connecter avec un autre compte</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

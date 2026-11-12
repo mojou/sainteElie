@@ -1,0 +1,43 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}Réserver une chambre · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section v-resa">
+  <div class="v-conteneur">
+    <ol class="v-etapes-resa" aria-label="Étapes de la réservation">
+  <li class="{% if not d %}actif{% else %}fait{% endif %}">Vos dates</li><li class="{% if d %}actif{% endif %}">La chambre</li><li class="">Vos coordonnées</li><li class="">C'est envoyé</li>
+</ol>
+    <h1>Réserver une chambre</h1>
+    <div class="v-boite v-boite-large">{% include "vitrine/_recherche_chambre.html" %}</div>
+
+    {% if d %}
+    <p class="v-resume-resa">Du <strong>{{ arrivee_texte }}</strong> au <strong>{{ depart_texte }}</strong> ·
+      {{ nuits }} nuit{{ nuits|pluralize }} · {{ d.personnes }} personne{{ d.personnes|pluralize }}</p>
+    {% if types %}
+    <h2>Choisissez votre chambre</h2>
+    <div class="v-types">
+      {% for t in types %}
+      <article class="v-type">
+        <img src="{{ t.photo }}" alt="{{ t.libelle }}" loading="lazy">
+        <div class="v-type-corps">
+          <h3>{{ t.libelle }}</h3>
+          <p class="v-type-infos">Jusqu'à {{ t.capacite }} personne{{ t.capacite|pluralize }}{% if t.description %} · {{ t.description }}{% endif %}</p>
+          {% if t.libres <= 2 %}<p class="v-plus-que">Plus que {{ t.libres }} libre{{ t.libres|pluralize }} à ces dates</p>{% endif %}
+          <p class="v-type-prix"><strong>{{ t.tarif|fcfa }}</strong> la nuit</p>
+          <p class="v-type-total">{{ t.nuits }} nuit{{ t.nuits|pluralize }} : <strong>{{ t.total|fcfa }}</strong></p>
+          <a class="btn grand v-type-choisir" href="{% url 'vitrine:reserver_coordonnees' %}?arrivee={{ d.arrivee|date:'Y-m-d' }}&depart={{ d.depart|date:'Y-m-d' }}&personnes={{ d.personnes }}&type={{ t.cle }}">Choisir</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <p class="v-petit-gris">Rien à payer maintenant : vous réglez à l'hôtel, en espèces, Orange Money ou MTN MoMo.</p>
+    {% else %}
+    <div class="carte v-complet">
+      <h2>Complet à ces dates</h2>
+      <p>Toutes nos chambres{% if d.personnes > 2 %} pour {{ d.personnes }} personnes{% endif %} sont prises à ces dates. Essayez d'autres dates{% if d.personnes > 1 %}, ou moins de personnes par chambre{% endif %}.
+        {% if etab.telephone %}La réception peut aussi vous aider : <a href="tel:{{ etab.telephone|cut:' ' }}">{{ etab.telephone }}</a>.{% endif %}</p>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

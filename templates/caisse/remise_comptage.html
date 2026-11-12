@@ -1,0 +1,53 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Fermer ma caisse : compter{% endblock %}
+{% block contenu %}
+<div class="entete"><div>
+  <h1>{% if cloture_office %}Fermer la caisse de {{ session.receptionniste }}{% else %}Fermer ma caisse{% endif %} · étape 1 sur 2 : compter</h1>
+  <p class="etape">{% if remise %}Vous recomptez : c'est permis une seule fois, et le premier comptage reste enregistré.{% else %}Comptez l'argent de la caisse et tapez ce que vous trouvez.{% endif %}</p>
+  <p>Ce que la caisse devrait contenir s'affichera ensuite.</p>
+</div></div>
+<form method="post" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+  <div class="carte">
+    <h2>Espèces</h2>
+    <p class="discret">Posez vos billets en petits tas. Pour chaque billet ou pièce que vous comptez, touchez son image :
+      le nombre et le total montent tout seuls. Vous pouvez aussi taper le nombre, ou directement le total en bas.</p>
+    <div class="billetage tactile" data-billetage="id_especes">
+      {% for f in form.billets %}{% with valeur=f.field.widget.attrs|get:"data-valeur" %}
+      <div class="billet{% if f.name|slice:':1' == 'p' %} piece{% endif %}" data-valeur="{{ valeur }}">
+        <button type="button" class="billet-image v{{ valeur }}" data-plus aria-label="Un {% if f.name|slice:':1' == 'p' %}pièce{% else %}billet{% endif %} de {{ valeur }} de plus">{{ valeur|nombre }}</button>
+        <div class="billet-compte">
+          <button type="button" data-moins aria-label="Un de moins">−</button>
+          <label class="sr-only" for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}
+          <button type="button" data-plus aria-label="Un de plus">+</button>
+        </div>
+        <div class="billet-total" aria-live="polite"></div>
+      </div>
+      {% endwith %}{% endfor %}
+    </div>
+    <div class="champ{% if form.especes.errors %} en-erreur{% endif %}"><label for="id_especes">{{ form.especes.label }} *</label>{{ form.especes }}
+      {% for e in form.especes.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+  </div>
+  <div class="carte">
+    <h2>Chèques</h2>
+    <div class="ligne-champs">
+      <div class="champ"><label for="id_cheques_nombre">{{ form.cheques_nombre.label }}</label>{{ form.cheques_nombre }}</div>
+      <div class="champ"><label for="id_cheques_total">{{ form.cheques_total.label }}</label>{{ form.cheques_total }}</div>
+    </div>
+  </div>
+  <div class="carte">
+    <h2>Orange Money et MTN MoMo</h2>
+    <p class="discret">Tapez ce que vous avez reçu sur le téléphone. Plusieurs paiements ? Mettez un + entre eux
+      (ex. 10000+5000) : le total s'affiche en dessous.</p>
+    <div class="ligne-champs">
+      {% for f in form.champs_mobiles %}
+      <div class="champ{% if f.errors %} en-erreur{% endif %}"><label for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}
+        <span class="aide">Total : <strong data-total-de="{{ f.id_for_label }}">0</strong> FCFA</span>
+        {% for e in f.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="actions"><button class="btn grand" type="submit">J'ai fini de compter</button>
+    <a class="btn secondaire" href="{% if cloture_office %}{% url 'caisse:session' session.pk %}{% else %}{% url 'caisse:ma_caisse' %}{% endif %}">Retour</a></div>
+</form>
+{% endblock %}

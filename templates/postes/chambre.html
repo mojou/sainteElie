@@ -1,0 +1,84 @@
+{% extends "base.html" %}{% load gestion postes %}
+{% block titre %}Chambre {{ chambre.numero }}{% endblock %}
+{% block contenu %}
+{% entete_poste "Réception · chambres" avec_caisse=True %}
+<p class="no-print"><a class="retour" href="{% url 'postes:reception' %}">← Toutes les chambres</a></p>
+
+<div class="carte fiche-chambre {{ chambre.statut }}">
+  <div class="fiche-chambre-tete">
+    <h1>Chambre {{ chambre.numero }}</h1>
+    <span class="badge {{ chambre.statut }}">{{ chambre.get_statut_display }}</span>
+  </div>
+  <p class="discret">{{ chambre.get_categorie_display }} · {{ chambre.tarif_nuit|fcfa }} la nuit</p>
+
+  {% if sejour %}
+    <dl class="fiche">
+      <dt>Client</dt><dd><a href="{% url 'hotel:sejour' sejour.pk %}">{{ sejour.client }}</a>{% if sejour.client.telephone %} · {{ sejour.client.telephone }}{% endif %}</dd>
+      <dt>Arrivé le</dt><dd>{{ sejour.date_arrivee|date:"l d/m" }}</dd>
+      <dt>Départ prévu</dt><dd>{{ sejour.date_depart|date:"l d/m" }}{% if sejour.date_depart <= jour %} <span class="badge alerte">aujourd'hui</span>{% endif %}</dd>
+      <dt>Nuits ({{ sejour.nb_nuits }})</dt><dd>{{ sejour.montant_chambre_prevu|fcfa }}</dd>
+      {% if sejour.total_extras %}<dt>Extras {% aide "extras" %}</dt><dd>{{ sejour.total_extras|fcfa }}</dd>{% endif %}
+      <dt>Déjà payé</dt><dd>{{ sejour.total_paye|fcfa }}</dd>
+    </dl>
+    <p class="reste-gros{% if sejour.reste_a_payer > 0 %} rouge{% endif %}">Reste à payer : {{ sejour.reste_a_payer|fcfa }} {% aide "reste" %}</p>
+
+    <h2>Encaisser</h2>
+    {% if session %}
+    <form method="post" action="{% url 'postes:reception' %}" novalidate>{% csrf_token %}
+      <input type="hidden" name="action" value="encaisser"><input type="hidden" name="sejour" value="{{ sejour.pk }}">
+      <div class="champ"><label for="montant-recu">Montant reçu (FCFA)</label>
+        <input id="montant-recu" type="number" name="{{ form.montant.html_name }}" value="{{ form.montant.value|default:'' }}" min="1"
+               inputmode="numeric" data-montant data-confirmer-montant data-montant-max="{{ sejour.reste_a_payer }}"
+               data-montant-max-texte="{{ sejour.client }} doit"></div>
+      <p class="etiquette">Payé en</p>
+      <div class="paiements trois">
+        {% for v, l in form.fields.moyen.choices %}
+        <label class="paiement paiement-{{ v|lower }}"><input type="radio" name="{{ form.moyen.html_name }}" value="{{ v }}"{% if v == "ESPECES" %} checked{% endif %}><span>{{ l }}</span></label>
+        {% endfor %}
+      </div>
+      <button class="btn grand ok bouton-plein" type="submit">Encaisser</button>
+    </form>
+    {% else %}
+    {% if user.tient_caisse %}<p>Pour encaisser, ouvrez d'abord votre caisse.</p>
+    <a class="btn" href="{% url 'caisse:ma_caisse' %}?suite={{ request.path|urlencode }}">Ouvrir ma caisse</a>
+    {% else %}<p class="discret">L'encaissement se fait par la réception, sur sa caisse.</p>{% endif %}
+    {% endif %}
+
+    <h2>Autre chose</h2>
+    <div class="actions-chambre">
+      <a class="btn secondaire grand" href="{% url 'hotel:extras' %}?sejour={{ sejour.pk }}">Ajouter un repas ou une boisson</a>
+      <form method="post" action="{% url 'postes:reception' %}">{% csrf_token %}
+        <input type="hidden" name="action" value="depart"><input type="hidden" name="sejour" value="{{ sejour.pk }}">
+        <button class="btn secondaire grand bouton-plein" data-oui="Oui, il part" data-non="Non"
+                data-confirmer="{{ sejour.client }} quitte la chambre {{ chambre.numero }} ?{% if sejour.reste_a_payer > 0 %} Attention : il doit encore {{ sejour.reste_a_payer|fcfa }}.{% endif %}">Le client part (départ)</button>
+      </form>
+    </div>
+
+  {% elif chambre.statut == "A_NETTOYER" %}
+    <p class="etape">Le client est parti. Quand le ménage a fini cette chambre, touchez :</p>
+    <form method="post" action="{% url 'postes:reception' %}">{% csrf_token %}
+      <input type="hidden" name="action" value="menage"><input type="hidden" name="chambre" value="{{ chambre.pk }}">
+      <button class="btn ok grand bouton-plein" type="submit">Chambre faite</button>
+    </form>
+
+  {% elif chambre.statut == "HORS_SERVICE" %}
+    <p class="etape">Cette chambre ne se loue pas en ce moment.</p>
+    {% for p in pannes %}<p>{{ p.probleme }} <small class="discret">(signalé le {{ p.signale_le|date:"d/m" }}, {{ p.get_statut_display|lower }})</small></p>{% endfor %}
+
+  {% elif attendu %}
+    <p class="etape">Réservée pour {{ attendu.client }} : {{ attendu.nb_nuits }} nuit{{ attendu.nb_nuits|pluralize }}, arrivée le {{ attendu.date_arrivee|date:"l d/m" }}.</p>
+    <form method="post" action="{% url 'postes:reception' %}">{% csrf_token %}
+      <input type="hidden" name="action" value="checkin"><input type="hidden" name="sejour" value="{{ attendu.pk }}">
+      <button class="btn ok grand bouton-plein" type="submit">{{ attendu.client }} est arrivé</button>
+    </form>
+    <p class="discret">Un autre client à la place ? Changez d'abord <a href="{% url 'hotel:sejour' attendu.pk %}">la réservation</a>.</p>
+
+  {% else %}
+    <p class="etape">La chambre est libre.</p>
+    <a class="btn grand bouton-plein" href="{% url 'postes:arrivee' %}?chambre={{ chambre.pk }}">Un client arrive</a>
+    <p><a href="{% url 'hotel:sejour_nouveau' %}">Réserver pour plus tard</a></p>
+  {% endif %}
+
+  <p class="signaler no-print"><a href="{% url 'postes:maintenance' %}?chambre={{ chambre.pk }}">Signaler une panne dans cette chambre</a></p>
+</div>
+{% endblock %}

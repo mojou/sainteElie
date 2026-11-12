@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Paramètres de caisse{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Paramètres de caisse</h1><p>Modifiables par l'admin seul, avec date d'effet. L'historique est conservé.</p></div></div>
+<div class="carte">
+  <h2>En vigueur</h2>
+  <dl class="fiche">
+    <dt>Seuil de tolérance</dt><dd>{{ en_vigueur.seuil_ecart|fcfa }}</dd>
+    <dt>Heure de coupure du rapport</dt><dd>{{ en_vigueur.heure_coupure|time:"H:i" }}</dd>
+    <dt>Dépense sans validation</dt><dd>jusqu'à {{ en_vigueur.plafond_depense|fcfa }}</dd>
+    <dt>Remboursement espèces sans validation</dt><dd>jusqu'à {{ en_vigueur.plafond_remboursement|fcfa }}</dd>
+    <dt>Remise sur tarif sans validation</dt><dd>jusqu'à {{ en_vigueur.remise_tarif_max_pct }} %</dd>
+    <dt>Délai de validation d'une remise</dt><dd>{{ en_vigueur.delai_validation_heures }} h</dd>
+    <dt>Alerte écarts récurrents</dt><dd>{{ en_vigueur.alerte_nb_ecarts }} écarts en {{ en_vigueur.alerte_fenetre_jours }} jours</dd>
+  </dl>
+  <p><a class="btn" href="{% url 'caisse:parametres_nouveaux' %}">Changer les paramètres</a></p>
+</div>
+<div class="carte">
+  <h2>Tiroirs et fond de caisse</h2>
+  <div class="tableau"><table><tr><th>Caisse</th><th>Poste</th><th class="nombre">Fond en vigueur</th><th>État</th><th></th></tr>
+    {% for t in tiroirs %}<tr><td>{{ t }}</td><td>{{ t.get_poste_display }}</td><td class="nombre">{{ t.fond_en_vigueur|nombre }}</td><td>{% if t.actif %}<span class="badge ok">Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td>
+      <td><a href="{% url 'caisse:tiroir_modifier' t.pk %}">Modifier</a></td></tr>{% empty %}<tr><td colspan="4" class="vide">Aucun tiroir.</td></tr>{% endfor %}
+  </table></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'caisse:tiroir_nouveau' %}">Nouveau tiroir</a><a class="btn" href="{% url 'caisse:fond_nouveau' %}">Changer un fond de caisse</a></div>
+  <h3>Historique des fonds</h3>
+  <ul>{% for f in fonds %}<li>{{ f.tiroir }} : {{ f.montant|fcfa }} à partir du {{ f.date_effet|date:"d/m/Y" }} <small>({{ f.cree_par|default:"" }})</small></li>{% empty %}<li class="discret">Aucun fond défini.</li>{% endfor %}</ul>
+</div>
+<h2>Historique des paramètres</h2>
+<ul>{% for p in params %}<li>{{ p }} : seuil {{ p.seuil_ecart|fcfa }}, coupure {{ p.heure_coupure|time:"H:i" }} <small>({{ p.cree_par|default:"" }})</small></li>{% endfor %}</ul>
+{% endblock %}

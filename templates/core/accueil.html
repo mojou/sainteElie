@@ -1,0 +1,69 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Tableau de bord{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Bonjour {{ user.first_name|default:user.username }}</h1>
+  <p>{{ jour|date:"l d F Y" }} · {{ user.get_role_display }}</p></div></div>
+
+{% if not user.a_un_pin and user.tient_caisse %}
+  <div class="message warning">Avant de commencer : choisissez votre code secret (4 chiffres) dans <a href="{% url 'accounts:mon_compte' %}">Mon compte</a>. Il sert à signer quand vous rendez la caisse.</div>
+{% endif %}
+
+
+{% if nb_chambres is not None %}
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ nb_occupees }} / {{ nb_chambres }}</div><div class="libelle">Chambres occupées</div></div>
+  <div class="chiffre {% if nb_a_nettoyer %}alerte{% endif %}"><div class="valeur">{{ nb_a_nettoyer }}</div><div class="libelle">Chambres à nettoyer</div></div>
+  <div class="chiffre"><div class="valeur">{{ arrivees|length }}</div><div class="libelle">Arrivées attendues</div></div>
+  <div class="chiffre"><div class="valeur">{{ departs|length }}</div><div class="libelle">Départs du jour (ou en retard)</div></div>
+  {% if user.est_direction %}
+  <div class="chiffre"><div class="valeur">{{ encaisse_jour|nombre }}</div><div class="libelle">Encaissé aujourd'hui (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ recette_jour|nombre }}</div><div class="libelle">Recette constatée du jour (FCFA)</div></div>
+  {% endif %}
+  {% if nb_a_valider is not None %}
+  <div class="chiffre {% if nb_ecarts %}danger{% elif nb_a_valider %}alerte{% endif %}"><div class="valeur">{{ nb_a_valider }}</div><div class="libelle"><a href="{% url 'caisse:sessions' %}">Remises à valider</a>{% if nb_ecarts %} · {{ nb_ecarts }} écart{{ nb_ecarts|pluralize }}{% endif %}</div></div>
+  {% if nb_sorties_a_valider %}<div class="chiffre alerte"><div class="valeur">{{ nb_sorties_a_valider }}</div><div class="libelle">Dépenses à valider</div></div>{% endif %}
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="grille">
+  {% if arrivees %}
+  <div class="carte"><h3>Arrivées</h3>
+    {% for s in arrivees %}<div><a href="{% url 'hotel:sejour' s.pk %}">Ch. {{ s.chambre.numero }} · {{ s.client }}</a>{% if s.date_arrivee < jour %} <span class="badge danger">en retard</span>{% endif %}</div>{% endfor %}</div>
+  {% endif %}
+  {% if departs %}
+  <div class="carte"><h3>Départs</h3>
+    {% for s in departs %}<div><a href="{% url 'hotel:sejour' s.pk %}">Ch. {{ s.chambre.numero }} · {{ s.client }}</a> · reste {{ s.reste_a_payer|fcfa }}</div>{% endfor %}</div>
+  {% endif %}
+  {% if sessions_ouvertes %}
+  <div class="carte"><h3>Caisses ouvertes</h3>
+    {% for s in sessions_ouvertes %}<div><a href="{% url 'caisse:session' s.pk %}">{{ s.receptionniste }}</a> · {{ s.get_shift_display }} depuis {{ s.ouverte_le|date:"d/m H:i" }}</div>{% endfor %}</div>
+  {% endif %}
+  {% if alertes %}
+  <div class="carte"><h3>Alertes</h3>
+    {% for a in alertes %}<div style="margin-bottom:.4rem"><span class="badge alerte">{{ a.get_type_display }}</span> {{ a.message }}</div>{% endfor %}
+    <a href="{% url 'core:alertes' %}">Toutes les alertes</a></div>
+  {% endif %}
+  {% if stock_bas %}
+  <div class="carte"><h3>Stock bas</h3>
+    {% for a in stock_bas %}<div><a href="{% url 'stock:article' a.pk %}">{{ a }}</a> : {{ a.quantite }} {{ a.unite }}</div>{% endfor %}</div>
+  {% endif %}
+  {% if equipe_du_jour is not None %}
+  <div class="carte"><h3>Équipe du jour</h3>
+    {% for a in equipe_du_jour %}<div>{{ a.creneau.nom }} · {{ a.employe }} {% if a.employe_id in pointes %}<span class="badge ok">pointé</span>{% else %}<span class="badge">pas pointé</span>{% endif %}</div>
+    {% empty %}<p class="discret">Aucun planning saisi pour aujourd'hui.</p>{% endfor %}
+    {% if conges_en_attente %}<p><a href="{% url 'personnel:conges' %}">{{ conges_en_attente }} demande{{ conges_en_attente|pluralize }} de congé en attente</a></p>{% endif %}
+  </div>
+  {% endif %}
+  {% if mon_planning is not None %}
+  <div class="carte"><h3>Mon planning (7 jours)</h3>
+    {% for a in mon_planning %}<div>{{ a.date|date:"D d/m" }} · {{ a.creneau }}</div>{% empty %}<p class="discret">Aucun shift prévu.</p>{% endfor %}
+    <p><a class="btn petit" href="{% url 'personnel:mon_espace' %}">{% if pointage_ouvert %}Pointer mon départ{% else %}Pointer mon arrivée{% endif %}</a></p></div>
+  {% endif %}
+  {% if mes_taches %}
+  <div class="carte"><h3>Mes tâches</h3>
+    {% for t in mes_taches %}<div>{{ t.titre }} <small>({{ t.projet }}{% if t.echeance %}, {{ t.echeance|date:"d/m" }}{% endif %})</small></div>{% endfor %}
+    <a href="{% url 'projets:mes_taches' %}">Toutes mes tâches</a></div>
+  {% endif %}
+</div>
+{% endblock %}

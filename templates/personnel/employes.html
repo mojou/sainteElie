@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Employés{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Employés</h1></div>
+  {% if user.est_gerant %}<div class="actions"><a class="btn" href="{% url 'personnel:employe_nouveau' %}">Nouvel employé</a></div>{% endif %}</div>
+<div class="tableau"><table><tr><th>Nom</th><th>Poste</th><th>Département</th><th>Téléphone</th><th>Compte</th>{% if user.est_gerant %}<th class="nombre">Salaire de base</th>{% endif %}<th>État</th><th></th></tr>
+  {% for e in employes %}<tr><td>{{ e }}</td><td>{{ e.poste }}</td><td>{{ e.get_departement_display }}</td><td>{{ e.telephone }}</td><td>{{ e.user.username|default:"-" }}</td>
+    {% if user.est_gerant %}<td class="nombre">{{ e.salaire_base|nombre }}</td>{% endif %}
+    <td>{% if e.actif %}<span class="badge ok">Actif</span>{% else %}<span class="badge">Parti</span>{% endif %}</td>
+    <td>{% if user.est_gerant %}<a href="{% url 'personnel:employe_modifier' e.pk %}">Modifier</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="8" class="vide">Aucun employé.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

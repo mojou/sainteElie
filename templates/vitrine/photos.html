@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titre %}Photos du site{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Photos du site</h1>
+  <p>Les photos de la page d'accueil publique. Tant qu'une rubrique n'a pas de photo, la page montre une illustration dessinée.</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'vitrine:site' %}" target="_blank" rel="noopener">Voir la page d'accueil</a></div></div>
+
+<div class="carte">
+  <h2>Ajouter des photos</h2>
+  <p class="discret">Prenez les photos de jour, à l'horizontale. Vous pouvez en choisir plusieurs d'un coup. Elles défilent
+    dans le grand bandeau du haut de la page d'accueil (celles de « L'hôtel » d'abord) et remplissent la galerie.</p>
+  <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+    <div class="ligne-champs">{% include "partials/champs.html" %}</div>
+    <button class="btn" type="submit">Ajouter les photos</button>
+  </form>
+</div>
+
+{% for r in rubriques %}
+<h2>{{ r.titre }} <small>({{ r.photos|length }})</small></h2>
+<div class="miniatures">
+  {% for p in r.photos %}
+  <figure class="miniature">
+    <img src="{{ p.url }}" alt="{{ r.titre }} : {{ p.legende|default:'photo' }}" loading="lazy">
+    <figcaption>
+      <span>{{ p.legende|default:"Sans légende" }}</span>
+      <form method="post" action="{% url 'vitrine:photo_retirer' p.pk %}">{% csrf_token %}
+        <button class="btn danger petit" type="submit">Retirer</button></form>
+    </figcaption>
+  </figure>
+  {% empty %}
+  <p class="discret">Aucune photo pour l'instant : la page d'accueil montre l'illustration.</p>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

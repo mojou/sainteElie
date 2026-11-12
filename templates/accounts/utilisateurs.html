@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titre %}Utilisateurs{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Utilisateurs</h1><p>Le rôle décide de ce que chacun voit.</p></div>
+  <div class="actions"><a class="btn" href="{% url 'accounts:utilisateur_nouveau' %}">Nouvel utilisateur</a></div></div>
+<div class="tableau"><table>
+  <tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Téléphone</th><th>PIN</th><th>État</th><th></th></tr>
+  {% for u in utilisateurs %}
+  <tr><td>{{ u }}</td><td>{{ u.username }}</td><td>{{ u.get_role_display }}</td><td>{{ u.telephone }}</td>
+    <td>{% if u.a_un_pin %}<span class="badge ok">oui</span>{% else %}<span class="badge">non</span>{% endif %}</td>
+    <td>{% if u.is_active %}<span class="badge ok">Actif</span>{% else %}<span class="badge danger">Désactivé</span>{% endif %}</td>
+    <td><a href="{% url 'accounts:utilisateur_modifier' u.pk %}">Modifier</a></td></tr>
+  {% endfor %}
+</table></div>
+{% endblock %}

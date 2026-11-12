@@ -1,0 +1,51 @@
+{% extends "base.html" %}{% load gestion postes %}
+{% block titre %}Extras{% endblock %}
+{% block contenu %}
+{% entete_poste "Extras sur chambre" %}
+{% if not sejour %}
+<div class="entete no-print"><div><h1>Ajouter un extra {% aide "extras" %}</h1>
+  <p class="etape">Touchez la chambre du client.</p></div></div>
+<div class="plan-chambres grosses no-print">
+  {% for s in presents %}
+  <a class="chambre OCCUPEE" href="?sejour={{ s.pk }}">
+    <span class="numero">{{ s.chambre.numero }}</span>
+    <span>{{ s.client }}</span>
+  </a>
+  {% empty %}<p class="vide">Aucun client n'est logé en ce moment.</p>{% endfor %}
+</div>
+{% else %}
+<div class="entete"><div><h1>Chambre {{ sejour.chambre.numero }} · {{ sejour.client }}</h1>
+  <p class="etape">Qu'est-ce que le client a pris ?</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'hotel:extras' %}">Changer de chambre</a></div></div>
+<form method="post" novalidate class="carte">{% csrf_token %}
+  <input type="hidden" name="sejour" value="{{ sejour.pk }}">
+  {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+  <div class="ligne-champs">
+    <div class="champ{% if form.plat.errors %} en-erreur{% endif %}"><label for="id_plat">{{ form.plat.label }}</label>{{ form.plat }}</div>
+    <div class="champ"><label for="id_quantite">{{ form.quantite.label }}</label>{{ form.quantite }}</div>
+  </div>
+  <details{% if form.description.value or form.montant.errors %} open{% endif %}>
+    <summary>Ce n'est pas sur la carte ? Écrivez-le ici</summary>
+    <div class="ligne-champs">
+      <div class="champ"><label for="id_description">{{ form.description.label }}</label>{{ form.description }}</div>
+      <div class="champ{% if form.montant.errors %} en-erreur{% endif %}"><label for="id_montant">{{ form.montant.label }}</label>{{ form.montant }}{% for e in form.montant.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+      <div class="champ"><label for="id_numero_bon">{{ form.numero_bon.label }}</label>{{ form.numero_bon }}</div>
+    </div>
+  </details>
+  <button class="btn grand" type="submit">Enregistrer l'extra</button>
+  <p class="discret">L'extra va sur la note de la chambre. Le client le paie à la réception, avec sa chambre.</p>
+</form>
+{% endif %}
+
+<div class="entete"><div><h2>Extras d'aujourd'hui</h2><p>Total : <strong>{{ total_jour|fcfa }}</strong>, à encaisser à la réception.</p></div>
+  <div class="actions no-print"><button class="btn secondaire petit" onclick="window.print()">Imprimer</button></div></div>
+<div class="tableau"><table>
+  <tr><th>Heure</th><th>Chambre</th><th>Client</th><th>Ce qui a été pris</th><th>Saisi par</th><th class="nombre">Montant</th><th class="no-print"></th></tr>
+  {% for e in du_jour %}
+  <tr class="{% if e.statut == 'ANNULE' %}annule{% endif %}"><td>{{ e.date_conso|date:"H:i" }}</td><td>{{ e.sejour.chambre.numero }}</td><td>{{ e.sejour.client }}</td>
+    <td>{{ e.description }}{% if e.numero_bon %} <small>(bon {{ e.numero_bon }})</small>{% endif %}</td>
+    <td>{{ e.saisi_par }} <small>({{ e.saisi_par.get_role_display }})</small></td><td class="nombre">{{ e.montant|nombre }}</td>
+    <td class="no-print">{% if e.statut == "ACTIF" %}<a href="{% url 'hotel:extra_annuler' e.pk %}">Annuler</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucun extra aujourd'hui.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

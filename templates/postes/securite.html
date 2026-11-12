@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load gestion postes %}
+{% block titre %}Gardiennage{% endblock %}
+{% block contenu %}
+{% entete_poste "Gardiennage · main courante" %}
+<div class="carte no-print">
+  <h2>Noter ce que le gardien signale {% aide "main_courante" %}</h2>
+  <p class="discret">Rondes, visiteurs, livraisons, incidents : le gardien prévient la réception, qui le note ici.
+    Pour la nuit, imprimez-lui une feuille vierge : il la remplit et vous la rapporte le matin.</p>
+  <p><a class="btn secondaire" href="{% url 'fiches:main_courante_gardien' %}" target="_blank" rel="noopener">Imprimer la feuille du gardien</a></p>
+  <form method="post" novalidate>{% csrf_token %}
+    <div class="ligne-champs">{% include "partials/champs.html" %}</div>
+    <button class="btn grand" type="submit">Noter</button>
+  </form>
+</div>
+<div class="entete"><div><h2>Aujourd'hui ({{ du_jour|length }})</h2></div>
+  <div class="actions no-print"><button class="btn secondaire petit" onclick="window.print()">Imprimer</button></div></div>
+<div class="tableau"><table><tr><th>Heure</th><th>Quoi</th><th>Ce qui s'est passé</th><th>Par</th></tr>
+  {% for e in du_jour %}<tr><td>{{ e.date|date:"H:i" }}</td><td>{% if e.type == "INCIDENT" %}<span class="badge danger">Incident</span>{% else %}{{ e.get_type_display }}{% endif %}</td>
+    <td>{{ e.description }}</td><td>{{ e.saisi_par }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Rien noté aujourd'hui.</td></tr>{% endfor %}
+</table></div>
+{% if veille %}
+<h2>Hier</h2>
+<div class="tableau"><table><tr><th>Heure</th><th>Quoi</th><th>Ce qui s'est passé</th><th>Par</th></tr>
+  {% for e in veille %}<tr><td>{{ e.date|date:"H:i" }}</td><td>{{ e.get_type_display }}</td><td>{{ e.description }}</td><td>{{ e.saisi_par }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

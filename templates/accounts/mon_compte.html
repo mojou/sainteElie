@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titre %}Mon compte{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Mon compte</h1><p>{{ user }} · {{ user.get_role_display }}</p></div></div>
+<div class="carte">
+  <h2>Code PIN de signature</h2>
+  <p>Le code PIN signe vos remises de caisse et vos validations.
+    {% if user.a_un_pin %}<span class="badge ok">Défini</span>{% else %}<span class="badge danger">Pas encore défini</span>{% endif %}</p>
+  <form method="post" novalidate>{% csrf_token %}
+    {% include "partials/champs.html" %}
+    <button class="btn" type="submit">Enregistrer le code</button>
+  </form>
+</div>
+<div class="carte"><a href="{% url 'accounts:mot_de_passe' %}">Changer mon mot de passe</a></div>
+{% endblock %}

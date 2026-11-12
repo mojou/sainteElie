@@ -1,0 +1,100 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Session n°{{ session.pk }}{% endblock %}
+{% block contenu %}
+<div class="entete">
+  <div><h1>{% if session.est_rectificative %}Session rectificative{% else %}Session{% endif %} n°{{ session.pk }} · {{ session.receptionniste }}</h1>
+    <p>{{ session.get_shift_display }} · caisse {{ session.tiroir }} · ouverte le {{ session.ouverte_le|date:"d/m/Y H:i" }}
+      {% if session.remise_le %}· remise le {{ session.remise_le|date:"d/m/Y H:i" }}{% endif %}
+      · <span class="badge {{ session.statut }}">{{ session.get_statut_display }}</span>
+      {% if session.cloture_office %}<span class="badge danger">clôture d'office</span>{% endif %}</p></div>
+  <div class="actions">
+    {% if remise.finalisee %}<a class="btn secondaire" href="{% url 'caisse:recu_remise' session.pk %}">Reçu de remise (PDF)</a>{% endif %}
+    {% if session.statut == "OUVERTE" and user.peut_valider_caisse and session.receptionniste != user and not session.est_rectificative %}
+      <a class="btn danger" href="{% url 'caisse:cloture_office' session.pk %}">Clôture d'office</a>{% endif %}
+  </div>
+</div>
+{% if session.est_rectificative %}<div class="message info">Correction de la <a href="{% url 'caisse:session' session.rectifie_session.pk %}">session n°{{ session.rectifie_session.pk }}</a> : {{ session.motif_rectification }}</div>{% endif %}
+
+<div class="chiffres">
+  {% for m in moyens %}{% if m.montant or m.cle != "CARTE" and m.cle != "CHEQUE" %}
+  <div class="chiffre"><div class="valeur">{{ m.montant|nombre }}</div><div class="libelle">{{ m.libelle }}</div></div>
+  {% endif %}{% endfor %}
+  <div class="chiffre"><div class="valeur">{{ session.total_encaisse|nombre }}</div><div class="libelle">Total encaissé</div></div>
+  {% if afficher_attendu and not session.est_rectificative %}
+  <div class="chiffre"><div class="valeur">{{ session.especes_attendues|nombre }}</div><div class="libelle">Espèces attendues{% if session.statut == "OUVERTE" %} (en direct){% endif %}</div></div>
+  {% endif %}
+</div>
+
+{% if remise.finalisee %}
+<div class="carte">
+  <h2>Remise</h2>
+  <div class="trois-chiffres">
+    <div><div class="libelle">Espèces attendues</div><div class="valeur">{{ remise.especes_attendues|nombre }}</div></div>
+    <div><div class="libelle">Espèces comptées</div><div class="valeur">{{ remise.especes_comptees|nombre }}</div>{% if remise.recompte_fait %}<small>1er comptage {{ remise.premier_comptage|nombre }}</small>{% endif %}</div>
+    <div class="{% if remise.ecart|hors_seuil:session.seuil_ecart %}hors{% endif %}"><div class="libelle">Écart</div><div class="valeur {% if remise.ecart|hors_seuil:session.seuil_ecart %}rouge{% endif %}">{{ remise.ecart|nombre }}</div></div>
+  </div>
+  <dl class="fiche">
+    <dt>Ouverture (prévue / comptée)</dt><dd>{{ session.especes_ouverture_prevues|fcfa }} / {{ session.especes_ouverture_comptees|fcfa }}</dd>
+    <dt>Chèques (attendus / comptés)</dt><dd>{{ remise.cheques_attendus_total|fcfa }} / {{ remise.cheques_total|fcfa }}</dd>
+    {% for m in remise.lignes_mobile %}<dt>{{ m.libelle }} (attendu / déclaré)</dt>
+    <dd>{{ m.attendu|fcfa }} / {{ m.declare|fcfa }}{% if m.lignes %} <small>({{ m.lignes }})</small>{% endif %}
+      {% if m.ecart %} · écart <span class="{% if m.ecart|hors_seuil:session.seuil_ecart %}rouge{% endif %}">{{ m.ecart|nombre }}</span>{% endif %}</dd>{% endfor %}
+    <dt>Versement</dt><dd>{{ remise.versement|fcfa }}</dd>
+    <dt>Laissé dans le tiroir</dt><dd>{{ remise.especes_transmises|fcfa }}</dd>
+    <dt>Compté par</dt><dd>{{ remise.compte_par }}</dd>
+    <dt>Entrant</dt><dd>{{ remise.entrant|default:"-" }}</dd>
+    {% if remise.motif %}<dt>Motif</dt><dd>{{ remise.motif|linebreaksbr }}</dd>{% endif %}
+    {% if session.motif_contestation %}<dt>Contestation</dt><dd>{{ session.motif_contestation }}</dd>{% endif %}
+    {% if session.validee_par %}<dt>Validée par</dt><dd>{{ session.validee_par }} le {{ session.validee_le|date:"d/m/Y H:i" }}</dd>{% endif %}
+    {% if session.imputation %}<dt>Décision</dt><dd>{{ session.get_imputation_display }} : {{ session.decision_arbitrage }}</dd>{% endif %}
+  </dl>
+</div>
+{% endif %}
+
+{% if peut_valider and session.statut == "REMISE" or peut_valider and session.statut == "ECART" %}
+<div class="carte">
+  <h2>{% if session.statut == "ECART" %}Arbitrer l'écart{% else %}Valider la remise{% endif %}</h2>
+  <form method="post" novalidate>{% csrf_token %}
+    <input type="hidden" name="action" value="valider">
+    {% if session.statut == "ECART" %}{% include "partials/champs.html" %}{% endif %}
+    <button class="btn ok" type="submit">Valider et verrouiller</button>
+  </form>
+  {% if session.statut == "REMISE" %}
+  <form method="post" style="margin-top:1rem">{% csrf_token %}<input type="hidden" name="action" value="contester">
+    <div class="champ"><label for="motif_contestation">Contester (motif)</label><input type="text" id="motif_contestation" name="motif_contestation"></div>
+    <button class="btn secondaire petit" type="submit">Contester la remise</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+
+<h2>Encaissements</h2>
+<div class="tableau"><table>
+  <tr><th>Reçu</th><th>Heure</th><th>Objet</th><th>Nature</th><th>Mode</th><th>Référence</th><th class="nombre">Montant</th></tr>
+  {% for e in encaissements %}
+  <tr class="{% if e.est_annule %}annule{% endif %}"><td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m H:i" }}</td>
+    <td>{% if e.sejour %}<a href="{% url 'hotel:sejour' e.sejour.pk %}">{{ e.libelle }}</a>{% else %}{{ e.libelle }}{% endif %}</td>
+    <td>{{ e.get_nature_display }}{% if e.annule %} du n°{{ e.annule.numero_recu }}<br><small>{{ e.motif }}</small>{% endif %}</td>
+    <td>{{ e.moyen_libelle }}</td><td>{{ e.reference }}</td>
+    <td class="nombre">{{ e.montant_signe|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucun encaissement.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Sorties de caisse</h2>
+<div class="tableau"><table>
+  <tr><th>Date</th><th>Type</th><th>Motif</th><th>Saisie par</th><th>Statut</th><th class="nombre">Montant</th><th></th></tr>
+  {% for s in sorties %}
+  <tr><td>{{ s.date|date:"d/m H:i" }}</td><td>{{ s.get_type_display }}</td>
+    <td>{{ s.motif }}{% if s.justificatif %} · <a href="{% url 'caisse:justificatif' s.pk %}">justificatif</a>{% endif %}</td>
+    <td>{{ s.saisi_par }}{% if s.valide_par %}<br><small>validée par {{ s.valide_par }}</small>{% endif %}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td class="nombre">{{ s.montant|nombre }}</td>
+    <td>{% if s.statut == "A_VALIDER" and user.peut_valider_caisse and s.saisi_par != user %}
+      <form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="sortie" value="{{ s.pk }}">
+        <button class="btn ok petit" name="action" value="accepter_sortie">Accepter</button>
+        <button class="btn danger petit" name="action" value="refuser_sortie" data-confirmer="Refuser cette dépense ? Le montant deviendra un écart à arbitrer.">Refuser</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucune sortie.</td></tr>{% endfor %}
+</table></div>
+
+{% if consignes %}<h2>Consignes de passation</h2><div class="carte">{% for c in consignes %}<p><small>{{ c.date|date:"d/m H:i" }} · {{ c.auteur }}</small><br>{{ c.texte|linebreaksbr }}</p>{% endfor %}</div>{% endif %}
+{% if rectifications %}<h2>Rectifications</h2><ul>{% for r in rectifications %}<li><a href="{% url 'caisse:session' r.pk %}">Session n°{{ r.pk }}</a> : {{ r.motif_rectification }}</li>{% endfor %}</ul>{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load postes %}
+{% block titre %}Maintenance{% endblock %}
+{% block contenu %}
+{% entete_poste "Maintenance · pannes" %}
+{% if form %}
+<div class="carte">
+  <h2>Signaler un problème de chambre</h2>
+  <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="action" value="signaler">
+    <div class="ligne-champs">{% include "partials/champs.html" %}</div>
+    <button class="btn grand" type="submit">Signaler</button>
+  </form>
+</div>
+{% endif %}
+
+<h2>À réparer ({{ a_faire|length }})</h2>
+<div class="tableau"><table>
+  <tr><th>Où ?</th><th>Problème</th><th>Urgence</th><th>Signalé</th><th>État</th>{% if peut_traiter %}<th class="no-print"></th>{% endif %}</tr>
+  {% for p in a_faire %}
+  <tr><td><strong>{{ p.endroit }}</strong>{% if p.hors_service %}<br><span class="badge danger">hors service</span>{% endif %}</td>
+    <td>{{ p.probleme }}</td>
+    <td>{% if p.urgence == "URGENTE" %}<span class="badge danger">Urgente</span>{% else %}Normale{% endif %}</td>
+    <td>{{ p.signale_le|date:"d/m H:i" }}<br><small>{{ p.signale_par }}</small></td>
+    <td><span class="badge {{ p.statut }}">{{ p.get_statut_display }}</span></td>
+    {% if peut_traiter %}<td class="no-print">
+      <form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="panne" value="{{ p.pk }}">
+        {% if p.statut == "A_FAIRE" %}<button class="btn secondaire petit" name="action" value="en_cours">Je m'en occupe</button>{% endif %}
+        <input type="text" name="commentaire" placeholder="Ce qui a été fait" style="max-width:200px">
+        <button class="btn ok petit" name="action" value="repare">Réparé</button></form></td>{% endif %}</tr>
+  {% empty %}<tr><td colspan="6" class="vide">Rien à réparer.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Réparé récemment</h2>
+<div class="tableau"><table><tr><th>Où ?</th><th>Problème</th><th>Réparé le</th><th>Par</th><th>Ce qui a été fait</th></tr>
+  {% for p in reparees %}<tr><td>{{ p.endroit }}</td><td>{{ p.probleme }}</td><td>{{ p.traite_le|date:"d/m H:i" }}</td><td>{{ p.traite_par }}</td><td>{{ p.commentaire }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="vide">Rien pour l'instant.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

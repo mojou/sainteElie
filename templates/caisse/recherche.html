@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Retrouver un reçu{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Retrouver un reçu</h1><p>Par numéro de reçu, référence de transaction ou nom du client.</p></div></div>
+<form class="filtres" method="get"><input type="text" name="q" value="{{ q }}" style="max-width:300px"><button class="btn petit">Chercher</button></form>
+<div class="tableau"><table><tr><th>Reçu</th><th>Date</th><th>Client</th><th>Nature</th><th>Mode</th><th>Référence</th><th>Par</th><th class="nombre">Montant</th></tr>
+  {% for e in resultats %}<tr><td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m/Y H:i" }}</td>
+    <td>{% if e.sejour %}<a href="{% url 'hotel:sejour' e.sejour.pk %}">{{ e.libelle }}</a>{% else %}{{ e.libelle }}{% endif %}</td><td>{{ e.get_nature_display }}</td><td>{{ e.moyen_libelle }}</td>
+    <td>{{ e.reference }}</td><td>{{ e.utilisateur }}</td><td class="nombre">{{ e.montant_signe|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="8" class="vide">{% if q %}Aucun résultat.{% else %}Saisissez une recherche.{% endif %}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

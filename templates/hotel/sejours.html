@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Séjours{% endblock %}
+{% block contenu %}
+<div class="entete">
+  <div><h1>Séjours et réservations</h1><p>Une seule fiche par séjour : réservé, en cours, terminé.</p></div>
+  <div class="actions"><a class="btn" href="{% url 'hotel:sejour_nouveau' %}">Nouvelle réservation</a>
+    <a class="btn secondaire" href="{% url 'hotel:chambres' %}">Plan des chambres</a>
+    <a class="btn secondaire" href="{% url 'hotel:clients' %}">Clients</a></div>
+</div>
+<form class="filtres" method="get">
+  <a class="btn {% if vue != 'jour' or q %}secondaire{% endif %} petit" href="?vue=jour">Aujourd'hui</a>
+  <a class="btn {% if vue != 'reserves' %}secondaire{% endif %} petit" href="?vue=reserves">À venir</a>
+  <a class="btn {% if vue != 'impayes' %}secondaire{% endif %} petit" href="?vue=impayes">Impayés</a>
+  <a class="btn {% if vue != 'tous' %}secondaire{% endif %} petit" href="?vue=tous">Tous</a>
+  <input type="text" name="q" value="{{ q }}" placeholder="Client, téléphone ou n° de chambre" style="max-width:280px">
+  <button class="btn petit" type="submit">Chercher</button>
+</form>
+{% for titre, liste in blocs %}
+  <h2>{{ titre }} <small>({{ liste|length }})</small></h2>
+  <div class="tableau"><table>
+    <tr><th>Chambre</th><th>Client</th><th>Arrivée</th><th>Départ</th><th class="nombre">Nuits</th><th class="nombre">Tarif</th><th class="nombre">Reste à payer</th><th>Statut</th></tr>
+    {% for s in liste %}
+    <tr>
+      <td><a href="{% url 'hotel:sejour' s.pk %}">{{ s.chambre.numero }}</a></td>
+      <td><a href="{% url 'hotel:sejour' s.pk %}">{{ s.client }}</a><br><small>{{ s.client.telephone }}</small></td>
+      <td>{{ s.date_arrivee|date:"d/m/Y" }}</td><td>{{ s.date_depart|date:"d/m/Y" }}</td>
+      <td class="nombre">{{ s.nb_nuits }}</td><td class="nombre">{{ s.tarif_nuit|nombre }}</td>
+      <td class="nombre">{% if s.reste_a_payer > 0 %}<span class="rouge">{{ s.reste_a_payer|nombre }}</span>{% else %}{{ s.reste_a_payer|nombre }}{% endif %}</td>
+      <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td>
+    </tr>
+    {% empty %}<tr><td colspan="8" class="vide">Aucun séjour.</td></tr>
+    {% endfor %}
+  </table></div>
+{% endfor %}
+{% endblock %}

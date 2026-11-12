@@ -1,0 +1,16 @@
+<article class="carte-tache{% if t.priorite == 'HAUTE' %} prioritaire{% endif %}" draggable="true" data-id="{{ t.pk }}"
+         data-url-statut="{% url 'projets:tache_statut' t.pk %}">
+  <a class="carte-tache-titre" href="{% url 'projets:tache' t.pk %}">{{ t.titre }}</a>
+  {% if avec_projet %}<span class="carte-tache-projet">{{ t.projet }}</span>{% endif %}
+  {% if t.description %}<p class="carte-tache-texte">{{ t.description|truncatechars:90 }}</p>{% endif %}
+  <div class="carte-tache-pied">
+    {% if user.est_encadrement %}
+    <button type="button" class="etoile{% if t.priorite == 'HAUTE' %} active{% endif %}" data-url="{% url 'projets:tache_priorite' t.pk %}"
+            aria-pressed="{% if t.priorite == 'HAUTE' %}true{% else %}false{% endif %}" title="Prioritaire">★</button>
+    {% elif t.priorite == 'HAUTE' %}<span class="etoile active" title="Prioritaire">★</span>{% endif %}
+    {% if t.echeance %}<span class="echeance {{ t.etat_echeance }}">{{ t.echeance|date:"d M" }}</span>{% endif %}
+    {% if t.nb_commentaires %}<span class="nb-commentaires" title="{{ t.nb_commentaires }} message{{ t.nb_commentaires|pluralize }}">💬 {{ t.nb_commentaires }}</span>{% endif %}
+    {% if t.assigne_a %}<span class="avatar petit" title="{{ t.assigne_a }}">{{ t.assigne_a.first_name|default:t.assigne_a.username|first|upper }}</span>
+    {% else %}<span class="avatar petit vide" title="Personne">?</span>{% endif %}
+  </div>
+</article>

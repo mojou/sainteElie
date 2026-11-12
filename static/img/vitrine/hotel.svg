@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bcd3ec"/><stop offset="1" stop-color="#f6efe0"/>
+    </linearGradient>
+    <linearGradient id="facade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#173d6e"/><stop offset="1" stop-color="#0b1f3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#ciel)"/>
+  <circle cx="400" cy="62" r="30" fill="#f2c96b"/>
+  <path d="M0 236 Q110 200 230 228 T480 214 V320 H0Z" fill="#b9cfae"/>
+  <rect x="0" y="262" width="480" height="58" fill="#e8dcc2"/>
+  <path d="M214 262 L196 320 H284 L266 262Z" fill="#f3e9d4"/>
+  <!-- Bâtiment -->
+  <rect x="118" y="86" width="244" height="178" rx="3" fill="url(#facade)"/>
+  <rect x="108" y="76" width="264" height="16" rx="3" fill="#0b1f3a"/>
+  <rect x="108" y="90" width="264" height="4" fill="#d4a94c"/>
+  <g fill="#f3d58c">
+    <rect x="136" y="110" width="30" height="24" rx="2"/><rect x="182" y="110" width="30" height="24" rx="2" fill="#dbe6f3"/>
+    <rect x="268" y="110" width="30" height="24" rx="2" fill="#dbe6f3"/><rect x="314" y="110" width="30" height="24" rx="2"/>
+    <rect x="136" y="150" width="30" height="24" rx="2" fill="#dbe6f3"/><rect x="182" y="150" width="30" height="24" rx="2"/>
+    <rect x="268" y="150" width="30" height="24" rx="2"/><rect x="314" y="150" width="30" height="24" rx="2" fill="#dbe6f3"/>
+    <rect x="136" y="190" width="30" height="24" rx="2"/><rect x="314" y="190" width="30" height="24" rx="2"/>
+  </g>
+  <!-- Verrière et entrée -->
+  <rect x="222" y="106" width="36" height="92" rx="2" fill="#dbe6f3" opacity=".85"/>
+  <path d="M240 106 V198 M222 136 H258 M222 167 H258" stroke="#d4a94c" stroke-width="2"/>
+  <path d="M196 204 H284 L276 216 H204Z" fill="#d4a94c"/>
+  <rect x="212" y="216" width="56" height="48" fill="#f8f0dc"/>
+  <path d="M240 216 V264" stroke="#d4a94c" stroke-width="2"/>
+  <circle cx="234" cy="242" r="2" fill="#b38a2e"/><circle cx="246" cy="242" r="2" fill="#b38a2e"/>
+  <!-- Palmiers -->
+  <path d="M66 266 C70 220 62 190 74 150" stroke="#8a6a3d" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <g fill="#3f7d4e">
+    <path d="M74 150 C50 138 32 146 22 160 C42 150 58 152 74 150Z"/>
+    <path d="M74 150 C92 132 114 134 126 146 C106 142 90 144 74 150Z"/>
+    <path d="M74 150 C64 126 72 108 88 100 C80 118 78 132 74 150Z"/>
+    <path d="M74 150 C56 124 38 122 26 128 C46 132 60 138 74 150Z" fill="#4f9460"/>
+    <path d="M74 150 C98 146 112 158 116 172 C102 160 88 156 74 150Z" fill="#4f9460"/>
+  </g>
+  <path d="M418 266 C414 230 420 206 412 178" stroke="#8a6a3d" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <g fill="#3f7d4e">
+    <path d="M412 178 C394 166 378 170 368 182 C386 176 398 176 412 178Z"/>
+    <path d="M412 178 C428 162 446 164 456 176 C440 172 426 174 412 178Z"/>
+    <path d="M412 178 C406 158 412 144 426 138 C418 154 416 164 412 178Z" fill="#4f9460"/>
+  </g>
+  <ellipse cx="160" cy="262" rx="26" ry="10" fill="#4f9460"/>
+  <ellipse cx="322" cy="262" rx="26" ry="10" fill="#4f9460"/>
+</svg>

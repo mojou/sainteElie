@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Stock boutique{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Stock boutique · {{ jour|date:"d/m/Y" }}</h1>
+  <p>{% for c in d.colonnes %}<strong>{{ c.code }}</strong> : {{ c.nom }}{% if not forloop.last %} · {% endif %}{% endfor %}
+    <br><small>Réceptionnistes du jour, dans l'ordre de leur prise de service.</small></p></div></div>
+{% include "fiches/_navigation.html" %}
+<div class="tableau"><table>
+  <tr><th>Désignation</th><th class="nombre">Prix</th><th class="nombre">S.I</th><th class="nombre">Approv</th>
+    {% for c in d.colonnes %}<th class="nombre" title="{{ c.nom }}">{{ c.code }}</th>{% endfor %}
+    <th class="nombre">S.F</th><th class="nombre">Montant</th><th class="nombre">Cumulé</th><th class="nombre">Crédit</th></tr>
+  {% for x in d.lignes %}
+  <tr><td>{{ x.article.nom }}</td><td class="nombre">{{ x.pv|nombre }}</td><td class="nombre">{{ x.si }}</td><td class="nombre">{{ x.appro|nv }}</td>
+    {% for r in x.releves %}<td class="nombre">{{ r|nv }}</td>{% endfor %}
+    <td class="nombre {% if x.article.est_bas %}rouge{% endif %}">{{ x.sf }}</td><td class="nombre">{{ x.montant|nv }}</td>
+    <td class="nombre">{{ x.cumul|nv }}</td><td class="nombre">{{ x.credit|nv }}</td></tr>
+  {% empty %}<tr><td colspan="11" class="vide">Aucun article de boutique.</td></tr>{% endfor %}
+  {% if d.lignes %}<tr class="total"><td>TOTAL</td><td></td><td></td><td></td>
+    {% for r in d.totaux.releves %}<td class="nombre">{{ r }}</td>{% endfor %}<td></td>
+    <td class="nombre">{{ d.totaux.montant|nombre }}</td><td class="nombre">{{ d.totaux.cumul|nombre }}</td><td class="nombre">{{ d.totaux.credit|nombre }}</td></tr>{% endif %}
+</table></div>
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ d.totaux.montant|nombre }}</div><div class="libelle">VENTES</div></div>
+  <div class="chiffre"><div class="valeur">{{ d.totaux.credit|nombre }}</div><div class="libelle">CRÉDITS</div></div>
+  <div class="chiffre"><div class="valeur">{{ d.totaux.offre|nombre }}</div><div class="libelle">OFFRES</div></div>
+  {% for m in d.totaux.moyens %}<div class="chiffre"><div class="valeur">{{ m.montant|nombre }}</div><div class="libelle">{{ m.libelle|upper }}</div></div>{% endfor %}
+</div>
+<p class="discret">R1, R2, R3 : quantités vendues par chaque réceptionniste. Cumulé : ventes depuis le 1er du mois. La main courante boutique est imprimée sous la fiche, dans le PDF.</p>
+{% endblock %}

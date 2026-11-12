@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Ouvrir ma caisse{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Ouvrir ma caisse</h1>
+  <p class="etape">Comptez l'argent qui est dans la caisse avant de commencer.</p>
+  <p>S'il manque quelque chose maintenant, c'est la personne d'avant qui en répond, pas vous.</p></div></div>
+{% if bloquante %}
+  <div class="message error"><strong>{{ bloquante.receptionniste }}</strong> n'a pas encore fermé sa caisse.
+    Elle doit la fermer d'abord, ou un chef la ferme à sa place {% aide "cloture_office" %}.
+    {% if user.peut_valider_caisse and bloquante.receptionniste != user %}<a href="{% url 'caisse:cloture_office' bloquante.pk %}">Fermer sa caisse à sa place</a>{% endif %}</div>
+{% endif %}
+{% if consignes %}
+<div class="carte">
+  <h2>Messages de la personne d'avant {% aide "consignes" %}</h2>
+  {% for c in consignes %}<p><strong>{{ c.auteur }}</strong> <small>{{ c.date|date:"d/m H:i" }}</small><br>{{ c.texte|linebreaksbr }}</p>{% endfor %}
+</div>
+{% endif %}
+{% if form %}
+<div class="carte">
+  <p>La caisse « {{ tiroir }} » devrait contenir <strong>{{ prevues|fcfa }}</strong> {% aide "fond" %}</p>
+  <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="suite" value="{{ suite }}">
+    {% include "partials/champs.html" %}
+    <button class="btn grand" type="submit">Ouvrir ma caisse</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

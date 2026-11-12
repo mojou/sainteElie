@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% load static gestion l10n %}
+{% block titre %}{{ article }}{% endblock %}
+{% block contenu %}
+<p class="no-print"><a class="retour" href="{% url 'stock:articles' %}">← Tout le stock</a></p>
+<div class="fiche-article-tete">
+  <img class="photo-article" src="{{ article.image_url }}" alt="{{ article }}">
+  <div>
+    <h1>{{ article }}</h1>
+    <p class="discret">{{ article.get_categorie_display }}{% if article.seuil_alerte %} · seuil d'alerte {{ article.seuil_alerte }}{% endif %}
+      · <a href="{% url 'stock:article_modifier' article.pk %}">Modifier</a>{% if not article.photo %} · <a href="{% url 'stock:photos' %}#article-{{ article.pk }}">Prendre la vraie photo</a>{% endif %}</p>
+    <p class="etat-phrase"><span class="etat-stock {{ etat.code }}">{{ etat.titre }}</span> {{ etat.phrase }}</p>
+  </div>
+</div>
+
+<div class="tuiles-chiffres">
+  <div class="tuile-chiffre"><div class="tuile-libelle">En stock</div><div class="tuile-valeur">{{ article.quantite }} <small>{{ article.unite }}</small></div>
+    <div class="tuile-variation">{% if article.prix_achat %}{{ article.valeur|fcfa }} au coût{% else %}prix d'achat pas encore noté{% endif %}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Reçu en {{ jours }} jours</div><div class="tuile-valeur">{{ resume.recu }}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Vendu en {{ jours }} jours</div><div class="tuile-valeur">{{ resume.vendu }}</div>
+    <div class="tuile-variation">{% if article.vitesse %}≈ {{ article.vitesse|floatformat:"-1" }} par jour{% else %}aucune vente{% endif %}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Perdu (casse, périmé)</div><div class="tuile-valeur{% if resume.perdu %} rouge{% endif %}">{{ resume.perdu }}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Écarts d'inventaire</div><div class="tuile-valeur{% if resume.ecart < 0 %} rouge{% endif %}">{{ resume.ecart|stringformat:"+d" }}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Marge par unité</div><div class="tuile-valeur{% if article.marge is not None and article.marge <= 0 %} rouge{% endif %}">{% if article.marge is not None %}{{ article.marge|nombre }}{% else %}–{% endif %}</div>
+    <div class="tuile-variation">coût {{ article.prix_achat|nombre }} · prix {{ article.prix_vente|nombre }}</div></div>
+</div>
+
+{% if article.suivi_stock %}
+<section class="carte graphe-carte">
+  <div class="graphe-tete"><h2>Le stock jour après jour ({{ jours }} derniers jours)</h2>
+    {% if courbe.seuil %}<ul class="legende"><li><span class="cle-seuil"></span>Seuil d'alerte ({{ article.seuil_alerte }})</li></ul>{% endif %}</div>
+  <div class="graphe" role="img" aria-label="Stock de {{ article }} en fin de journée sur {{ jours }} jours ; aujourd'hui {{ article.quantite }}.">
+    <div class="graphe-axe" aria-hidden="true">{% for r in courbe.reperes %}<span style="bottom: {{ r.position|unlocalize }}%">{{ r.texte }}</span>{% endfor %}</div>
+    <div class="graphe-zone">
+      {% for r in courbe.reperes %}<span class="graphe-ligne" style="bottom: {{ r.position|unlocalize }}%" aria-hidden="true"></span>{% endfor %}
+      {% if courbe.seuil %}<span class="graphe-seuil" style="bottom: {{ courbe.seuil|unlocalize }}%" aria-hidden="true"></span>{% endif %}
+      <div class="graphe-colonnes" style="--n: {{ courbe.colonnes|length }}">
+        {% for c in courbe.colonnes %}
+        <div class="graphe-colonne{% if not c.connu %} inconnu{% endif %}" tabindex="0" data-titre="{{ c.titre }}" data-total="{{ c.valeur }}" data-unite="{{ article.unite }}{{ c.valeur|pluralize }}" data-parts="">
+          <div class="pile" style="height: {{ c.hauteur|unlocalize }}%">{% if c.valeur %}<span class="serie-0" style="height: 100%"></span>{% endif %}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="graphe-dates" style="--n: {{ courbe.colonnes|length }}" aria-hidden="true">{% for c in courbe.colonnes %}<span>{% if c.etiquette %}{{ c.court }}{% endif %}</span>{% endfor %}</div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<div class="carte"><h2>Noter un mouvement</h2>
+  <form method="post" novalidate>{% csrf_token %}<div class="ligne-champs">{% include "partials/champs.html" %}</div><button class="btn">Enregistrer</button></form></div>
+
+<h2>Ce qui s'est passé</h2>
+{% include "stock/_recit.html" %}
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/rapports.js' %}?v={{ version_statique }}"></script>{% endblock %}

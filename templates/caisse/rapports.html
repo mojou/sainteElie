@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titre %}Rapports quotidiens{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Rapports quotidiens</h1>
+  <p>Un rapport par jour, à {{ params.heure_coupure|time:"H:i" }} : il reprend toutes les sessions remises depuis le rapport précédent.</p></div></div>
+<div class="tableau"><table>
+  <tr><th>Jour</th><th>Période</th><th>Sessions</th><th></th></tr>
+  {% for r in rapports %}
+  <tr><td><a href="{% url 'caisse:rapport' r.pk %}">{{ r.coupure|date:"l d/m/Y" }}</a></td><td>{{ r.debut|date:"d/m H:i" }} au {{ r.coupure|date:"d/m H:i" }}</td>
+    <td>{{ r.sessions.count }}</td><td>{% if r.pdf %}<a href="{% url 'caisse:rapport_pdf' r.pk %}">PDF</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Le premier rapport sera produit à la prochaine heure de coupure.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

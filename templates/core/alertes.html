@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titre %}Alertes{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Alertes</h1><p>Écarts, annulations, validations en retard, stock bas, ménage sans séjour.</p></div></div>
+<form method="post">{% csrf_token %}
+<div class="tableau"><table>
+  <tr><th></th><th>Date</th><th>Type</th><th>Message</th></tr>
+  {% for a in non_lues %}
+  <tr><td><input type="checkbox" name="alerte" value="{{ a.pk }}"></td><td>{{ a.creee_le|date:"d/m H:i" }}</td>
+    <td><span class="badge alerte">{{ a.get_type_display }}</span></td>
+    <td>{% if a.lien %}<a href="{{ a.lien }}">{{ a.message }}</a>{% else %}{{ a.message }}{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Aucune alerte non lue.</td></tr>{% endfor %}
+</table></div>
+{% if non_lues %}<button class="btn secondaire">Marquer la sélection comme lue</button>{% endif %}
+</form>
+<h2>Déjà lues</h2>
+<div class="tableau"><table><tr><th>Date</th><th>Type</th><th>Message</th><th>Lue par</th></tr>
+  {% for a in lues %}<tr><td>{{ a.creee_le|date:"d/m H:i" }}</td><td>{{ a.get_type_display }}</td><td>{{ a.message }}</td><td>{{ a.lue_par|default:"" }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Rien.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

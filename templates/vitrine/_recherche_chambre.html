@@ -1,0 +1,9 @@
+<form method="get" action="{% url 'vitrine:reserver' %}" class="v-recherche" novalidate>
+  {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+  <div class="v-recherche-champs">
+    <label>Arrivée<input type="date" name="arrivee" value="{{ form.arrivee.value|date:'Y-m-d'|default:form.arrivee.value }}" min="{% now 'Y-m-d' %}" required></label>
+    <label>Départ<input type="date" name="depart" value="{{ form.depart.value|date:'Y-m-d'|default:form.depart.value }}" min="{% now 'Y-m-d' %}" required></label>
+    <label>Personnes<select name="personnes" data-sans-recherche>{% for n in "123456" %}<option value="{{ n }}"{% if form.personnes.value|stringformat:"s" == n %} selected{% endif %}>{{ n }}</option>{% endfor %}</select></label>
+  </div>
+  <button class="btn or grand v-recherche-bouton" type="submit">Voir les chambres libres</button>
+</form>

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Chambres{% endblock %}
+{% block contenu %}
+<div class="entete">
+  <div><h1>Chambres</h1><p>État en temps réel. Le tarif de la fiche est celui appliqué par défaut aux réservations.</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'hotel:menage' %}">Ménage des chambres</a>
+    {% if user.est_gerant %}<a class="btn" href="{% url 'hotel:chambre_nouvelle' %}">Nouvelle chambre</a>{% endif %}</div>
+</div>
+<div class="plan-chambres">
+  {% for c in chambres %}
+  <div class="chambre {{ c.statut }}">
+    {% if c.photo %}<img class="vignette-chambre" src="{{ c.photo_url }}" alt="Chambre {{ c.numero }}" loading="lazy">{% endif %}
+    <div class="numero">{{ c.numero }}</div>
+    <div><span class="badge {{ c.statut }}">{{ c.get_statut_display }}</span></div>
+    <small>{{ c.get_categorie_display }} · {{ c.tarif_nuit|nombre }} FCFA</small>
+    {% if c.occupant %}<div><a href="{% url 'hotel:sejour' c.occupant.pk %}">{{ c.occupant.client }}</a><br><small>départ {{ c.occupant.date_depart|date:"d/m" }}</small></div>{% endif %}
+    {% if not c.active %}<div><span class="badge danger">Inactive</span></div>{% endif %}
+    {% if user.est_gerant %}<div><a href="{% url 'hotel:chambre_modifier' c.pk %}"><small>Modifier</small></a></div>{% endif %}
+  </div>
+  {% empty %}<p class="vide">Aucune chambre. {% if user.est_gerant %}Créez les chambres de l'établissement.{% endif %}</p>
+  {% endfor %}
+</div>
+{% endblock %}

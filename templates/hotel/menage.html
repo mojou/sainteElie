@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load gestion postes %}
+{% block titre %}Ménage{% endblock %}
+{% block contenu %}
+{% entete_poste "Ménage · chambres" %}
+<div class="entete"><div><h1 class="sr-only">Ménage des chambres</h1>
+  <p>Marquez chaque chambre faite. Une chambre faite sans séjour enregistré est signalée au gérant.</p></div>
+  <div class="actions no-print"><a class="btn secondaire" href="{% url 'fiches:chambres_a_faire' %}" target="_blank" rel="noopener">Imprimer la fiche « Chambres à faire »</a></div></div>
+<h2>À faire après un départ ({{ a_faire|length }})</h2>
+<div class="plan-chambres">
+  {% for c in a_faire %}
+  <div class="chambre A_NETTOYER"><div class="numero">{{ c.numero }}</div>
+    <form method="post">{% csrf_token %}<input type="hidden" name="chambre" value="{{ c.pk }}"><button class="btn ok petit">Chambre faite</button></form></div>
+  {% empty %}<p class="discret">Aucune chambre en attente.</p>{% endfor %}
+</div>
+<h2>Recouche des chambres occupées ({{ occupees|length }}) {% aide "recouche" %}</h2>
+<div class="plan-chambres">
+  {% for c in occupees %}
+  <div class="chambre OCCUPEE"><div class="numero">{{ c.numero }}</div>
+    <form method="post">{% csrf_token %}<input type="hidden" name="chambre" value="{{ c.pk }}"><button class="btn secondaire petit">Chambre faite</button></form></div>
+  {% empty %}<p class="discret">Aucune chambre occupée.</p>{% endfor %}
+</div>
+<h2>Historique</h2>
+<div class="tableau"><table><tr><th>Chambre</th><th>Faite le</th><th>Par</th><th>Contrôle</th></tr>
+  {% for n in historique %}<tr><td>{{ n.chambre.numero }}</td><td>{{ n.fait_le|date:"d/m H:i" }}</td><td>{{ n.fait_par }}</td>
+    <td>{% if n.sans_sejour %}<span class="badge danger">Sans séjour enregistré</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Rien pour l'instant.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

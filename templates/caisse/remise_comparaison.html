@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Fermer ma caisse : vérifier{% endblock %}
+{% block contenu %}
+<div class="entete"><div>
+  <h1>{% if cloture_office %}Fermer la caisse de {{ session.receptionniste }}{% else %}Fermer ma caisse{% endif %} · étape 2 sur 2 : vérifier et signer</h1>
+  <p>Une différence de plus de {{ c.seuil|fcfa }} doit être expliquée.</p>
+</div></div>
+<form method="post" novalidate>{% csrf_token %}
+{% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+<div class="trois-chiffres">
+  <div><div class="libelle">La caisse devrait contenir</div><div class="valeur">{{ c.attendues|nombre }}</div><small>FCFA</small></div>
+  <div><div class="libelle">Vous avez compté</div><div class="valeur">{{ c.comptees|nombre }}</div><small>FCFA{% if c.premier_comptage != c.comptees %} · 1er comptage {{ c.premier_comptage|nombre }}{% endif %}</small></div>
+  <div class="{% if c.ecart_hors_seuil %}hors{% endif %}"><div class="libelle">Différence {% aide "difference" %}</div><div class="valeur {% if c.ecart_hors_seuil %}rouge{% endif %}">{{ c.ecart|nombre }}</div><small>FCFA</small></div>
+</div>
+<div class="tableau"><table>
+  <tr><th>Quoi</th><th class="nombre">Devrait être</th><th class="nombre">Compté ou déclaré</th><th class="nombre">Différence</th></tr>
+  <tr><td>Chèques ({{ c.nb_cheques_attendus }} attendu{{ c.nb_cheques_attendus|pluralize }})</td><td class="nombre">{{ c.cheques_attendus|nombre }}</td><td class="nombre">{{ c.cheques_comptes|nombre }}</td>
+    <td class="nombre {% if c.ecart_cheques|hors_seuil:c.seuil %}rouge{% endif %}">{{ c.ecart_cheques|nombre }}</td></tr>
+  {% for m in c.mobiles %}
+  <tr><td>{{ m.libelle }}{% if m.lignes %}<br><small>{{ m.lignes }}</small>{% endif %}</td>
+    <td class="nombre">{{ m.attendu|nombre }}</td><td class="nombre">{{ m.declare|nombre }}</td>
+    <td class="nombre {% if m.hors_seuil %}rouge{% endif %}">{{ m.ecart|nombre }}</td></tr>
+  {% endfor %}
+</table></div>
+
+<div class="carte">
+  <h2>L'argent à remettre {% aide "versement" %}</h2>
+  <p>Laissez <strong>{{ c.fond|fcfa }}</strong> dans la caisse (le fond) et remettez <strong>{{ c.versement|fcfa }}</strong> au gérant ou au coffre.</p>
+  <div class="champ{% if form.motif.errors %} en-erreur{% endif %}">
+    <label for="id_motif">{{ form.motif.label }}{% if motif_requis %} * (obligatoire){% endif %}</label>
+    <textarea name="motif" id="id_motif" rows="3" {% if motif_requis %}data-motif-obligatoire{% endif %}>{{ form.motif.value|default:"" }}</textarea>
+    {% for e in form.motif.errors %}<div class="erreur">{{ e }}</div>{% endfor %}
+  </div>
+  {% if not cloture_office %}
+  <div class="champ"><label for="id_consigne">{{ form.consigne.label }}</label>{{ form.consigne }}<span class="aide">{{ form.consigne.help_text }}</span></div>
+  {% endif %}
+</div>
+
+<div class="carte">
+  <h2>Signer avec votre code PIN {% aide "pin" %}</h2>
+  <div class="ligne-champs">
+    <div class="champ{% if form.entrant.errors %} en-erreur{% endif %}"><label for="id_entrant">{{ form.entrant.label }}</label>{{ form.entrant }}{% for e in form.entrant.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <div class="champ{% if form.entrant_pin.errors %} en-erreur{% endif %}"><label for="id_entrant_pin">{{ form.entrant_pin.label }}</label>{{ form.entrant_pin }}{% for e in form.entrant_pin.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <div class="champ{% if form.pin.errors %} en-erreur{% endif %}"><label for="id_pin">{{ form.pin.label }} *</label>{{ form.pin }}{% for e in form.pin.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+  </div>
+  <div class="actions">
+    <button class="btn grand ok" id="bouton-remettre" type="submit">Fermer ma caisse et signer</button>
+    {% if not session.remise.recompte_fait %}
+      <a class="btn secondaire" href="{% if cloture_office %}{% url 'caisse:cloture_office' session.pk %}{% else %}{% url 'caisse:remise_comptage' %}{% endif %}?recompter=1">Recompter (une fois)</a>
+    {% endif %}
+  </div>
+</div>
+</form>
+{% endblock %}

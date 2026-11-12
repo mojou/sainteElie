@@ -1,0 +1,34 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}Vos coordonnées · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section v-resa">
+  <div class="v-conteneur">
+    <ol class="v-etapes-resa" aria-label="Étapes de la réservation">
+  <li class="fait">Vos dates</li><li class="fait">La chambre</li><li class="actif">Vos coordonnées</li><li class="">C'est envoyé</li>
+</ol>
+    <div class="v-double v-resa-double">
+      <aside class="v-recap">
+        <img src="{{ choix.photo }}" alt="{{ choix.libelle }}">
+        <h2>{{ choix.libelle }}</h2>
+        <dl>
+          <dt>Arrivée</dt><dd>{{ arrivee_texte }}</dd>
+          <dt>Départ</dt><dd>{{ depart_texte }}</dd>
+          <dt>Personnes</dt><dd>{{ d.personnes }}</dd>
+          <dt>Prix</dt><dd>{{ choix.tarif|fcfa }} × {{ choix.nuits }} nuit{{ choix.nuits|pluralize }}</dd>
+          <dt>Total du séjour</dt><dd class="v-recap-total">{{ choix.total|fcfa }}</dd>
+        </dl>
+        <p class="v-petit-gris">Rien à payer maintenant. <a href="{% url 'vitrine:reserver' %}?arrivee={{ d.arrivee|date:'Y-m-d' }}&depart={{ d.depart|date:'Y-m-d' }}&personnes={{ d.personnes }}">Changer de chambre ou de dates</a></p>
+      </aside>
+      <div class="v-boite">
+        <h1>Vos coordonnées</h1>
+        <p>La réception vous appelle pour confirmer votre réservation.</p>
+        <form method="post" novalidate>{% csrf_token %}
+          {% include "partials/champs.html" %}
+          <button class="btn or grand" type="submit">Envoyer ma demande</button>
+        </form>
+        {% if not compte %}<p class="v-lien-bas"><small>Vous avez un compte client ? <a href="{% url 'accounts:connexion' %}?next={{ request.get_full_path|urlencode }}">Connectez-vous</a> : la demande apparaîtra dans votre espace.</small></p>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

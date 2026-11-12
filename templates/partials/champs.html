@@ -1,0 +1,14 @@
+{% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}
+{% for field in form.visible_fields %}
+<div class="champ{% if field.errors %} en-erreur{% endif %}"{% if field.name == "reference" %} id="bloc-reference"{% endif %}>
+  {% if field.widget_type == "checkbox" %}
+    <label class="case">{{ field }} {{ field.label }}</label>
+  {% else %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+    {{ field }}
+  {% endif %}
+  {% if field.help_text %}<span class="aide">{{ field.help_text }}</span>{% endif %}
+  {% for e in field.errors %}<div class="erreur">{{ e }}</div>{% endfor %}
+</div>
+{% endfor %}

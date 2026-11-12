@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}{{ tache }}{% endblock %}
+{% block contenu %}
+<p class="no-print"><a class="retour" href="{% if user.est_encadrement %}{% url 'projets:projet' tache.projet_id %}{% else %}{% url 'projets:mes_taches' %}{% endif %}">← {{ tache.projet }}</a></p>
+<div class="fiche-tache">
+  <div class="carte">
+    <div class="etapes-tache" role="group" aria-label="Étape de la tâche">
+      {% for c in colonnes %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="etape"><input type="hidden" name="statut" value="{{ c.statut }}">
+        <button class="etape-bouton etape-{{ c.statut }}{% if tache.statut == c.statut %} actif{% endif %}"{% if tache.statut == c.statut %} aria-current="step"{% endif %}>{{ c.libelle }}</button></form>
+      {% endfor %}
+    </div>
+    <h1>{% if tache.priorite == "HAUTE" %}<span class="etoile active" title="Prioritaire">★</span> {% endif %}{{ tache.titre }}</h1>
+    <dl class="fiche">
+      <dt>Projet</dt><dd>{{ tache.projet }}</dd>
+      <dt>Confiée à</dt><dd>{{ tache.assigne_a|default:"Personne pour l'instant" }}</dd>
+      <dt>Échéance</dt><dd class="{% if tache.etat_echeance == 'retard' %}rouge{% endif %}">{{ tache.echeance|date:"l d F Y"|default:"–" }}{% if tache.etat_echeance == 'retard' %} (dépassée){% endif %}</dd>
+    </dl>
+    {% if tache.description %}<p>{{ tache.description|linebreaksbr }}</p>{% endif %}
+    {% if form %}
+    <details{% if form.errors %} open{% endif %}><summary>Modifier la tâche</summary>
+      <form method="post" novalidate>{% csrf_token %}<input type="hidden" name="action" value="modifier">
+        <div class="ligne-champs">{% include "partials/champs.html" %}</div><button class="btn">Enregistrer</button></form>
+    </details>
+    {% endif %}
+  </div>
+  <div class="carte discussion" id="discussion">
+    <h2>Discussion</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="commenter">
+      <textarea name="texte" rows="3" placeholder="Écrire un message : où en est-on, ce qui manque, une photo à prendre…" aria-label="Message"></textarea>
+      <button class="btn petit">Envoyer</button></form>
+    <ol class="fil">
+      {% for c in commentaires reversed %}
+      <li class="{% if c.systeme %}systeme{% endif %}"><span class="avatar petit">{{ c.auteur.first_name|default:c.auteur.username|first|upper }}</span>
+        <div><strong>{{ c.auteur }}</strong> <small>{{ c.date|date:"d/m H:i" }}</small><p>{{ c.texte|linebreaksbr }}</p></div></li>
+      {% empty %}<li class="vide">Aucun message pour l'instant.</li>{% endfor %}
+    </ol>
+  </div>
+</div>
+{% endblock %}

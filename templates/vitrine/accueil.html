@@ -1,0 +1,178 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}{{ etablissement.nom }}{% if etablissement.slogan %} · {{ etablissement.slogan }}{% endif %}{% endblock %}
+{% block contenu %}
+<section class="v-hero{% if diaporama %} avec-photo{% endif %}">
+  {% if diaporama %}<div class="v-diaporama" data-diaporama aria-hidden="true">
+    {% for url in diaporama %}<div class="v-diapo{% if forloop.first %} active{% endif %}" style="background-image: url('{{ url }}')"></div>{% endfor %}
+  </div>{% endif %}
+  <div class="v-conteneur v-hero-grille">
+    <div>
+      <p class="v-surtitre">Hôtel · Restaurant · Bar{% if etablissement.adresse %} — {{ etablissement.adresse }}{% endif %}</p>
+      <h1>{{ etablissement.nom }}</h1>
+      <p class="v-slogan">{{ etablissement.slogan|default:"Votre séjour, en toute simplicité." }}</p>
+      <p class="v-intro">{% if etablissement.presentation %}{{ etablissement.presentation|linebreaksbr }}{% else %}Chambres et suites, restaurant, bar et boutique : tout est sur place. Créez votre compte client pour suivre vos séjours, ce que vous avez payé et ce qu'il reste à régler.{% endif %}</p>
+      <div class="v-actions">
+        <a class="btn or grand" href="#reserver">Réserver une chambre</a>
+        <a class="btn v-fantome grand" href="{% url 'vitrine:inscription' %}">Créer un compte</a>
+        <a class="btn v-fantome grand" href="{% url 'accounts:connexion' %}">Se connecter</a>
+      </div>
+      <p class="v-petit">Déjà venu chez nous ? Créez votre compte avec le numéro de téléphone donné à la réception.</p>
+    </div>
+
+    <aside class="v-apercu v-reserver" id="reserver" aria-labelledby="titre-reserver">
+      <h2 id="titre-reserver">Réservez votre chambre</h2>
+      <p class="v-apercu-dates">Choisissez vos dates : on vous montre les chambres libres et le prix du séjour.</p>
+      {% include "vitrine/_recherche_chambre.html" with form=recherche %}
+      <p class="v-petit-gris">Rien à payer en ligne · la réception vous appelle pour confirmer</p>
+    </aside>
+  </div>
+</section>
+
+{% if prix_bas %}
+<div class="v-defile" aria-label="Nos prix les plus bas">
+  <div class="v-defile-piste" style="animation-duration: {{ duree_defile }}s">
+    {% for tour in "12" %}
+    <ul{% if forloop.last %} aria-hidden="true"{% endif %}>
+      {% for p in prix_bas %}<li>{{ p.libelle }} <strong>{% if p.des %}dès {% endif %}{{ p.prix|fcfa }}</strong></li>{% endfor %}
+    </ul>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<section id="galerie" class="v-section">
+  <div class="v-conteneur">
+    <p class="v-surtitre">En images</p>
+    <h2 class="v-apparait">Découvrez le {{ etablissement.nom }}</h2>
+    <p class="v-sous-titre">L'hôtel, les chambres, la réception, nos plats et le parking.</p>
+    <div class="v-galerie" data-defile>
+      {% for t in tuiles %}
+      <figure class="v-tuile v-apparait{% if forloop.first %} grande{% endif %}{% if not t.photo %} illustration{% endif %}">
+        <img src="{{ t.url }}" alt="{% if t.photo %}{{ t.titre }} : {{ t.texte }}{% else %}Illustration : {{ t.titre|lower }}{% endif %}" loading="lazy">
+        <figcaption><strong>{{ t.titre }}</strong><span>{{ t.texte }}</span></figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="chambres" class="v-section v-sable">
+  <div class="v-conteneur">
+    <p class="v-surtitre">Hébergement</p>
+    <h2 class="v-apparait">Nos chambres et suites</h2>
+    <p class="v-sous-titre">{{ nb_chambres }} chambre{{ nb_chambres|pluralize }} pour vos nuits de passage comme pour vos longs séjours.</p>
+    <div class="v-cartes">
+      {% for o in offres %}
+      <article class="v-carte v-apparait{% if o.photo %} avec-photo{% endif %}">
+        {% if o.photo %}<img class="v-carte-photo" src="{{ o.photo }}" alt="{{ o.libelle }}" loading="lazy">
+        {% else %}<div class="v-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 14h18"/><path d="M7 9V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2"/><path d="M3 18v2M21 18v2"/></svg></div>{% endif %}
+        <h3>{{ o.libelle }}</h3>
+        <p>{{ o.compte }}</p>
+        <p class="v-prix">{% if o.prix %}À partir de <strong>{{ o.prix|fcfa }}</strong> la nuit{% else %}Prix à la réception{% endif %}</p>
+        <a class="btn secondaire v-carte-reserver" href="#reserver">Réserver</a>
+      </article>
+      {% empty %}
+      <article class="v-carte v-apparait"><h3>Chambres</h3><p>Renseignez-vous à la réception.</p></article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="services" class="v-section">
+  <div class="v-conteneur">
+    <p class="v-surtitre">Sur place</p>
+    <h2 class="v-apparait">Restaurant, bar, boutique et parking</h2>
+    <p class="v-sous-titre">Mangez, buvez un verre ou faites un petit achat sans quitter l'hôtel. Logé chez nous ? Tout peut aller sur votre note de chambre.</p>
+    <div class="v-cartes">
+      <article class="v-carte v-apparait">
+        <div class="v-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v8a3 3 0 0 0 6 0V3M7 3v18"/><path d="M17 21V3c-2 1-3 3.5-3 7s1 4 3 4"/></svg></div>
+        <h3>Restaurant</h3><p>Les plats de notre cuisine, servis sur place ou portés sur votre note de chambre.</p>
+      </article>
+      <article class="v-carte v-apparait">
+        <div class="v-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-1.5 8a4.5 4.5 0 0 1-9 0z"/><path d="M12 15.5V21M8.5 21h7"/></svg></div>
+        <h3>Bar</h3><p>Bières, boissons fraîches et spiritueux, à la bouteille ou au verre.</p>
+      </article>
+      <article class="v-carte v-apparait">
+        <div class="v-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></div>
+        <h3>Boutique</h3><p>Produits d'hygiène et petits achats, à la réception.</p>
+      </article>
+      <article class="v-carte v-apparait">
+        <div class="v-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9.5 17V7h3.5a3 3 0 0 1 0 6H9.5"/></svg></div>
+        <h3>Parking</h3><p>Garez votre véhicule sur place pendant votre séjour ou votre repas.</p>
+      </article>
+      <article class="v-carte v-apparait">
+        <div class="v-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></div>
+        <h3>Paiement facile</h3><p>Réglez comme vous préférez.</p>
+        <div class="v-paiements"><span>Espèces</span><span>Orange Money</span><span>MTN MoMo</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% if carte %}
+<section id="cuisine" class="v-section">
+  <div class="v-conteneur">
+    <p class="v-surtitre">Notre cuisine</p>
+    <h2 class="v-apparait">Notre carte</h2>
+    <p class="v-sous-titre">Servis sur place ; logé chez nous, vos repas peuvent aller sur votre note de chambre.</p>
+    {% if plats %}<div class="v-cartes v-plats-photo">
+      {% for p in plats %}
+      <article class="v-carte v-apparait avec-photo">
+        <img class="v-carte-photo" src="{{ p.photo_url }}" alt="{{ p.nom }}" loading="lazy">
+        <h3>{{ p.nom }}</h3>
+        <p class="v-prix"><strong>{{ p.prix_vente|fcfa }}</strong></p>
+      </article>
+      {% endfor %}
+    </div>{% endif %}
+    <div class="v-menu">
+      {% for r in carte %}
+      <div class="v-menu-rubrique v-apparait">
+        <h3>{{ r.titre }}</h3>
+        <ul>
+          {% for p in r.plats %}
+          <li><span class="v-menu-nom">{{ p.nom }}{% if p.description %}<small>{{ p.description }}</small>{% endif %}</span>
+            <span class="v-menu-points" aria-hidden="true"></span><strong>{{ p.prix_vente|fcfa }}</strong></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section id="espace-client" class="v-section v-sable">
+  <div class="v-conteneur">
+    <p class="v-surtitre">Espace client</p>
+    <h2 class="v-apparait">Suivez votre séjour en ligne</h2>
+    <p class="v-sous-titre">Vos réservations, vos nuits, vos extras, ce que vous avez payé et ce qu'il reste à régler : tout est là, à jour.</p>
+    <div class="v-etapes">
+      <div class="v-etape v-apparait"><strong>Créez votre compte</strong><p>Avec votre nom et votre numéro de téléphone : il sera votre identifiant.</p></div>
+      <div class="v-etape v-apparait"><strong>La réception le confirme</strong><p>Elle vérifie que c'est bien vous et relie le compte à vos séjours.</p></div>
+      <div class="v-etape v-apparait"><strong>Suivez tout</strong><p>Séjour en cours, réservations à venir, paiements et reste à payer.</p></div>
+    </div>
+    <div class="v-actions">
+      <a class="btn grand" href="{% url 'vitrine:inscription' %}">Créer mon compte</a>
+      <a class="btn secondaire grand" href="{% url 'accounts:connexion' %}">J'ai déjà un compte</a>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="v-section">
+  <div class="v-conteneur">
+    <div class="v-contact v-apparait">
+      <div>
+        <p class="v-surtitre">Contact</p>
+        <h2 class="v-apparait">Une question, une réservation ?</h2>
+        <p>Notre réception vous répond et vous accueille. Vous pouvez aussi <a href="#reserver">réserver en ligne</a>.</p>
+      </div>
+      <dl>
+        {% if etablissement.adresse %}<div><dt>Adresse</dt><dd>{{ etablissement.adresse }}</dd></div>{% endif %}
+        {% if etablissement.telephone %}<div><dt>Téléphone</dt><dd><a href="tel:{{ etablissement.telephone|cut:' ' }}">{{ etablissement.telephone }}</a></dd></div>{% endif %}
+        {% if etablissement.email %}<div><dt>E-mail</dt><dd><a href="mailto:{{ etablissement.email }}">{{ etablissement.email }}</a></dd></div>{% endif %}
+        {% if not etablissement.adresse and not etablissement.telephone and not etablissement.email %}<div><dt>Réception</dt><dd>Passez nous voir à l'hôtel.</dd></div>{% endif %}
+      </dl>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titre %}Pointages{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Pointages du {{ jour|date:"l d/m/Y" }}</h1></div>
+  <div class="actions"><a class="btn secondaire petit" href="?jour={{ veille }}">← Veille</a><a class="btn secondaire petit" href="?jour={{ lendemain }}">Lendemain →</a></div></div>
+{% if absents %}<div class="message warning">Prévus mais pas pointés : {% for a in absents %}{{ a.employe }} ({{ a.creneau.nom }}){% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+<div class="tableau"><table><tr><th>Employé</th><th>Arrivée</th><th>Départ</th><th class="nombre">Heures</th><th>Retard</th><th>Saisi par</th><th>Note</th></tr>
+  {% for p in faits %}<tr><td>{{ p.employe }}</td><td>{{ p.arrivee|date:"H:i" }}</td><td>{{ p.depart|date:"H:i"|default:"…" }}</td><td class="nombre">{{ p.duree_heures|default:"" }}</td>
+    <td>{% if p.retard_minutes %}<span class="badge alerte">{{ p.retard_minutes }} min</span>{% endif %}</td><td>{{ p.saisi_par }}</td><td>{{ p.note }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucun pointage ce jour.</td></tr>{% endfor %}
+</table></div>
+<div class="carte"><h2>Saisie manuelle (oubli, panne)</h2>
+  <form method="post" novalidate>{% csrf_token %}<div class="ligne-champs">{% include "partials/champs.html" %}</div><button class="btn">Enregistrer</button></form></div>
+{% endblock %}

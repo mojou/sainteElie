@@ -1,0 +1,91 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Séjour {{ sejour.client }}{% endblock %}
+{% block contenu %}
+<div class="entete">
+  <div>
+    <h1>{{ sejour.client }} · chambre {{ sejour.chambre.numero }}</h1>
+    <p>Du {{ sejour.date_arrivee|date:"d/m/Y" }} au {{ sejour.date_depart|date:"d/m/Y" }} ({{ sejour.nb_nuits }} nuit{{ sejour.nb_nuits|pluralize }})
+      · <span class="badge {{ sejour.statut }}">{{ sejour.get_statut_display }}</span></p>
+  </div>
+  <div class="actions">
+    {% if sejour.statut == "RESERVE" %}
+      <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-in' %}">{% csrf_token %}<button class="btn ok">Check-in</button></form>
+    {% endif %}
+    {% if sejour.statut == "EN_COURS" %}
+      <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-out' %}">{% csrf_token %}
+        <button class="btn ok" data-confirmer="Confirmer le check-out ? Les nuits passées seront facturées.">Check-out</button></form>
+      <a class="btn secondaire" href="{% url 'hotel:extras' %}?sejour={{ sejour.pk }}">Ajouter un extra</a>
+    {% endif %}
+    {% if sejour.statut != "TERMINE" or sejour.reste_a_payer != 0 %}
+      <a class="btn" href="{% url 'hotel:encaisser' sejour.pk %}">Encaisser / rembourser</a>
+    {% endif %}
+    {% if sejour.statut == "RESERVE" or sejour.statut == "EN_COURS" %}
+      <a class="btn secondaire" href="{% url 'hotel:sejour_modifier' sejour.pk %}">Modifier</a>
+    {% endif %}
+    {% if sejour.statut == "RESERVE" %}
+      <a class="btn secondaire" href="{% url 'hotel:sejour_annuler' sejour.pk %}">Annuler</a>
+      <a class="btn secondaire" href="{% url 'hotel:sejour_no_show' sejour.pk %}">No-show</a>
+    {% endif %}
+  </div>
+</div>
+{% if not session and sejour.statut != "ANNULE" and user.tient_caisse %}<div class="message info">Pour encaisser, ouvrez d'abord <a href="{% url 'caisse:ma_caisse' %}">votre session de caisse</a>.</div>{% endif %}
+
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ sejour.total_facture|nombre }}</div><div class="libelle">Total {% if sejour.statut == "TERMINE" %}facturé{% else %}prévu{% endif %} (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ sejour.total_paye|nombre }}</div><div class="libelle">Payé (FCFA)</div></div>
+  <div class="chiffre {% if sejour.reste_a_payer > 0 %}alerte{% endif %}"><div class="valeur">{{ sejour.reste_a_payer|nombre }}</div><div class="libelle">Reste à payer (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ sejour.total_nuitees|add:sejour.total_extras|nombre }}</div><div class="libelle">Recette constatée (FCFA)</div></div>
+</div>
+
+<div class="grille">
+  <div class="carte">
+    <h3>Fiche</h3>
+    <dl class="fiche">
+      <dt>Téléphone</dt><dd>{{ sejour.client.telephone }}</dd>
+      {% if sejour.client.entreprise %}<dt>Entreprise</dt><dd>{{ sejour.client.entreprise }}</dd>{% endif %}
+      <dt>Personnes</dt><dd>{{ sejour.nb_personnes }}</dd>
+      {% if sejour.gratuite %}<dt>Type de séjour</dt><dd><span class="badge alerte">{{ sejour.get_gratuite_display }}</span></dd>{% endif %}
+      <dt>Tarif appliqué</dt><dd>{{ sejour.tarif_nuit|fcfa }}{% if sejour.tarif_nuit != sejour.tarif_grille %} <small>(grille {{ sejour.tarif_grille|fcfa }}, −{{ sejour.remise_pct }} %)</small>{% endif %}</dd>
+      {% if sejour.motif_tarif %}<dt>Motif du tarif</dt><dd>{{ sejour.motif_tarif }}{% if sejour.tarif_valide_par %} · validé par {{ sejour.tarif_valide_par }}{% endif %}</dd>{% endif %}
+      <dt>Check-in</dt><dd>{{ sejour.check_in_le|date:"d/m/Y H:i"|default:"-" }}</dd>
+      <dt>Check-out</dt><dd>{{ sejour.check_out_le|date:"d/m/Y H:i"|default:"-" }}</dd>
+      {% if sejour.motif_annulation %}<dt>Motif</dt><dd>{{ sejour.motif_annulation }}</dd>{% endif %}
+      {% if sejour.notes %}<dt>Notes</dt><dd>{{ sejour.notes|linebreaksbr }}</dd>{% endif %}
+    </dl>
+  </div>
+  <div class="carte">
+    <h3>Nuitées constatées ({{ nuitees|length }})</h3>
+    {% for n in nuitees %}<div>Nuit du {{ n.date_nuit|date:"d/m" }} : {{ n.montant|fcfa }}</div>{% empty %}<p class="discret">Les nuits sont constatées le lendemain matin, et toutes au check-out.</p>{% endfor %}
+  </div>
+</div>
+
+<h2>Extras sur la note</h2>
+<div class="tableau"><table>
+  <tr><th>Date</th><th>Source</th><th>Description</th><th>Bon</th><th>Saisi par</th><th class="nombre">Montant</th><th></th></tr>
+  {% for e in extras %}
+  <tr class="{% if e.statut == 'ANNULE' %}annule{% endif %}"><td>{{ e.date_conso|date:"d/m H:i" }}</td><td>{{ e.get_source_display }}</td><td>{{ e.description }}{% if e.motif_annulation %}<br><small>Annulé : {{ e.motif_annulation }}</small>{% endif %}</td>
+    <td>{{ e.numero_bon }}</td><td>{{ e.saisi_par }}</td><td class="nombre">{{ e.montant|nombre }}</td>
+    <td>{% if e.statut == "ACTIF" %}<a href="{% url 'hotel:extra_annuler' e.pk %}">Annuler</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucun extra.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Encaissements</h2>
+<div class="tableau"><table>
+  <tr><th>Reçu</th><th>Date</th><th>Nature</th><th>Mode</th><th>Référence</th><th>Par</th><th class="nombre">Montant</th><th></th></tr>
+  {% for e in encaissements %}
+  <tr class="{% if e.est_annule %}annule{% endif %}">
+    <td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m H:i" }}</td>
+    <td>{{ e.get_nature_display }}{% if e.annule %} du reçu n°{{ e.annule.numero_recu }}<br><small>{{ e.motif }}</small>{% endif %}</td>
+    <td>{{ e.moyen_libelle }}</td><td>{{ e.reference }}</td><td>{{ e.utilisateur }}</td>
+    <td class="nombre">{{ e.montant_signe|nombre }}</td>
+    <td>{% if e.nature != "ANNULATION" and not e.est_annule %}<a href="{% url 'caisse:annuler_encaissement' e.pk %}">Annuler</a>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="8" class="vide">Aucun encaissement.</td></tr>{% endfor %}
+</table></div>
+{% if virements %}
+<h2>Virements reçus</h2>
+<div class="tableau"><table><tr><th>Date de valeur</th><th>Référence</th><th class="nombre">Montant</th></tr>
+  {% for v in virements %}<tr><td>{{ v.date_valeur|date:"d/m/Y" }}</td><td>{{ v.reference_bancaire }}</td><td class="nombre">{{ v.montant|nombre }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

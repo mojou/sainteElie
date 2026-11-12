@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Règlement · {{ client }}{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Règlement de dette · {{ client }}</h1><p>Reste dû : <strong class="rouge">{{ reste|fcfa }}</strong></p></div></div>
+<div class="carte"><form method="post" novalidate>{% csrf_token %}<div class="ligne-champs">{% include "partials/champs.html" %}</div>
+  <button class="btn">Encaisser et imprimer le reçu</button> <a class="btn secondaire" href="{% url 'caisse:credits' %}">Retour</a></form></div>
+<div class="grille">
+  <div class="carte"><h3>Crédits pris</h3>
+    {% for v in historique %}<div>{{ v.journee|date:"d/m" }} · {{ v.quantite }} × {{ v.article }} : {{ v.montant|fcfa }}</div>{% empty %}<p class="discret">Aucun.</p>{% endfor %}</div>
+  <div class="carte"><h3>Règlements</h3>
+    {% for e in reglements %}<div>{{ e.date|date:"d/m" }} · reçu n°{{ e.numero_recu }} : {{ e.montant_signe|fcfa }}</div>{% empty %}<p class="discret">Aucun.</p>{% endfor %}</div>
+</div>
+{% endblock %}

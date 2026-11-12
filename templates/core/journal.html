@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titre %}Journal d'activité{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Journal d'activité</h1><p>Qui a fait quoi, et quand. Rien n'y est jamais modifié.</p></div></div>
+<form class="filtres" method="get"><input type="text" name="q" value="{{ q }}" placeholder="Action, objet ou utilisateur" style="max-width:300px"><button class="btn petit">Chercher</button></form>
+<div class="tableau"><table><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Objet</th><th>Détails</th></tr>
+  {% for a in actions %}<tr><td>{{ a.date|date:"d/m/Y H:i" }}</td><td>{{ a.utilisateur|default:"système" }}</td><td>{{ a.action }}</td><td>{{ a.objet }}</td><td><small>{{ a.details }}</small></td></tr>
+  {% empty %}<tr><td colspan="5" class="vide">Aucune action.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

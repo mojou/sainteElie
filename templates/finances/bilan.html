@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Bilan {{ libelle }}{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Bilan · {{ libelle }}</h1><p>Recettes constatées moins charges : un résultat de gestion simplifié, pas une comptabilité.</p></div>
+  <div class="actions"><a class="btn secondaire petit" href="?mois={{ precedent }}">← Mois précédent</a><a class="btn secondaire petit" href="?mois={{ suivant }}">Mois suivant →</a>
+    <button class="btn secondaire petit" onclick="window.print()">Imprimer</button></div></div>
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ recettes|nombre }}</div><div class="libelle">Recettes constatées (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ charges|nombre }}</div><div class="libelle">Charges (FCFA)</div></div>
+  <div class="chiffre {% if resultat < 0 %}danger{% endif %}"><div class="valeur">{{ resultat|nombre }}</div><div class="libelle">Résultat (FCFA)</div></div>
+  <div class="chiffre"><div class="valeur">{{ taux_occupation }} %</div><div class="libelle">Taux d'occupation ({{ nb_nuitees }} nuitées)</div></div>
+  <div class="chiffre"><div class="valeur">{{ prix_moyen|nombre }}</div><div class="libelle">Prix moyen d'une nuitée (FCFA)</div></div>
+</div>
+<div class="grille">
+  <div class="carte"><h2>Recettes constatées</h2>
+    <table><tr><td>Chambres (nuitées)</td><td class="nombre">{{ recettes_chambres|nombre }}</td></tr>
+      <tr><td>Extras sur les notes (restaurant, bar, boutique)</td><td class="nombre">{{ recettes_extras|nombre }}</td></tr>
+      <tr><td>Bar et boutique (cash et crédits clients)</td><td class="nombre">{{ comptoir.recette|nombre }}</td></tr>
+      <tr class="total"><td>Total</td><td class="nombre">{{ recettes|nombre }}</td></tr></table>
+    <p class="discret">Offres du mois au bar et à la boutique : {{ comptoir.offres|fcfa }} (non comptées en recette).</p></div>
+  <div class="carte"><h2>Charges</h2>
+    <table>{% for libelle, total in depenses_par_categorie %}<tr><td>{{ libelle }}</td><td class="nombre">{{ total|nombre }}</td></tr>{% endfor %}
+      <tr><td>Petites dépenses payées au tiroir</td><td class="nombre">{{ depenses_tiroir|nombre }}</td></tr>
+      <tr><td>Salaires nets (fiches validées)</td><td class="nombre">{{ salaires|nombre }}</td></tr>
+      <tr class="total"><td>Total</td><td class="nombre">{{ charges|nombre }}</td></tr></table></div>
+  <div class="carte"><h2>Encaissements (argent reçu)</h2>
+    <table>{% for mode, total in encaissements_par_mode.items %}<tr><td>{{ mode }}</td><td class="nombre">{{ total|nombre }}</td></tr>{% endfor %}
+      <tr><td>Virements</td><td class="nombre">{{ virements|nombre }}</td></tr>
+      <tr class="total"><td>Total encaissé</td><td class="nombre">{{ total_encaisse|nombre }}</td></tr></table>
+    <p class="discret">L'écart entre recettes et encaissements vient des acomptes reçus d'avance et des clients pas encore soldés.</p></div>
+</div>
+{% endblock %}

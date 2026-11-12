@@ -1,0 +1,30 @@
+{% extends "vitrine/base.html" %}
+{% block titre %}Créer un compte · {{ etablissement_nom }}{% endblock %}
+{% block navigation %}{% endblock %}
+{% block contenu %}
+<section class="v-page-formulaire">
+  <div class="v-conteneur">
+    <div class="v-double">
+      <div class="v-avantages">
+        <p class="v-surtitre">Espace client</p>
+        <h2>Votre séjour, suivi en ligne</h2>
+        <ul>
+          <li>Vos réservations et votre séjour en cours</li>
+          <li>Ce que vous avez payé, reçu par reçu</li>
+          <li>Ce qu'il reste à régler, toujours à jour</li>
+          <li>Vos extras : restaurant, bar, boutique</li>
+        </ul>
+      </div>
+      <div class="v-boite">
+        <h1>Créer un compte</h1>
+        <p>Une minute suffit. La réception reliera ensuite votre compte à vos séjours.</p>
+        <form method="post" novalidate>{% csrf_token %}
+          {% include "partials/champs.html" %}
+          <button class="btn grand" type="submit">Créer mon compte</button>
+        </form>
+        <p class="v-lien-bas">Déjà un compte ? <a href="{% url 'accounts:connexion' %}">Se connecter</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

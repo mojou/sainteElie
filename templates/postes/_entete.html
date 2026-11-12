@@ -1,0 +1,19 @@
+<div class="poste-entete">
+  <div>
+    <div class="poste-nom">{{ nom }}</div>
+    <div class="discret">{{ jour|date:"l d F Y" }} · {{ user }}</div>
+  </div>
+  <div class="actions no-print">
+    {% if avec_caisse and user.tient_caisse %}
+      {% if session %}
+        <span class="badge ok">Caisse ouverte depuis {{ session.ouverte_le|date:"H:i" }}</span>
+        <a class="btn petit secondaire" href="{% url 'caisse:remise_comptage' %}">Fermer ma caisse</a>
+      {% else %}
+        <a class="btn" href="{% url 'caisse:ma_caisse' %}?suite={{ request.path|urlencode }}">Ouvrir ma caisse</a>
+      {% endif %}
+    {% endif %}
+    {% if user.voit_reception %}
+      <a class="btn petit secondaire" href="{% url 'postes:maintenance' %}">Signaler une panne</a>
+    {% endif %}
+  </div>
+</div>

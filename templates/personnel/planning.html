@@ -1,0 +1,101 @@
+{% extends "base.html" %}{% load static gestion %}
+{% block titre %}Planning{% endblock %}
+{% block contenu %}
+<div class="planning-barre no-print">
+  <div class="planning-nav">
+    <a class="btn secondaire petit" href="?vue={{ vue }}&date={{ precedent }}&dep={{ departement }}" aria-label="Période précédente">←</a>
+    <a class="btn secondaire petit" href="?vue={{ vue }}&date={{ aujourdhui }}&dep={{ departement }}">Aujourd'hui</a>
+    <a class="btn secondaire petit" href="?vue={{ vue }}&date={{ suivant }}&dep={{ departement }}" aria-label="Période suivante">→</a>
+    <h1 class="planning-titre">{{ titre }}</h1>
+  </div>
+  <div class="planning-outils">
+    <div class="segment" role="group" aria-label="Affichage">
+      <a class="{% if vue == 'semaine' %}actif{% endif %}" href="?vue=semaine&date={{ debut|date:'Y-m-d' }}&dep={{ departement }}">Semaine</a>
+      <a class="{% if vue == 'mois' %}actif{% endif %}" href="?vue=mois&date={{ debut|date:'Y-m-d' }}&dep={{ departement }}">Mois</a>
+    </div>
+    {% if departements|length > 1 %}
+    <div class="segment" role="group" aria-label="Département">
+      <a class="{% if not departement %}actif{% endif %}" href="?vue={{ vue }}&date={{ debut|date:'Y-m-d' }}">Tous</a>
+      {% for v, l in departements %}<a class="{% if departement == v %}actif{% endif %}" href="?vue={{ vue }}&date={{ debut|date:'Y-m-d' }}&dep={{ v }}">{{ l }}</a>{% endfor %}
+    </div>
+    {% endif %}
+    {% if vue == "semaine" %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="copier">
+      <button class="btn secondaire petit" data-confirmer="Recopier sur cette semaine les créneaux de la semaine précédente ? Les jours de congé et les créneaux déjà pris sont sautés." data-oui="Oui, recopier">Copier la semaine précédente</button></form>
+    {% endif %}
+    <button type="button" class="btn secondaire petit" onclick="window.print()">Imprimer</button>
+  </div>
+</div>
+<h1 class="imprime-seulement">Planning · {{ titre }}</h1>
+
+<div class="planning-legende">
+  {% for c in creneaux %}<span class="legende-creneau"><span class="pastille-creneau creneau-c{{ c.couleur }}"></span>{{ c.nom }} <small>{{ c.heure_debut|time:"H:i" }}–{{ c.heure_fin|time:"H:i" }}</small></span>{% endfor %}
+  <span class="legende-creneau"><span class="pastille-creneau conge"></span>Congé</span>
+  <span class="legende-total">{{ total_heures|floatformat:"-1" }} h planifiées</span>
+</div>
+
+<div class="gantt-defile">
+  <div class="gantt {{ vue }}" style="--jours: {{ jours|length }}">
+    <div class="gantt-coin">Personne</div>
+    {% for c in couverture %}<div class="gantt-jour{% if c.aujourdhui %} aujourdhui{% endif %}{% if c.weekend %} weekend{% endif %}">
+      {% if vue == "mois" %}<span>{{ c.jour|date:"D"|slice:":2" }}</span><strong>{{ c.jour|date:"j" }}</strong>{% else %}<span>{{ c.jour|date:"l" }}</span><strong>{{ c.jour|date:"j M" }}</strong>{% endif %}</div>{% endfor %}
+
+    {% for g in groupes %}
+    <div class="gantt-groupe"><span>{{ g.nom }}</span><small>{{ g.lignes|length }} personne{{ g.lignes|length|pluralize }} · {{ g.heures|floatformat:"-1" }} h</small></div>
+      {% for l in g.lignes %}
+      <div class="gantt-personne"><span class="avatar">{{ l.employe.prenom|default:l.employe.nom|first|upper }}</span>
+        <span class="gantt-nom"><strong>{{ l.employe }}</strong><small>{{ l.heures|floatformat:"-1" }} h</small></span></div>
+        {% for c in l.cases %}
+        <div class="gantt-case{% if c.weekend %} weekend{% endif %}{% if c.aujourdhui %} aujourdhui{% endif %}" data-employe="{{ l.employe.pk }}" data-date="{{ c.jour|date:'Y-m-d' }}">
+          {% if c.conge %}<span class="gantt-conge" title="{{ c.conge.get_type_display }} du {{ c.conge.date_debut|date:'d/m' }} au {{ c.conge.date_fin|date:'d/m' }}">{% if vue == "mois" %}C{% else %}{{ c.conge.get_type_display }}{% endif %}</span>{% endif %}
+          {% for a in c.shifts %}
+          <button type="button" class="gantt-shift creneau-c{{ a.couleur }}" draggable="true" data-id="{{ a.pk }}"
+                  data-employe="{{ l.employe.pk }}" data-date="{{ a.date|date:'Y-m-d' }}" data-creneau="{{ a.creneau_id }}" data-note="{{ a.note }}"
+                  title="{{ l.employe }} · {{ a.creneau.nom }} {{ a.creneau.heure_debut|time:'H:i' }}–{{ a.creneau.heure_fin|time:'H:i' }}{% if a.note %} · {{ a.note }}{% endif %}">
+            {% if vue == "mois" %}{{ a.creneau.nom|first }}{% else %}<strong>{{ a.creneau.nom }}</strong><span>{{ a.creneau.heure_debut|time:"H:i" }}–{{ a.creneau.heure_fin|time:"H:i" }}</span>{% if a.note %}<em>{{ a.note }}</em>{% endif %}{% endif %}
+          </button>
+          {% endfor %}
+          {% if not c.conge %}<button type="button" class="gantt-ajouter no-print" data-employe="{{ l.employe.pk }}" data-date="{{ c.jour|date:'Y-m-d' }}"
+                  aria-label="Ajouter un créneau pour {{ l.employe }} le {{ c.jour|date:'l j F' }}">+</button>{% endif %}
+        </div>
+        {% endfor %}
+      {% endfor %}
+    {% empty %}
+    <div class="gantt-vide">Aucune personne dans votre équipe{% if departement %} pour ce département{% endif %}.</div>
+    {% endfor %}
+
+    {% if groupes %}
+    <div class="gantt-coin gantt-pied-titre">Présents</div>
+    {% for c in couverture %}<div class="gantt-pied{% if c.weekend %} weekend{% endif %}">
+      {% for x in c.creneaux %}<span class="couverture creneau-c{{ x.creneau.couleur }}{% if not x.n %} vide{% endif %}" title="{{ x.creneau.nom }} : {{ x.n }} personne{{ x.n|pluralize }}">{{ x.n }}</span>{% endfor %}
+    </div>{% endfor %}
+    {% endif %}
+  </div>
+</div>
+<p class="discret no-print">Touchez « + » dans une case pour ajouter un créneau, ou un créneau pour le changer. À la souris, glissez un créneau vers un autre jour ou une autre personne.
+  {% if user.est_gerant %}<a href="{% url 'personnel:creneaux' %}">Les créneaux horaires</a> · {% endif %}<a href="{% url 'personnel:conges' %}">Congés et échanges</a></p>
+
+<dialog class="dialogue-planning" id="dialogue-shift" aria-labelledby="titre-shift">
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="ajouter" id="shift-action"><input type="hidden" name="pk" value="">
+    <h2 id="titre-shift">Ajouter un créneau</h2>
+    <div class="champ"><label for="shift-employe">Personne</label>
+      <select name="employe" id="shift-employe" data-sans-recherche>{% for e in employes %}<option value="{{ e.pk }}">{{ e }} · {{ e.get_departement_display }}</option>{% endfor %}</select></div>
+    <div class="champ"><label for="shift-date">Jour</label><input type="date" name="date" id="shift-date" required></div>
+    <p class="etiquette">Créneau</p>
+    <div class="choix-creneaux">
+      {% for c in creneaux %}<label class="choix-creneau"><input type="radio" name="creneau" value="{{ c.pk }}"{% if forloop.first %} checked{% endif %}>
+        <span class="creneau-c{{ c.couleur }}"><strong>{{ c.nom }}</strong>{{ c.heure_debut|time:"H:i" }}–{{ c.heure_fin|time:"H:i" }}</span></label>{% endfor %}
+    </div>
+    <div class="champ"><label for="shift-note">Note (facultatif)</label><input type="text" name="note" id="shift-note" maxlength="120" placeholder="Ex. : remplace Nina"></div>
+    <div class="boutons-dialogue">
+      <button type="submit" class="btn danger" name="action" value="supprimer" id="shift-supprimer" data-confirmer="Retirer ce créneau du planning ?" data-oui="Oui, retirer">Retirer</button>
+      <button type="button" class="btn secondaire" data-fermer>Annuler</button>
+      <button type="submit" class="btn ok" id="shift-enregistrer">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+<form method="post" id="form-deplacer" hidden>{% csrf_token %}<input type="hidden" name="action" value="deplacer">
+  <input type="hidden" name="pk"><input type="hidden" name="employe"><input type="hidden" name="date"></form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/planning.js' %}?v={{ version_statique }}"></script>{% endblock %}

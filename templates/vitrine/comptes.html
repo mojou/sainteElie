@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titre %}Comptes clients en ligne{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Comptes clients en ligne</h1>
+  <p>Un client qui crée son compte sur le site attend ici. Vérifiez que c'est bien lui (en personne ou au téléphone),
+    puis reliez le compte à sa fiche : il verra alors ses séjours et ses paiements.</p></div></div>
+
+<h2>À relier ({{ en_attente|length }})</h2>
+<div class="tableau"><table>
+  <tr><th>Inscrit le</th><th>Nom</th><th>Téléphone</th><th>Fiche client</th><th class="no-print"></th></tr>
+  {% for c in en_attente %}
+  <tr>
+    <td>{{ c.cree_le|date:"d/m H:i" }}</td>
+    <td><strong>{{ c.nom }}</strong>{% if c.email %}<br><small>{{ c.email }}</small>{% endif %}</td>
+    <td>{{ c.telephone }}</td>
+    <td>
+      <form method="post" id="relier-{{ c.pk }}">{% csrf_token %}<input type="hidden" name="compte" value="{{ c.pk }}">
+        <select name="client" aria-label="Fiche client de {{ c.nom }}">
+          <option value="">— Nouvelle fiche à ce nom —</option>
+          {% for f in clients %}<option value="{{ f.pk }}"{% if c.suggestions and f == c.suggestions.0 %} selected{% endif %}>{{ f.nom }} · {{ f.telephone }}</option>{% endfor %}
+        </select>
+        {% if c.suggestions %}<small>Même numéro : {{ c.suggestions|join:", " }}</small>{% else %}<small>Aucune fiche à ce numéro.</small>{% endif %}
+      </form>
+    </td>
+    <td class="no-print">
+      <div class="actions">
+        <button class="btn ok petit" form="relier-{{ c.pk }}" name="action" value="relier">C'est bien lui : relier</button>
+        <button class="btn danger petit" form="relier-{{ c.pk }}" name="action" value="refuser">Refuser</button>
+      </div>
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="5" class="vide">Aucun compte en attente.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Déjà traités</h2>
+<div class="tableau"><table>
+  <tr><th>Nom</th><th>Téléphone</th><th>État</th><th>Fiche</th><th>Par</th><th>Le</th></tr>
+  {% for c in traites %}
+  <tr><td>{{ c.nom }}</td><td>{{ c.telephone }}</td><td><span class="badge {{ c.statut }}">{{ c.get_statut_display }}</span></td>
+    <td>{{ c.client|default:"-" }}</td><td>{{ c.traite_par|default:"-" }}</td><td>{{ c.traite_le|date:"d/m/Y H:i" }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="vide">Rien pour l'instant.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

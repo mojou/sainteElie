@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}{{ titre }}{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>{{ titre|capfirst }} · {{ jour|date:"d/m/Y" }}</h1><p>{{ qui }} : {{ noms|join:", "|default:"-" }}</p></div></div>
+{% include "fiches/_navigation.html" %}
+<div class="tableau"><table>
+  <tr><th>Désignation</th><th class="nombre">Qté V</th><th class="nombre">Cash</th><th class="nombre">Crédit</th><th class="nombre">Total</th><th class="nombre">Offre</th><th>Obs</th></tr>
+  {% for x in d.lignes %}
+  <tr><td>{{ x.article }}</td><td class="nombre">{{ x.quantite }}</td><td class="nombre">{{ x.cash|nv }}</td><td class="nombre">{{ x.credit|nv }}</td>
+    <td class="nombre">{{ x.total|nv }}</td><td class="nombre">{{ x.offre|nv }}</td><td><small>{{ x.obs|join:" ; " }}</small></td></tr>
+  {% empty %}<tr><td colspan="7" class="vide">Aucune vente ce jour.</td></tr>{% endfor %}
+  {% if d.lignes %}<tr class="total"><td>TOTAL</td><td class="nombre">{{ d.totaux.quantite }}</td><td class="nombre">{{ d.totaux.cash|nombre }}</td>
+    <td class="nombre">{{ d.totaux.credit|nombre }}</td><td class="nombre">{{ d.totaux.total|nombre }}</td><td class="nombre">{{ d.totaux.offre|nombre }}</td><td></td></tr>{% endif %}
+</table></div>
+<p class="discret">Total = cash + crédit + offre (valeur au prix de vente). Le cash est dans la caisse de la personne qui a vendu ; le crédit est sur la note de la chambre ou au compte du client.</p>
+{% endblock %}

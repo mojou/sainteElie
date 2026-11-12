@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load static gestion %}
+{% block titre %}{{ projet }}{% endblock %}
+{% block contenu %}
+<p class="no-print"><a class="retour" href="{% url 'projets:liste' %}">← Tous les projets</a></p>
+<div class="entete"><div><h1>{{ projet }}</h1>
+  <p>{{ projet.responsable }}{% if projet.echeance %} · pour le <span class="{% if projet.en_retard %}rouge{% endif %}">{{ projet.echeance|date:"d/m/Y" }}</span>{% endif %}{% if projet.budget %} · budget {{ projet.budget|fcfa }}{% endif %}
+    · <span class="badge {{ projet.statut }}">{{ projet.get_statut_display }}</span> · {{ faites }}/{{ nb }} tâches faites</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'projets:projet_modifier' projet.pk %}">Modifier le projet</a></div></div>
+{% if projet.description %}<div class="carte">{{ projet.description|linebreaksbr }}</div>{% endif %}
+<p class="discret no-print">Faites glisser une tâche d'une colonne à l'autre (à la souris), ou touchez-la pour changer son étape.</p>
+<div class="kanban" data-kanban>
+  {% for c in colonnes %}
+  <section class="kanban-colonne etape-{{ c.statut }}" data-statut="{{ c.statut }}" aria-label="{{ c.libelle }}">
+    <header class="kanban-tete"><h2>{{ c.libelle }}</h2><span class="kanban-nombre">{{ c.taches|length }}</span></header>
+    <form method="post" class="ajout-rapide no-print">{% csrf_token %}<input type="hidden" name="statut" value="{{ c.statut }}">
+      <input type="text" name="titre" maxlength="200" placeholder="+ Nouvelle tâche" aria-label="Nouvelle tâche dans « {{ c.libelle }} »">
+    </form>
+    <div class="kanban-cartes">
+      {% for t in c.taches %}{% include "projets/_carte_tache.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/kanban.js' %}?v={{ version_statique }}"></script>{% endblock %}

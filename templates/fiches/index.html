@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titre %}Fiches du jour{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Fiches du {{ jour|date:"l d/m/Y" }}</h1>
+  <p>Les fiches papier, remplies automatiquement à partir des ventes, des séjours et des mouvements de stock.</p></div></div>
+{% include "fiches/_navigation.html" %}
+<div class="grille">
+  {% if voit_bar %}
+  <div class="carte"><h3>Main courante bar</h3><p>Désignation, Qté V, Cash, Crédit, Total, Offre, Obs.</p>
+    <a class="btn secondaire petit" href="{% url 'fiches:main_courante' 'bar' %}?date={{ jour|date:'Y-m-d' }}">Ouvrir</a>
+    <a class="btn petit" href="{% url 'fiches:main_courante' 'bar' %}?date={{ jour|date:'Y-m-d' }}&format=pdf">PDF</a></div>
+  <div class="carte"><h3>Stock bar</h3><p>S.I, Appro, Avaries, S.T, Qtés vendues, P.V, Montant, S.F ; ventes, crédits, offres, espèces, Orange Money, MTN MoMo.</p>
+    <a class="btn secondaire petit" href="{% url 'fiches:stock' 'bar' %}?date={{ jour|date:'Y-m-d' }}">Ouvrir</a>
+    <a class="btn petit" href="{% url 'fiches:stock' 'bar' %}?date={{ jour|date:'Y-m-d' }}&format=pdf">PDF</a></div>
+  <div class="carte"><h3>Main courante cuisine</h3><p>Plats vendus : Qté V, Cash, Crédit (chambre ou client), Total, Offre, Obs.</p>
+    <a class="btn secondaire petit" href="{% url 'fiches:main_courante' 'cuisine' %}?date={{ jour|date:'Y-m-d' }}">Ouvrir</a>
+    <a class="btn petit" href="{% url 'fiches:main_courante' 'cuisine' %}?date={{ jour|date:'Y-m-d' }}&format=pdf">PDF</a></div>
+  {% endif %}
+  {% if voit_reception %}
+  <div class="carte"><h3>Stock et main courante boutique</h3><p>Prix, S.I, Approv, R1, R2, R3 (ventes de chaque réceptionniste), S.F, Montant, Cumulé, Crédit.</p>
+    <a class="btn secondaire petit" href="{% url 'fiches:stock' 'boutique' %}?date={{ jour|date:'Y-m-d' }}">Ouvrir</a>
+    <a class="btn petit" href="{% url 'fiches:stock' 'boutique' %}?date={{ jour|date:'Y-m-d' }}&format=pdf">PDF</a></div>
+  {% endif %}
+  {% if voit_chambres %}
+  <div class="carte"><h3>Chambres à faire</h3><p>Pour le personnel des chambres : chaque chambre à faire et quoi y faire. Il coche, puis rapporte la fiche à la réception.</p>
+    <a class="btn petit" href="{% url 'fiches:chambres_a_faire' %}?date={{ jour|date:'Y-m-d' }}" target="_blank" rel="noopener">Imprimer</a></div>
+  <div class="carte"><h3>Main courante du gardien</h3><p>Feuille vierge pour la nuit : heure, ronde, visiteur, livraison, incident. La réception recopie le matin.</p>
+    <a class="btn petit" href="{% url 'fiches:main_courante_gardien' %}?date={{ jour|date:'Y-m-d' }}" target="_blank" rel="noopener">Imprimer</a></div>
+  <div class="carte"><h3>Recette chambres</h3><p>Recette jr, Imp jr, Extras jr (cuisine, bar…), Offre jr, Compensation, Avance, Rég. dette, Reste dette.</p>
+    <a class="btn secondaire petit" href="{% url 'fiches:hebergement' %}?date={{ jour|date:'Y-m-d' }}">Ouvrir</a>
+    <a class="btn petit" href="{% url 'fiches:hebergement' %}?date={{ jour|date:'Y-m-d' }}&format=pdf">PDF</a></div>
+  {% endif %}
+</div>
+{% if sessions %}
+<h2>Main courante par personne</h2>
+<div class="tableau"><table><tr><th>Personne</th><th>Caisse</th><th>Service</th><th>Fiches</th></tr>
+  {% for s in sessions %}<tr><td>{{ s.receptionniste }}</td><td>{{ s.tiroir }}</td><td>{{ s.get_shift_display }}</td>
+    <td>{% if s.tiroir.poste == "BAR" %}<a href="{% url 'fiches:main_courante' 'bar' %}?session={{ s.pk }}&format=pdf">PDF bar</a>
+      · <a href="{% url 'fiches:main_courante' 'cuisine' %}?session={{ s.pk }}&format=pdf">PDF cuisine</a>
+      {% else %}<a href="{% url 'fiches:main_courante' 'boutique' %}?session={{ s.pk }}&format=pdf">PDF boutique</a>{% endif %}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

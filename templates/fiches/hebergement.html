@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Recette chambres{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Recette chambres · {{ jour|date:"d/m/Y" }}</h1>
+  <p>{{ d.occupees }} chambre{{ d.occupees|pluralize }} occupée{{ d.occupees|pluralize }} la nuit du {{ jour|date:"d/m" }}. Réceptionnistes : {{ receptionnistes|join:", "|default:"-" }}</p></div></div>
+{% include "fiches/_navigation.html" %}
+<div class="tableau"><table>
+  <tr><th>Ch</th><th>Nom client</th><th class="nombre">Recette jr</th><th class="nombre">Imp jr</th><th class="nombre">Extras jr</th><th class="nombre">Offre jr</th><th class="nombre">Compensation</th><th class="nombre">Avance</th><th>Observation</th></tr>
+  {% for x in d.lignes %}
+  <tr><td>{{ x.chambre.numero }}</td><td>{% if x.sejour %}<a href="{% url 'hotel:sejour' x.sejour.pk %}">{{ x.sejour.client }}</a>{% endif %}</td>
+    <td class="nombre">{{ x.recette|nv }}</td><td class="nombre {% if x.impaye %}rouge{% endif %}">{{ x.impaye|nv }}</td><td class="nombre">{{ x.extras|nv }}</td>
+    <td class="nombre">{{ x.offre|nv }}</td><td class="nombre">{{ x.compensation|nv }}</td><td class="nombre">{{ x.avance|nv }}</td>
+    <td><small>{{ x.observation }}</small></td></tr>
+  {% endfor %}
+  <tr class="total"><td>TOTAL</td><td></td><td class="nombre">{{ d.totaux.recette|nombre }}</td><td class="nombre">{{ d.totaux.impaye|nombre }}</td><td class="nombre">{{ d.totaux.extras|nombre }}</td><td class="nombre">{{ d.totaux.offre|nombre }}</td>
+    <td class="nombre">{{ d.totaux.compensation|nombre }}</td><td class="nombre">{{ d.totaux.avance|nombre }}</td><td></td></tr>
+</table></div>
+<h2>Extras du jour <small>(cuisine, réception, bar) : à encaisser à la réception</small></h2>
+<div class="tableau"><table><tr><th>Heure</th><th>Ch</th><th>Client</th><th>Ce qui a été pris</th><th>Saisi par</th><th class="nombre">Montant</th></tr>
+  {% for e in d.extras_du_jour %}<tr><td>{{ e.date_conso|date:"H:i" }}</td><td>{{ e.sejour.chambre.numero }}</td><td>{{ e.sejour.client }}</td>
+    <td>{{ e.description }}</td><td>{{ e.saisi_par }} <small>({{ e.saisi_par.get_role_display }})</small></td><td class="nombre">{{ e.montant|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="vide">Aucun extra ce jour.</td></tr>{% endfor %}
+  {% if d.extras_du_jour %}<tr class="total"><td colspan="5">Total</td><td class="nombre">{{ d.totaux.extras|nombre }}</td></tr>{% endif %}
+</table></div>
+<div class="grille">
+  <div class="carte"><h3>Règlements de dettes du jour</h3>
+    {% for r in d.reglements %}<div>{{ r.nom }} : <strong>{{ r.montant|fcfa }}</strong></div>{% empty %}<p class="discret">Aucun.</p>{% endfor %}
+    <p>Total : {{ d.totaux.reglements|fcfa }}</p></div>
+  <div class="carte"><h3>Restes de dettes</h3>
+    {% for r in d.dettes %}<div>{{ r.nom }} : <strong class="rouge">{{ r.montant|fcfa }}</strong></div>{% empty %}<p class="discret">Aucune dette.</p>{% endfor %}
+    <p>Total : {{ d.totaux.dettes|fcfa }}</p></div>
+</div>
+<p class="discret">Recette jr : part de la nuit du jour couverte par les paiements. Imp jr : part non payée. Extras jr : ce que la chambre a consommé ce jour (cuisine, bar…), payé à la réception. Offre jr et Compensation : séjours offerts ou compensés, à la valeur de la grille.
+  Avance : ce que le client a payé d'avance au-delà de la nuit du jour. Les paiements règlent d'abord les dettes des jours précédents.</p>
+{% endblock %}

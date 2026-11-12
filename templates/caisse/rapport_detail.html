@@ -1,0 +1,70 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Rapport du {{ rapport.coupure|date:"d/m/Y" }}{% endblock %}
+{% block contenu %}
+<div class="entete">
+  <div><h1>Rapport quotidien du {{ rapport.coupure|date:"l d/m/Y" }}</h1>
+    <p>Sessions remises du {{ rapport.debut|date:"d/m H:i" }} au {{ rapport.coupure|date:"d/m H:i" }}.</p></div>
+  <div class="actions">{% if rapport.pdf %}<a class="btn" href="{% url 'caisse:rapport_pdf' rapport.pk %}">PDF à imprimer</a>{% endif %}</div>
+</div>
+
+<h2>Encaissements par caisse et par personne</h2>
+<div class="tableau"><table>
+  <tr><th>Titulaire</th><th>Caisse · shift</th>{% for m in moyens %}<th class="nombre">{{ m.libelle }}</th>{% endfor %}
+    <th class="nombre">Total encaissé</th><th class="nombre">Sorties</th><th class="nombre">Espèces attendues</th><th class="nombre">Écart espèces</th><th class="nombre">Écart OM + MoMo</th><th>Statut</th></tr>
+  {% for l in lignes %}{% with s=l.session %}
+  <tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s.receptionniste }}</a>{% if s.est_rectificative %} <span class="badge">rectification</span>{% endif %}</td>
+    <td>{{ s.tiroir }} · {{ s.get_shift_display }} {{ s.ouverte_le|date:"d/m" }}</td>
+    {% for v in l.moyens %}<td class="nombre">{{ v|nombre }}</td>{% endfor %}
+    <td class="nombre">{{ l.total|nombre }}</td><td class="nombre">{{ l.sorties|nombre }}</td><td class="nombre">{{ l.attendues|nombre }}</td>
+    <td class="nombre {% if l.ecart|hors_seuil:s.seuil_ecart %}rouge{% endif %}">{{ l.ecart|nombre }}</td>
+    <td class="nombre {% if l.ecart_mobile|hors_seuil:s.seuil_ecart %}rouge{% endif %}">{{ l.ecart_mobile|nombre }}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td></tr>
+  {% endwith %}{% empty %}<tr><td colspan="12" class="vide">Aucune session remise sur la période.</td></tr>{% endfor %}
+  {% if lignes %}<tr class="total"><td>Total</td><td></td>{% for v in totaux.moyens %}<td class="nombre">{{ v|nombre }}</td>{% endfor %}<td class="nombre">{{ totaux.total|nombre }}</td>
+    <td class="nombre">{{ totaux.sorties|nombre }}</td><td></td><td class="nombre">{{ totaux.ecart|nombre }}</td><td class="nombre">{{ totaux.ecart_mobile|nombre }}</td><td></td></tr>{% endif %}
+</table></div>
+
+<h2>Recettes constatées</h2>
+<p class="discret">Ce que l'hôtel a gagné sur la période. Ce total ne recoupe pas les encaissements, et c'est normal : un acompte est encaissé avant d'être gagné, un client à crédit a consommé sans payer.</p>
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ total_nuitees|nombre }}</div><div class="libelle">Nuitées ({{ nuitees|length }})</div></div>
+  <div class="chiffre"><div class="valeur">{{ total_extras|nombre }}</div><div class="libelle">Extras sur les notes ({{ extras|length }})</div></div>
+  <div class="chiffre"><div class="valeur">{{ comptoir.recette|nombre }}</div><div class="libelle">Bar et boutique (cash et crédits clients)</div></div>
+  <div class="chiffre"><div class="valeur">{{ total_recettes|nombre }}</div><div class="libelle">Total recettes (FCFA)</div></div>
+</div>
+<div class="tableau"><table><tr><th>Chambre</th><th>Client</th><th>Nuit du</th><th class="nombre">Montant</th></tr>
+  {% for n in nuitees %}<tr><td>{{ n.sejour.chambre.numero }}</td><td>{{ n.sejour.client }}</td><td>{{ n.date_nuit|date:"d/m" }}</td><td class="nombre">{{ n.montant|nombre }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Aucune nuitée constatée.</td></tr>{% endfor %}
+</table></div>
+
+<h2>Bar et boutique (main courante)</h2>
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ comptoir.ventes|nombre }}</div><div class="libelle">Ventes</div></div>
+  <div class="chiffre"><div class="valeur">{{ comptoir.credits|nombre }}</div><div class="libelle">Crédits</div></div>
+  <div class="chiffre {% if comptoir.offres %}alerte{% endif %}"><div class="valeur">{{ comptoir.offres|nombre }}</div><div class="libelle">Offres</div></div>
+  <div class="chiffre"><div class="valeur">{{ comptoir.comptant|nombre }}</div><div class="libelle">Cash encaissé</div></div>
+</div>
+
+{% if ecarts %}<h2>Écarts et motifs</h2>
+<div class="tableau"><table><tr><th>Session</th><th class="nombre">Écart espèces</th><th>Statut</th><th>Motif</th></tr>
+  {% for s in ecarts %}<tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s }}</a></td><td class="nombre">{{ s.remise.ecart|nombre }}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td>{{ s.remise.motif }} {{ s.motif_contestation }}</td></tr>{% endfor %}
+</table></div>{% endif %}
+
+{% if sorties %}<h2>Sorties de caisse</h2>
+<div class="tableau"><table><tr><th>Réceptionniste</th><th>Type</th><th>Motif</th><th>Statut</th><th class="nombre">Montant</th></tr>
+  {% for s in sorties %}<tr><td>{{ s.session.receptionniste }}</td><td>{{ s.get_type_display }}</td><td>{{ s.motif }}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td class="nombre">{{ s.montant|nombre }}</td></tr>{% endfor %}
+</table></div>{% endif %}
+
+{% if impayes %}<h2>Séjours terminés non soldés</h2>
+<div class="tableau"><table><tr><th>Client</th><th>Chambre</th><th>Départ</th><th class="nombre">Reste à payer</th></tr>
+  {% for s in impayes %}<tr><td><a href="{% url 'hotel:sejour' s.pk %}">{{ s.client }}</a></td><td>{{ s.chambre.numero }}</td><td>{{ s.date_depart|date:"d/m/Y" }}</td>
+    <td class="nombre rouge">{{ s.reste_a_payer|nombre }}</td></tr>{% endfor %}
+</table></div>{% endif %}
+
+{% if menage_sans_sejour %}<h2>Chambres faites sans séjour enregistré</h2>
+<div class="tableau"><table><tr><th>Chambre</th><th>Faite le</th><th>Par</th></tr>
+  {% for n in menage_sans_sejour %}<tr><td>{{ n.chambre.numero }}</td><td>{{ n.fait_le|date:"d/m H:i" }}</td><td>{{ n.fait_par }}</td></tr>{% endfor %}
+</table></div>{% endif %}
+{% endblock %}

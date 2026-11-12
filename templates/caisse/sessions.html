@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Sessions de caisse{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Sessions de caisse</h1>
+  <p>{% if user.peut_valider_caisse %}Toutes les sessions de la réception.{% else %}Vos sessions et les remises que vous avez reçues.{% endif %}</p></div>
+  {% if user.peut_valider_caisse %}<div class="actions"><a class="btn secondaire" href="{% url 'caisse:recherche' %}">Retrouver un reçu</a></div>{% endif %}
+</div>
+{% if a_valider %}
+<h2>À valider ({{ a_valider|length }})</h2>
+<div class="tableau"><table>
+  <tr><th>Session</th><th>Remise le</th><th>Statut</th><th class="nombre">Écart espèces</th></tr>
+  {% for s in a_valider %}<tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s }}</a></td><td>{{ s.remise_le|date:"d/m H:i" }}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td>
+    <td class="nombre {% if s.remise.ecart|hors_seuil:s.seuil_ecart %}rouge{% endif %}">{{ s.remise.ecart|nombre }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+<form class="filtres" method="get">
+  <select name="statut"><option value="">Tous les statuts</option>
+    {% for v, l in statuts %}<option value="{{ v }}" {% if v == statut %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <button class="btn petit">Filtrer</button>
+</form>
+<div class="tableau"><table>
+  <tr><th>N°</th><th>Réceptionniste</th><th>Shift</th><th>Ouverte</th><th>Remise</th><th class="nombre">Total encaissé</th><th class="nombre">Écart espèces</th><th>Statut</th></tr>
+  {% for s in sessions %}
+  <tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s.pk }}</a></td><td>{{ s.receptionniste }}{% if s.est_rectificative %} <span class="badge">rectification</span>{% endif %}</td>
+    <td>{{ s.get_shift_display }}</td><td>{{ s.ouverte_le|date:"d/m H:i" }}</td><td>{{ s.remise_le|date:"d/m H:i"|default:"-" }}</td>
+    <td class="nombre">{{ s.total_encaisse|nombre }}</td>
+    <td class="nombre {% if s.remise.ecart|hors_seuil:s.seuil_ecart %}rouge{% endif %}">{% if s.remise.finalisee %}{{ s.remise.ecart|nombre }}{% else %}-{% endif %}</td>
+    <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span>{% if s.cloture_office %} <span class="badge danger">d'office</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="8" class="vide">Aucune session.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}{% load static gestion l10n %}
+{% block titre %}Rapport · {{ libelle }}{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Rapport d'activité · {{ libelle }}</h1>
+  <p>Comparé à la période d'avant : {{ libelle_avant }}.</p></div>
+  <div class="actions no-print">
+    <a class="btn petit" href="{% url 'rapports:inventaire' %}?{{ request.GET.urlencode }}">Inventaire et rentabilité</a>
+    <a class="btn secondaire petit" href="?{{ request.GET.urlencode }}&format=csv">Télécharger (Excel)</a>
+    <button type="button" class="btn secondaire petit" onclick="window.print()">Imprimer</button></div></div>
+
+<div class="filtres-periode no-print">
+  <div class="segment" role="group" aria-label="Période">
+    {% for v, l in periodes %}<a class="{% if cle == v %}actif{% endif %}" href="?periode={{ v }}">{{ l }}</a>{% endfor %}
+  </div>
+  <form method="get" class="dates-libres">
+    <label for="du">Du</label><input type="date" id="du" name="du" value="{{ d.debut|date:'Y-m-d' }}">
+    <label for="au">au</label><input type="date" id="au" name="au" value="{{ d.fin|date:'Y-m-d' }}">
+    <button class="btn petit">Voir</button>
+  </form>
+</div>
+
+<div class="tuiles-chiffres">
+  {% for t in tuiles %}
+  <div class="tuile-chiffre">
+    <div class="tuile-libelle">{{ t.libelle }}</div>
+    <div class="tuile-valeur">{% if t.unite == "%" %}{{ t.valeur|floatformat:"-1" }} %{% else %}{{ t.valeur|nombre }}{% if t.unite %} <small>{{ t.unite }}</small>{% endif %}{% endif %}</div>
+    {% if t.variation is not None %}
+    <div class="tuile-variation {{ t.sens }}"><span aria-hidden="true">{% if t.variation > 0 %}▲{% elif t.variation < 0 %}▼{% else %}={% endif %}</span>
+      {% if t.variation > 0 %}+{% endif %}{{ t.variation }} % <span class="discret">par rapport à avant</span></div>
+    {% else %}<div class="tuile-variation"><span class="discret">rien à comparer avant</span></div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<section class="carte graphe-carte" aria-labelledby="titre-recette">
+  <div class="graphe-tete">
+    <h2 id="titre-recette">Recette {% if d.par_mois %}mois par mois{% else %}jour par jour{% endif %}, par service</h2>
+    <ul class="legende">{% for s in services %}<li><span class="cle-couleur serie-{{ s.rang }}"></span>{{ s.libelle }}</li>{% endfor %}</ul>
+  </div>
+  {% if d.total %}
+  <div class="graphe" role="img" aria-label="Recette {% if d.par_mois %}par mois{% else %}par jour{% endif %} : {{ d.total|fcfa }} au total ; le détail est dans le tableau sous le graphique.">
+    <div class="graphe-axe" aria-hidden="true">{% for r in graphe.reperes %}<span style="bottom: {{ r.position|unlocalize }}%">{{ r.texte }}</span>{% endfor %}</div>
+    <div class="graphe-zone">
+      {% for r in graphe.reperes %}<span class="graphe-ligne" style="bottom: {{ r.position|unlocalize }}%" aria-hidden="true"></span>{% endfor %}
+      <div class="graphe-colonnes" style="--n: {{ graphe.colonnes|length }}">
+        {% for c in graphe.colonnes %}
+        <div class="graphe-colonne{% if c.aujourdhui %} aujourdhui{% endif %}" tabindex="0" data-titre="{{ c.titre }}" data-total="{{ c.total }}"
+             data-parts="{% for p in c.toutes %}{{ p.rang }}|{{ p.libelle }}|{{ p.montant }}{% if not forloop.last %};{% endif %}{% endfor %}">
+          <div class="pile" style="height: {{ c.hauteur|unlocalize }}%">{% for p in c.parts %}<span class="serie-{{ p.rang }}" style="height: {{ p.part|unlocalize }}%"></span>{% endfor %}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="graphe-dates" style="--n: {{ graphe.colonnes|length }}" aria-hidden="true">{% for c in graphe.colonnes %}<span>{% if c.etiquette %}{{ c.court }}{% endif %}</span>{% endfor %}</div>
+    </div>
+  </div>
+  {% else %}
+  <p class="vide">Aucune recette sur cette période.</p>
+  {% endif %}
+  <details class="vue-tableau"><summary>Voir le tableau des chiffres</summary>
+    <div class="tableau"><table>
+      <tr><th>{% if d.par_mois %}Mois{% else %}Jour{% endif %}</th>{% for s in services %}<th class="nombre">{{ s.libelle }}</th>{% endfor %}<th class="nombre">Total</th></tr>
+      {% for c in graphe.colonnes %}<tr><td>{{ c.titre }}</td>{% for p in c.toutes %}<td class="nombre">{{ p.montant|nv }}</td>{% endfor %}<td class="nombre"><strong>{{ c.total|nv }}</strong></td></tr>{% endfor %}
+      <tr class="total"><td>Total</td>{% for s in services %}<td class="nombre">{{ s.montant|nombre }}</td>{% endfor %}<td class="nombre">{{ d.total|nombre }}</td></tr>
+    </table></div>
+  </details>
+</section>
+
+<div class="grille-rapport">
+  <section class="carte">
+    <h2>Recette par service</h2>
+    <table class="table-services">
+      {% for s in services %}<tr><td><span class="cle-couleur serie-{{ s.rang }}"></span>{{ s.libelle }}</td><td class="nombre">{{ s.montant|fcfa }}</td>
+        <td class="nombre variation-texte">{% if s.variation is not None %}{% if s.variation > 0 %}▲ +{% elif s.variation < 0 %}▼ {% endif %}{{ s.variation }} %{% endif %}</td></tr>{% endfor %}
+      <tr class="total"><td>Total</td><td class="nombre">{{ d.total|fcfa }}</td><td></td></tr>
+    </table>
+    <p class="discret">Offert au comptoir (pas une recette) : {{ d.offres|fcfa }}. Un repas ou une boisson « sur la chambre » compte dans son service, une seule fois.</p>
+  </section>
+
+  <section class="carte">
+    <h2>Argent encaissé, par moyen de paiement</h2>
+    <ul class="barres-classees">
+      {% for m in moyens %}<li tabindex="0" title="{{ m.libelle }} : {{ m.montant|fcfa }} ({{ m.part }} %)">
+        <span class="barre-nom">{{ m.libelle }}</span>
+        <span class="barre-piste"><span class="barre" style="width: {{ m.largeur|unlocalize }}%"></span></span>
+        <span class="barre-valeur">{{ m.montant|nombre }}</span></li>{% endfor %}
+    </ul>
+    <p class="discret">Total encaissé : <strong>{{ d.encaisse|fcfa }}</strong>. La différence avec la recette vient des avances et des clients pas encore soldés.</p>
+  </section>
+
+  <section class="carte">
+    <h2>Les articles qui rapportent le plus</h2>
+    {% if meilleurs %}
+    <ul class="barres-classees">
+      {% for m in meilleurs %}<li tabindex="0" title="{{ m.article__nom }} : {{ m.quantite }} vendus, {{ m.montant|fcfa }}">
+        <span class="barre-nom">{{ m.article__nom }} {{ m.article__code }} <small>× {{ m.quantite }}</small></span>
+        <span class="barre-piste"><span class="barre" style="width: {{ m.largeur|unlocalize }}%"></span></span>
+        <span class="barre-valeur">{{ m.montant|nombre }}</span></li>{% endfor %}
+    </ul>
+    {% else %}<p class="vide">Aucune vente sur cette période.</p>{% endif %}
+  </section>
+
+  <section class="carte">
+    <h2>Hébergement</h2>
+    <dl class="fiche">
+      <dt>Nuits vendues</dt><dd>{{ d.nb_nuitees }} sur {{ d.capacite }} possibles</dd>
+      <dt>Taux d'occupation</dt><dd>{{ d.occupation|floatformat:"-1" }} %</dd>
+      <dt>Prix moyen d'une nuit</dt><dd>{{ d.prix_moyen|fcfa }}</dd>
+      <dt>Recette par chambre disponible {% aide "revpar" %}</dt><dd>{{ d.revpar|fcfa }}</dd>
+      <dt>Arrivées / départs</dt><dd>{{ d.arrivees }} / {{ d.departs }}</dd>
+    </dl>
+  </section>
+
+  <section class="carte">
+    <h2>Stock</h2>
+    <dl class="fiche">
+      <dt>Livraisons reçues</dt><dd>{{ d.stock.livraisons.nombre }} livraison{{ d.stock.livraisons.nombre|pluralize }} · {{ d.stock.livraisons.quantite }} unités · {{ d.stock.livraisons.valeur|fcfa }}</dd>
+      <dt>Sorties par la vente</dt><dd>{{ d.stock.ventes.quantite }} unités</dd>
+      <dt>Casse ou périmé</dt><dd class="{% if d.stock.casse.quantite %}rouge{% endif %}">{{ d.stock.casse.quantite }} unités · {{ d.stock.casse.valeur|fcfa }} au coût</dd>
+      <dt>Manquants aux inventaires</dt><dd class="{% if d.stock.manquants.quantite %}rouge{% endif %}">{{ d.stock.manquants.quantite }} unités · {{ d.stock.manquants.valeur|fcfa }} au coût</dd>
+    </dl>
+    <p><a href="{% url 'stock:mouvements' %}?du={{ d.debut|date:'Y-m-d' }}&au={{ d.fin|date:'Y-m-d' }}">Voir les mouvements de la période</a></p>
+  </section>
+
+  <section class="carte">
+    <h2>Caisses</h2>
+    {% if d.caissiers %}
+    <div class="tableau"><table>
+      <tr><th>Personne</th><th class="nombre">Encaissé</th><th class="nombre">Caisses fermées</th><th class="nombre">Différences</th></tr>
+      {% for c in d.caissiers %}<tr><td>{{ c.nom }}</td><td class="nombre">{{ c.encaisse|nombre }}</td><td class="nombre">{{ c.sessions }}</td>
+        <td class="nombre {% if c.ecarts %}rouge{% endif %}">{% if c.ecart %}{{ c.ecart|nombre }}{% else %}–{% endif %}{% if c.ecarts %} ({{ c.ecarts }} hors seuil){% endif %}</td></tr>{% endfor %}
+    </table></div>
+    {% else %}<p class="vide">Aucune caisse sur cette période.</p>{% endif %}
+  </section>
+
+  {% if finances %}
+  <section class="carte">
+    <h2>Dépenses <small class="discret">(gérant)</small></h2>
+    {% if depenses %}
+    <ul class="barres-classees">
+      {% for x in depenses %}<li tabindex="0" title="{{ x.libelle }} : {{ x.montant|fcfa }} ({{ x.part }} %)">
+        <span class="barre-nom">{{ x.libelle }}</span><span class="barre-piste"><span class="barre" style="width: {{ x.largeur|unlocalize }}%"></span></span>
+        <span class="barre-valeur">{{ x.montant|nombre }}</span></li>{% endfor %}
+    </ul>
+    {% else %}<p class="vide">Aucune dépense sur cette période.</p>{% endif %}
+    <p>Total : <strong>{{ d.depenses.total|fcfa }}</strong>. Recette moins dépenses (sans les salaires) :
+      <strong class="{% if d.total < d.depenses.total %}rouge{% endif %}">{{ d.total|add:0|fcfa }}</strong>
+      <span class="discret">− {{ d.depenses.total|fcfa }}</span>. Le résultat avec les salaires est dans le <a href="{% url 'finances:bilan' %}">bilan du mois</a>.</p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/rapports.js' %}?v={{ version_statique }}"></script>{% endblock %}

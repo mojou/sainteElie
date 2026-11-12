@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Mouvements de stock{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Mouvements de stock</h1>
+  <p>Du {{ du|date:"d/m/Y" }} au {{ au|date:"d/m/Y" }} : {{ total }} mouvement{{ total|pluralize }}, chacun raconté en clair.</p></div>
+  <div class="actions"><a class="btn secondaire petit" href="?{{ request.GET.urlencode }}&format=csv">Télécharger (Excel)</a>
+    <a class="btn secondaire petit" href="{% url 'stock:articles' %}">← Stock</a></div></div>
+<form class="filtres carte" method="get">
+  <label>Du <input type="date" name="du" value="{{ du|date:'Y-m-d' }}"></label>
+  <label>au <input type="date" name="au" value="{{ au|date:'Y-m-d' }}"></label>
+  <select name="type" data-sans-recherche><option value="">Tout ce qui bouge</option>{% for v, l in types %}<option value="{{ v }}" {% if v == type %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="categorie" data-sans-recherche><option value="">Toutes catégories</option>{% for v, l in categories %}<option value="{{ v }}" {% if v == categorie %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <input type="search" name="q" value="{{ q }}" placeholder="Article ou motif" style="max-width:200px">
+  <button class="btn petit">Voir</button>
+</form>
+{% if resume %}
+<div class="resume-mouvements">
+  {% for r in resume %}<a class="pastille-mouvement {{ r.type }}" href="?du={{ du|date:'Y-m-d' }}&au={{ au|date:'Y-m-d' }}&type={{ r.type }}&categorie={{ categorie }}&q={{ q|urlencode }}">
+    <strong>{{ r.nombre }}</strong> {{ r.libelle|lower }} <span class="discret">({{ r.quantite }} unités)</span></a>{% endfor %}
+</div>
+{% endif %}
+{% if tronque %}<p class="message info">Seuls les 500 mouvements les plus récents sont affichés : resserrez la période ou filtrez.</p>{% endif %}
+{% include "stock/_recit.html" with avec_article=True %}
+{% endblock %}

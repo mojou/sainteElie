@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titre %}Clients{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Clients</h1></div>
+  <div class="actions"><a class="btn" href="{% url 'hotel:client_nouveau' %}">Nouveau client</a></div></div>
+<form class="filtres" method="get"><input type="text" name="q" value="{{ q }}" placeholder="Nom, téléphone, entreprise" style="max-width:300px"><button class="btn petit">Chercher</button></form>
+<div class="tableau"><table>
+  <tr><th>Nom</th><th>Téléphone</th><th>Entreprise</th><th>Pièce d'identité</th><th></th></tr>
+  {% for c in clients %}
+  <tr><td><a href="{% url 'hotel:client' c.pk %}">{{ c.nom }}</a></td><td>{{ c.telephone }}</td><td>{{ c.entreprise }}</td><td>{{ c.piece_identite }}</td>
+    <td><a href="{% url 'hotel:client_modifier' c.pk %}">Modifier</a></td></tr>
+  {% empty %}<tr><td colspan="5" class="vide">Aucun client.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

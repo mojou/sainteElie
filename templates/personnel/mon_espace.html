@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titre %}Mon planning et pointage{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>{{ employe }}</h1><p>{{ employe.poste }} · {{ employe.get_departement_display }}</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'personnel:conge_nouveau' %}">Demander un congé</a>
+    <a class="btn secondaire" href="{% url 'personnel:echange_nouveau' %}">Échanger un shift</a>
+    <a class="btn secondaire" href="{% url 'personnel:conges' %}">Mes demandes</a>
+    {% if not user.est_gerant %}<a class="btn secondaire" href="{% url 'paie:mes_bulletins' %}">Mes bulletins de paie</a>{% endif %}
+    <a class="btn secondaire" href="{% url 'projets:mes_taches' %}">Mes tâches</a></div></div>
+<div class="carte">
+  <h2>Pointage</h2>
+  <form method="post">{% csrf_token %}
+    {% if pointage_ouvert %}
+      <p>Arrivée pointée à {{ pointage_ouvert.arrivee|date:"H:i" }} le {{ pointage_ouvert.arrivee|date:"d/m" }}.</p>
+      <button class="btn grand" name="action" value="depart">Pointer mon départ</button>
+    {% else %}
+      <button class="btn grand ok" name="action" value="arrivee">Pointer mon arrivée</button>
+    {% endif %}
+  </form>
+</div>
+<div class="grille">
+  <div class="carte"><h3>Mes shifts (14 jours)</h3>
+    {% for a in planning %}<div>{{ a.date|date:"D d/m" }} · {{ a.creneau }}</div>{% empty %}<p class="discret">Aucun shift prévu.</p>{% endfor %}</div>
+  <div class="carte"><h3>Mes derniers pointages</h3>
+    {% for p in pointages %}<div>{{ p.date|date:"d/m" }} : {{ p.arrivee|date:"H:i" }} - {{ p.depart|date:"H:i"|default:"…" }}
+      {% if p.retard_minutes %}<span class="badge alerte">{{ p.retard_minutes }} min de retard</span>{% endif %}</div>
+    {% empty %}<p class="discret">Aucun pointage.</p>{% endfor %}</div>
+</div>
+{% endblock %}

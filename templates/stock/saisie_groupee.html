@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Saisie groupée du stock{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Saisie groupée du stock</h1>
+  <p>Inventaire : saisissez la quantité comptée (c'est le S.I des fiches). Approvisionnement : la quantité livrée. Les cases vides ne changent rien.</p></div></div>
+<form class="filtres" method="get">
+  <select name="categorie">{% for v, l in categories %}<option value="{{ v }}" {% if v == categorie %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="type"><option value="INVENTAIRE" {% if type == "INVENTAIRE" %}selected{% endif %}>Inventaire (quantité comptée)</option>
+    <option value="ENTREE" {% if type == "ENTREE" %}selected{% endif %}>Approvisionnement (quantité livrée)</option></select>
+  <input type="date" name="journee" value="{{ journee|date:'Y-m-d' }}" style="max-width:180px">
+  <button class="btn petit">Afficher</button>
+</form>
+{% for e in erreurs %}<div class="message error">{{ e }}</div>{% endfor %}
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="categorie" value="{{ categorie }}"><input type="hidden" name="type" value="{{ type }}">
+  <input type="hidden" name="journee" value="{{ journee|date:'Y-m-d' }}">
+  <div class="tableau"><table>
+    <tr><th>Article</th><th>Code</th><th class="nombre">En stock</th><th class="nombre">P.V</th><th>{% if type == "INVENTAIRE" %}Quantité comptée{% else %}Quantité livrée{% endif %}</th>{% if type == "ENTREE" %}<th>Prix d'achat unitaire (facultatif)</th>{% endif %}</tr>
+    {% for a in articles %}<tr><td>{{ a.nom }}</td><td>{{ a.code }}</td><td class="nombre">{{ a.quantite }}</td><td class="nombre">{{ a.prix_vente|nombre }}</td>
+      <td><input type="number" name="q_{{ a.pk }}" min="0" inputmode="numeric" style="max-width:120px"></td>
+      {% if type == "ENTREE" %}<td><input type="number" name="c_{{ a.pk }}" min="0" inputmode="numeric" style="max-width:140px" placeholder="{{ a.prix_achat|default:'' }}"></td>{% endif %}</tr>
+    {% empty %}<tr><td colspan="5" class="vide">Aucun article dans cette catégorie.</td></tr>{% endfor %}
+  </table></div>
+  <div class="champ"><label for="motif">Motif</label><input type="text" id="motif" name="motif" placeholder="{% if type == 'INVENTAIRE' %}Inventaire de démarrage{% else %}Livraison fournisseur, bon n°…{% endif %}"></div>
+  <button class="btn" type="submit">Enregistrer</button>
+</form>
+{% endblock %}

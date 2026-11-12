@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Crédits clients{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Crédits clients (bar et boutique) {% aide "credit" %}</h1>
+  <p>Clients non logés qui ont pris à crédit. Les crédits des clients logés sont sur la note de leur chambre.</p></div>
+  {% if user.voit_reception %}<div class="actions"><a class="btn secondaire" href="{% url 'hotel:sejours' %}?vue=impayes">Impayés chambres</a></div>{% endif %}</div>
+<div class="tableau"><table><tr><th>Client</th><th>Téléphone</th><th class="nombre">Reste dû</th><th></th></tr>
+  {% for client, reste in debiteurs %}<tr><td>{{ client }}</td><td>{{ client.telephone }}</td><td class="nombre rouge">{{ reste|nombre }}</td>
+    <td>{% if session %}<a class="btn petit" href="{% url 'caisse:credit_regler' client.pk %}">Encaisser un règlement</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Aucun crédit en cours.</td></tr>{% endfor %}
+</table></div>
+{% if not session %}<p class="discret">Ouvrez votre caisse pour encaisser un règlement.</p>{% endif %}
+{% endblock %}

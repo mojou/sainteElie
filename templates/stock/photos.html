@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Photos des articles{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Photos des articles</h1>
+  <p class="etape">Prenez chaque produit en photo : elle remplace le dessin à la caisse, dans le stock et sur la page d'accueil.</p>
+  <p>Sur téléphone, « Prendre la photo » ouvre l'appareil photo. Posez le produit sur une table claire, de face, et
+    cadrez-le bien au milieu. {% if sans_photo %}Encore {{ sans_photo }} article{{ sans_photo|pluralize }} avec un dessin.{% else %}Tous les articles ont leur photo.{% endif %}</p></div></div>
+<div class="filtres no-print">
+  <a class="btn petit {% if not categorie %}{% else %}secondaire{% endif %}" href="?">Tout</a>
+  {% for v, l in categories %}<a class="btn petit {% if categorie == v %}{% else %}secondaire{% endif %}" href="?categorie={{ v }}">{{ l }}</a>{% endfor %}
+</div>
+<div class="photos-articles">
+  {% for a in articles %}
+  <div class="photo-article-carte{% if a.photo %} a-photo{% endif %}" id="article-{{ a.pk }}">
+    <img src="{{ a.image_url }}" alt="{{ a }}" loading="lazy" width="120" height="90">
+    <div class="photo-article-nom"><strong>{{ a.nom }}</strong>{% if a.code %} <small>{{ a.code }}</small>{% endif %}
+      <span class="badge {% if a.photo %}ok{% endif %}">{% if a.photo %}Photo{% else %}Dessin{% endif %}</span></div>
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <input type="hidden" name="article" value="{{ a.pk }}"><input type="hidden" name="categorie" value="{{ categorie }}">
+      <label class="btn petit prendre-photo">{% if a.photo %}Changer la photo{% else %}Prendre la photo{% endif %}
+        <input type="file" name="photo" accept="image/*" capture="environment" data-envoi-auto></label>
+      {% if a.photo %}<button class="lien" name="action" value="retirer" data-confirmer="Retirer la photo de {{ a.nom }} ? Le dessin reviendra.">Retirer</button>{% endif %}
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

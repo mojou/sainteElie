@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Reçu n°{{ e.numero_recu }}{% endblock %}
+{% block contenu %}
+<div class="actions no-print" style="margin-bottom:1rem">
+  <button class="btn" onclick="window.print()">Imprimer</button>
+  {% if sejour %}<a class="btn secondaire" href="{% url 'hotel:sejour' sejour.pk %}">Retour au séjour</a>
+  {% elif ventes and user.tient_caisse %}<a class="btn secondaire" href="{% url 'caisse:ventes' %}">Retour aux ventes</a>
+  {% elif user.tient_caisse %}<a class="btn secondaire" href="{% url 'caisse:ma_caisse' %}">Retour à ma caisse</a>
+  {% else %}<a class="btn secondaire" href="{% url 'caisse:sessions' %}">Retour aux sessions</a>{% endif %}
+</div>
+<div class="carte" style="max-width:420px">
+  <h2 style="margin-top:0">{{ etablissement_nom }}</h2>
+  <p><strong>Reçu n°{{ e.numero_recu }}</strong><br>{{ e.date|date:"d/m/Y à H:i" }}</p>
+  <dl class="fiche">
+    {% if sejour %}
+      <dt>Client</dt><dd>{{ sejour.client }}</dd>
+      <dt>Chambre</dt><dd>{{ sejour.chambre.numero }} ({{ sejour.date_arrivee|date:"d/m" }} au {{ sejour.date_depart|date:"d/m/Y" }})</dd>
+    {% elif e.client %}
+      <dt>Client</dt><dd>{{ e.client }}</dd>
+    {% endif %}
+    <dt>Objet</dt><dd>{{ e.get_nature_display }}{% if e.annule %} du reçu n°{{ e.annule.numero_recu }}{% endif %}</dd>
+    {% for v in ventes %}<dt>{{ v.quantite }} × {{ v.article }}</dt><dd>{{ v.montant|fcfa }}</dd>{% endfor %}
+    <dt>Payé en</dt><dd>{{ e.moyen_libelle }}</dd>
+    {% if e.reference %}<dt>Référence</dt><dd>{{ e.reference }}</dd>{% endif %}
+    <dt>Montant</dt><dd style="font-size:1.3rem">{{ e.montant_signe|fcfa }}</dd>
+    <dt>En lettres</dt><dd class="montant-lettres">{{ e.montant|en_lettres }}</dd>
+    {% if sejour %}<dt>Reste à payer</dt><dd>{{ sejour.reste_a_payer|fcfa }}</dd>{% endif %}
+    {% if dette is not None %}<dt>Reste dû</dt><dd>{{ dette|fcfa }}</dd>{% endif %}
+    <dt>Reçu par</dt><dd>{{ e.utilisateur }}</dd>
+  </dl>
+  <p class="discret" style="margin-top:1rem">Merci de votre confiance.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <rect width="480" height="320" fill="#f6efe0"/>
+  <rect x="0" y="246" width="480" height="74" fill="#d9c39a"/>
+  <rect x="0" y="242" width="480" height="6" fill="#c7ad7f"/>
+  <!-- Fenêtre et rideaux -->
+  <rect x="40" y="52" width="104" height="122" rx="3" fill="#bcd3ec" stroke="#ffffff" stroke-width="6"/>
+  <path d="M92 52 V174 M40 113 H144" stroke="#ffffff" stroke-width="4"/>
+  <circle cx="118" cy="80" r="11" fill="#f2c96b"/>
+  <path d="M26 40 H158" stroke="#b38a2e" stroke-width="4" stroke-linecap="round"/>
+  <path d="M28 42 H52 V188 Q40 194 28 188Z" fill="#12305a"/>
+  <path d="M132 42 H156 V188 Q144 194 132 188Z" fill="#12305a"/>
+  <!-- Tableau -->
+  <rect x="236" y="56" width="120" height="64" rx="3" fill="#e5eef8" stroke="#d4a94c" stroke-width="5"/>
+  <path d="M244 112 L276 82 L300 104 L318 90 L348 112Z" fill="#3f7d4e"/>
+  <circle cx="330" cy="74" r="7" fill="#f2c96b"/>
+  <!-- Lit -->
+  <rect x="190" y="132" width="212" height="96" rx="12" fill="#12305a"/>
+  <rect x="198" y="140" width="196" height="8" rx="4" fill="#d4a94c" opacity=".7"/>
+  <rect x="178" y="190" width="236" height="56" rx="8" fill="#ffffff" stroke="#e2e0d9" stroke-width="2"/>
+  <rect x="204" y="166" width="78" height="32" rx="14" fill="#ffffff" stroke="#e2e0d9" stroke-width="2"/>
+  <rect x="310" y="166" width="78" height="32" rx="14" fill="#ffffff" stroke="#e2e0d9" stroke-width="2"/>
+  <rect x="178" y="206" width="236" height="40" rx="6" fill="#d4a94c"/>
+  <rect x="178" y="202" width="236" height="10" rx="5" fill="#f8f0dc"/>
+  <rect x="186" y="246" width="10" height="16" fill="#0b1f3a"/><rect x="396" y="246" width="10" height="16" fill="#0b1f3a"/>
+  <!-- Table de chevet et lampe -->
+  <rect x="420" y="196" width="48" height="54" rx="4" fill="#b38a2e"/>
+  <rect x="426" y="214" width="36" height="3" fill="#8a6a3d"/>
+  <circle cx="444" cy="232" r="2.5" fill="#f8f0dc"/>
+  <rect x="441" y="168" width="6" height="28" fill="#8a6a3d"/>
+  <path d="M428 168 H460 L452 146 H436Z" fill="#f8f0dc" stroke="#e2d2a8" stroke-width="2"/>
+  <circle cx="444" cy="170" r="30" fill="#f2c96b" opacity=".18"/>
+  <!-- Tapis -->
+  <ellipse cx="296" cy="290" rx="120" ry="16" fill="#12305a" opacity=".85"/>
+  <ellipse cx="296" cy="290" rx="100" ry="10" fill="none" stroke="#d4a94c" stroke-width="2"/>
+</svg>

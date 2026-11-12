@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titre %}{{ titre }}{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>{{ titre }}</h1>{% if sous_titre %}<p>{{ sous_titre }}</p>{% endif %}</div></div>
+<div class="carte">
+  {% if intro %}<p>{{ intro }}</p>{% endif %}
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% include "partials/champs.html" %}
+    <div class="actions">
+      <button class="btn" type="submit">{{ bouton|default:"Enregistrer" }}</button>
+      {% if retour_url %}<a class="btn secondaire" href="{{ retour_url }}">Annuler</a>
+      {% elif retour %}<a class="btn secondaire" href="{% url retour %}">Annuler</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

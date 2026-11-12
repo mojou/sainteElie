@@ -1,0 +1,108 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}Mon espace · {{ etablissement_nom }}{% endblock %}
+{% block navigation %}{% endblock %}
+{% block contenu %}
+<section class="v-espace">
+  <div class="v-conteneur">
+    <div class="v-espace-tete">
+      <div>
+        <p class="v-surtitre">Espace client</p>
+        <h1>Bonjour {{ compte.nom }}</h1>
+        <p>Identifiant : {{ compte.telephone }}</p>
+      </div>
+      <div class="actions"><a class="btn or" href="{% url 'vitrine:reserver' %}">Réserver une chambre</a>
+        <a class="btn secondaire petit" href="{% url 'vitrine:mot_de_passe' %}">Changer mon mot de passe</a></div>
+    </div>
+
+    {% if demandes %}
+    <h2>Mes demandes de réservation</h2>
+    <div class="grille">
+      {% for r in demandes %}
+      <div class="carte">
+        <span class="badge {% if r.statut == 'CONFIRMEE' %}ok{% elif r.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ r.get_statut_display }}</span>
+        <h3>Demande n°{{ r.pk }} · {{ r.libelle_type }}</h3>
+        <p>Du {{ r.date_arrivee|date:"l d F" }} au {{ r.date_depart|date:"l d F Y" }} · {{ r.nb_nuits }} nuit{{ r.nb_nuits|pluralize }} · {{ r.total_prevu|fcfa }}</p>
+        {% if r.statut == "NOUVELLE" %}<p class="discret">La réception vous appelle pour confirmer.</p>
+          <form method="post" action="{% url 'vitrine:demande_annuler' r.pk %}">{% csrf_token %}<button class="btn secondaire petit" data-confirmer="Annuler votre demande n°{{ r.pk }} ?" data-oui="Oui, annuler">Annuler ma demande</button></form>
+        {% elif r.statut == "CONFIRMEE" and r.sejour %}<p>Confirmée : chambre {{ r.sejour.chambre.numero }}.</p>
+        {% elif r.motif %}<p class="discret">{{ r.motif }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if compte.statut == "EN_ATTENTE" %}
+    <div class="carte v-attente">
+      <h2>Votre compte est presque prêt</h2>
+      <p>Pour protéger vos informations, la réception doit vérifier que ce compte est bien le vôtre avant de vous montrer
+        vos séjours et vos paiements. Présentez-vous à la réception{% if etablissement.telephone %} ou appelez le
+        <a href="tel:{{ etablissement.telephone|cut:' ' }}">{{ etablissement.telephone }}</a>{% endif %}.</p>
+    </div>
+    {% else %}
+
+    {% for s in en_cours %}
+    <article class="carte v-sejour">
+      <span class="badge info">Séjour en cours</span>
+      <h2>Chambre {{ s.chambre.numero }}</h2>
+      <p class="v-dates">Du {{ s.date_arrivee|date:"l d F" }} au {{ s.date_depart|date:"l d F Y" }} · {{ s.nb_nuits }} nuit{{ s.nb_nuits|pluralize }}</p>
+      <div class="chiffres">
+        <div class="chiffre"><div class="valeur">{{ s.total_facture|nombre }}</div><div class="libelle">Total (FCFA)</div></div>
+        <div class="chiffre"><div class="valeur">{{ s.total_paye|nombre }}</div><div class="libelle">Déjà payé</div></div>
+        <div class="chiffre {% if s.reste_a_payer > 0 %}v-reste{% else %}v-solde{% endif %}"><div class="valeur">{{ s.reste_a_payer|nombre }}</div>
+          <div class="libelle">{% if s.reste_a_payer > 0 %}Reste à payer{% else %}Tout est réglé{% endif %}</div></div>
+      </div>
+      <h3>Détail</h3>
+      <div class="tableau"><table>
+        <tr><th>Quoi</th><th class="nombre">Montant</th></tr>
+        <tr><td>Chambre : {{ s.nb_nuits }} nuit{{ s.nb_nuits|pluralize }} × {{ s.tarif_nuit|fcfa }}</td><td class="nombre">{{ s.montant_chambre_prevu|nombre }}</td></tr>
+        {% for e in s.extras.all %}{% if e.statut == "ACTIF" %}<tr><td>{{ e.date_conso|date:"d/m" }} · {{ e.description }}</td><td class="nombre">{{ e.montant|nombre }}</td></tr>{% endif %}{% endfor %}
+      </table></div>
+    </article>
+    {% endfor %}
+
+    {% if a_venir %}
+    <h2>Réservations à venir</h2>
+    <div class="grille">
+      {% for s in a_venir %}
+      <div class="carte">
+        <span class="badge RESERVE">Réservé</span>
+        <h3>Chambre {{ s.chambre.numero }}</h3>
+        <p>Du {{ s.date_arrivee|date:"l d F" }} au {{ s.date_depart|date:"l d F Y" }} · {{ s.nb_nuits }} nuit{{ s.nb_nuits|pluralize }}</p>
+        <dl class="fiche"><dt>Prévu</dt><dd>{{ s.montant_chambre_prevu|fcfa }}</dd><dt>Déjà versé</dt><dd>{{ s.total_paye|fcfa }}</dd></dl>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not en_cours and not a_venir and not passes %}
+    <div class="carte"><h2>Aucun séjour pour l'instant</h2>
+      <p>Vos prochains séjours et vos paiements apparaîtront ici dès qu'ils seront enregistrés à la réception.</p></div>
+    {% endif %}
+
+    {% if paiements %}
+    <h2>Mes paiements</h2>
+    <div class="tableau"><table>
+      <tr><th>Date</th><th>Reçu</th><th>Chambre</th><th>Objet</th><th>Payé en</th><th class="nombre">Montant</th></tr>
+      {% for p in paiements %}
+      <tr><td>{{ p.date|date:"d/m/Y" }}</td><td>n°{{ p.numero_recu }}</td><td>{{ p.sejour.chambre.numero }}</td><td>{{ p.get_nature_display }}</td>
+        <td>{{ p.moyen_libelle }}</td><td class="nombre">{{ p.montant_signe|nombre }}</td></tr>
+      {% endfor %}
+    </table></div>
+    {% endif %}
+
+    {% if passes %}
+    <h2>Séjours passés</h2>
+    {% if reste_passes > 0 %}<div class="message warning">Il reste <strong>{{ reste_passes|fcfa }}</strong> à régler sur vos séjours passés.</div>{% endif %}
+    <div class="tableau"><table>
+      <tr><th>Chambre</th><th>Dates</th><th class="nombre">Total</th><th class="nombre">Payé</th><th class="nombre">Reste</th></tr>
+      {% for s in passes %}
+      <tr><td>{{ s.chambre.numero }}</td><td>{{ s.date_arrivee|date:"d/m/Y" }} → {{ s.date_depart|date:"d/m/Y" }}</td>
+        <td class="nombre">{{ s.total_facture|nombre }}</td><td class="nombre">{{ s.total_paye|nombre }}</td>
+        <td class="nombre {% if s.reste_a_payer > 0 %}rouge{% endif %}">{{ s.reste_a_payer|nombre }}</td></tr>
+      {% endfor %}
+    </table></div>
+    {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

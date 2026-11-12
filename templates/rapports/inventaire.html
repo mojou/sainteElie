@@ -1,0 +1,158 @@
+{% extends "base.html" %}{% load static gestion l10n %}
+{% block titre %}Inventaire et rentabilité · {{ libelle }}{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Inventaire et rentabilité · {{ libelle }}</h1>
+  <p>Ventes, marges, stock, pertes{% if finances %}, charges et résultat{% endif %}, et tout ce qui s'est passé dans l'application. Comparé à : {{ libelle_avant }}.</p></div>
+  <div class="actions no-print">
+    <a class="btn" href="?{{ request.GET.urlencode }}&format=pdf" target="_blank" rel="noopener">Imprimer le rapport (PDF)</a>
+    <a class="btn secondaire" href="?{{ request.GET.urlencode }}&format=csv">Télécharger le détail (Excel)</a></div></div>
+
+<div class="filtres-periode no-print">
+  <div class="segment" role="group" aria-label="Période">
+    {% for v, l in periodes %}<a class="{% if cle == v %}actif{% endif %}" href="?periode={{ v }}">{{ l }}</a>{% endfor %}
+  </div>
+  <form method="get" class="dates-libres">
+    <label for="du">Du</label><input type="date" id="du" name="du" value="{{ d.c.debut|date:'Y-m-d' }}">
+    <label for="au">au</label><input type="date" id="au" name="au" value="{{ d.c.fin|date:'Y-m-d' }}">
+    <button class="btn petit">Voir</button>
+  </form>
+</div>
+
+<nav class="sommaire-rapport no-print" aria-label="Parties du rapport">
+  <a href="#synthese">Synthèse</a><a href="#services">Recettes</a><a href="#marges">Ventes et marges</a>
+  <a href="#articles">Par article</a><a href="#stock">Inventaire</a><a href="#pertes">Pertes et sorties</a>
+  {% if finances %}<a href="#resultat">Charges et résultat</a>{% endif %}<a href="#activite">Activité</a>
+</nav>
+
+{% if notes %}
+<div class="message warning notes-rapport"><strong>À savoir avant de lire :</strong>
+  <ul>{% for note in notes %}<li>{{ note }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<section id="synthese">
+<div class="tuiles-chiffres">
+  <div class="tuile-chiffre"><div class="tuile-libelle">Chiffre d'affaires</div><div class="tuile-valeur">{{ d.c.total|nombre }} <small>FCFA</small></div>
+    <div class="tuile-variation">{{ d.c.occupation|floatformat:"-1" }} % d'occupation</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Marge brute sur marchandises</div><div class="tuile-valeur">{{ d.marge|nombre }} <small>FCFA</small></div>
+    <div class="tuile-variation">{% if d.taux_marque is not None %}taux de marque {{ d.taux_marque|floatformat:"-1" }} %{% else %}prix d'achat à noter{% endif %}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Pertes et écarts (au coût)</div><div class="tuile-valeur{% if d.pertes or d.ecarts < 0 %} rouge{% endif %}">{{ d.pertes|add:0|nombre }} <small>FCFA</small></div>
+    <div class="tuile-variation">écarts d'inventaire : {{ d.ecarts|nombre }}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Stock en fin de période</div><div class="tuile-valeur">{{ d.valeur_fin|nombre }} <small>FCFA</small></div>
+    <div class="tuile-variation">au coût · {{ d.valeur_fin_vente|nombre }} au prix de vente</div></div>
+  {% if finances %}
+  <div class="tuile-chiffre"><div class="tuile-libelle">Charges</div><div class="tuile-valeur">{{ d.charges|nombre }} <small>FCFA</small></div>
+    <div class="tuile-variation">{% if d.part_charges is not None %}{{ d.part_charges|floatformat:"-1" }} % du chiffre d'affaires{% endif %}</div></div>
+  <div class="tuile-chiffre"><div class="tuile-libelle">Résultat de gestion</div><div class="tuile-valeur{% if d.resultat < 0 %} rouge{% endif %}">{{ d.resultat|nombre }} <small>FCFA</small></div>
+    <div class="tuile-variation">{% if d.taux_resultat is not None %}marge nette {{ d.taux_resultat|floatformat:"-1" }} %{% endif %}</div></div>
+  {% endif %}
+</div>
+<div class="tableau"><table>
+  <tr><th>Par rapport à {{ libelle_avant }}</th><th class="nombre">Cette période</th><th class="nombre">Avant</th><th class="nombre">Évolution</th></tr>
+  {% for c in comparaison %}<tr><td>{{ c.libelle }}</td><td class="nombre">{{ c.valeur|nombre }}</td><td class="nombre">{{ c.avant|nombre }}</td>
+    <td class="nombre">{% if c.variation is not None %}{% if c.variation > 0 %}▲ +{% elif c.variation < 0 %}▼ {% endif %}{{ c.variation }} %{% else %}–{% endif %}</td></tr>{% endfor %}
+</table></div>
+</section>
+
+<section id="services" class="carte">
+  <h2>D'où vient l'argent : recettes par service</h2>
+  {% if d.c.total %}
+  <div class="barre-segments" role="img" aria-label="Répartition des recettes ; les montants sont dans le tableau.">
+    {% for s in d.services %}{% if s.montant %}<span class="serie-{{ s.rang }}" style="flex: {{ s.montant|unlocalize }}" title="{{ s.libelle }} : {{ s.montant|fcfa }} ({{ s.part|floatformat:'-1' }} %)">{% if s.part >= 12 %}{{ s.part|floatformat:"0" }} %{% endif %}</span>{% endif %}{% endfor %}
+  </div>
+  <ul class="legende">{% for s in d.services %}<li><span class="cle-couleur serie-{{ s.rang }}"></span>{{ s.libelle }}</li>{% endfor %}</ul>
+  {% endif %}
+  <table class="table-services">
+    {% for s in d.services %}<tr><td><span class="cle-couleur serie-{{ s.rang }}"></span>{{ s.libelle }}</td><td class="nombre">{{ s.montant|fcfa }}</td><td class="nombre">{% if s.part is not None %}{{ s.part|floatformat:"-1" }} %{% endif %}</td></tr>{% endfor %}
+    <tr class="total"><td>Total</td><td class="nombre">{{ d.c.total|fcfa }}</td><td class="nombre">100 %</td></tr>
+  </table>
+  <p class="discret">Argent encaissé sur la période : {{ d.c.encaisse|fcfa }}. Extras notés à la main sur les chambres (sans passer par une caisse) : {{ d.extras_manuels|fcfa }}.</p>
+</section>
+
+<section id="marges">
+<h2>Ventes et marges par catégorie {% aide "taux_marque" %}</h2>
+<div class="tableau"><table>
+  <tr><th>Catégorie</th><th class="nombre">Vendus</th><th class="nombre">Chiffre d'affaires</th><th class="nombre">Part</th><th class="nombre">Coût des ventes</th><th class="nombre">Marge</th><th class="nombre">Taux de marque</th><th class="nombre">Sans prix d'achat</th></tr>
+  {% for c in d.categories %}{% if c.ca or c.valeur_fin %}<tr><td>{{ c.nom }}</td><td class="nombre">{{ c.vendu }}</td><td class="nombre">{{ c.ca|nombre }}</td>
+    <td class="nombre">{% if c.part_ca is not None %}{{ c.part_ca|floatformat:"-1" }} %{% endif %}</td><td class="nombre">{{ c.cmv|nv }}</td><td class="nombre">{{ c.marge|nv }}</td>
+    <td class="nombre">{% if c.taux_marque is not None %}{{ c.taux_marque|floatformat:"-1" }} %{% else %}–{% endif %}</td>
+    <td class="nombre {% if c.sans_cout %}rouge{% endif %}">{{ c.sans_cout|default:"" }}</td></tr>{% endif %}{% endfor %}
+  <tr class="total"><td>Total</td><td></td><td class="nombre">{{ d.ca_marchandises|nombre }}</td><td class="nombre">100 %</td><td class="nombre">{{ d.cmv|nombre }}</td>
+    <td class="nombre">{{ d.marge|nombre }}</td><td class="nombre">{% if d.taux_marque is not None %}{{ d.taux_marque|floatformat:"-1" }} %{% else %}–{% endif %}</td><td></td></tr>
+</table></div>
+</section>
+
+<section id="articles">
+<h2>Rentabilité par article</h2>
+<p class="discret">Les articles vendus sur la période, du plus gros chiffre d'affaires au plus petit. Le taux de marque est la part du prix de vente qui reste une fois l'article payé ; le coefficient, combien de fois le prix de vente couvre le prix d'achat.</p>
+<div class="tableau"><table>
+  <tr><th>Article</th><th class="nombre">Vendu</th><th class="nombre">Prix</th><th class="nombre">Coût d'achat</th><th class="nombre">Marge unit.</th><th class="nombre">Taux de marque</th><th class="nombre">Coef.</th><th class="nombre">Chiffre d'affaires</th><th class="nombre">Marge</th><th class="nombre">Part du CA</th></tr>
+  {% for l in d.lignes|dictsortreversed:"ca" %}{% if l.vendu %}
+  <tr><td><a href="{% url 'stock:article' l.article.pk %}">{{ l.article }}</a><br><small class="discret">{{ l.categorie }}</small></td>
+    <td class="nombre">{{ l.vendu }}</td><td class="nombre">{{ l.prix|nombre }}</td>
+    <td class="nombre">{% if l.avec_cout %}{{ l.cout|nombre }}{% else %}<span class="rouge">à noter</span>{% endif %}</td>
+    <td class="nombre {% if l.marge_unitaire is not None and l.marge_unitaire <= 0 %}rouge{% endif %}">{{ l.marge_unitaire|default_if_none:"–" }}</td>
+    <td class="nombre">{% if l.taux_marque is not None %}{{ l.taux_marque|floatformat:"-1" }} %{% else %}–{% endif %}</td>
+    <td class="nombre">{{ l.coefficient|default_if_none:"–" }}</td>
+    <td class="nombre">{{ l.ca|nombre }}</td><td class="nombre">{% if l.marge is not None %}{{ l.marge|nombre }}{% else %}–{% endif %}</td>
+    <td class="nombre">{% if l.part_ca is not None %}{{ l.part_ca|floatformat:"-1" }} %{% endif %}</td></tr>
+  {% endif %}{% empty %}<tr><td colspan="10" class="vide">Aucune vente sur la période.</td></tr>{% endfor %}
+</table></div>
+</section>
+
+<section id="stock">
+<h2>Inventaire : le stock article par article</h2>
+<p class="discret">Stock au début de la période + premier comptage + livraisons − vendu ou offert − casse − sorties ± écarts d'inventaire = stock à la fin. Une vente annulée revient en stock : elle n'est pas comptée.</p>
+{% for c in d.categories %}{% if c.lignes.0.suivi %}
+<details class="carte inventaire-categorie"{% if forloop.first %} open{% endif %}>
+  <summary><strong>{{ c.nom }}</strong> · stock {{ c.valeur_debut|nombre }} → {{ c.valeur_fin|nombre }} FCFA au coût · livraisons {{ c.entrees_valeur|nombre }}</summary>
+  <div class="tableau"><table>
+    <tr><th>Article</th><th class="nombre">Début</th><th class="nombre">1er comptage</th><th class="nombre">Livré</th><th class="nombre">Vendu ou offert</th><th class="nombre">Casse</th><th class="nombre">Sorties</th><th class="nombre">Écart</th><th class="nombre">Fin</th><th class="nombre">Valeur fin</th><th class="nombre">Jours de stock</th></tr>
+    {% for l in c.lignes %}<tr><td><a href="{% url 'stock:article' l.article.pk %}">{{ l.article }}</a></td>
+      <td class="nombre">{{ l.debut }}</td><td class="nombre">{{ l.premier_comptage|nv }}</td><td class="nombre">{{ l.entrees|nv }}</td><td class="nombre">{{ l.sorti_vente|nv }}</td>
+      <td class="nombre {% if l.pertes %}rouge{% endif %}">{{ l.pertes|nv }}</td><td class="nombre">{{ l.sorties|nv }}</td>
+      <td class="nombre {% if l.ecart < 0 %}rouge{% endif %}">{% if l.ecart %}{{ l.ecart|stringformat:"+d" }}{% endif %}</td>
+      <td class="nombre"><strong>{{ l.fin }}</strong></td><td class="nombre">{{ l.valeur_fin|nv }}</td><td class="nombre">{{ l.jours_de_stock|default_if_none:"" }}</td></tr>{% endfor %}
+  </table></div>
+</details>
+{% endif %}{% endfor %}
+</section>
+
+<section id="pertes" class="carte">
+  <h2>Pertes et sorties</h2>
+  <table class="table-services">
+    <tr><td>Casse et périmés</td><td class="nombre">{{ d.pertes|fcfa }} au coût</td></tr>
+    <tr><td>Écarts d'inventaire (manquants − surplus)</td><td class="nombre {% if d.ecarts < 0 %}rouge{% endif %}">{{ d.ecarts|fcfa }} au coût</td></tr>
+    <tr><td>Offerts</td><td class="nombre">{{ d.offerts_vente|fcfa }} au prix de vente · {{ d.offerts_cout|fcfa }} au coût</td></tr>
+    <tr><td>Pertes en part du coût des ventes</td><td class="nombre">{% if d.taux_pertes is not None %}{{ d.taux_pertes|floatformat:"-1" }} %{% else %}–{% endif %}</td></tr>
+    {% if finances %}<tr><td>Prélèvements du gérant dans les caisses</td><td class="nombre">{{ d.prelevements|fcfa }}</td></tr>{% endif %}
+  </table>
+  <p><a href="{% url 'stock:ecarts' %}">Détail des écarts d'inventaire</a> · <a href="{% url 'stock:mouvements' %}?du={{ d.c.debut|date:'Y-m-d' }}&au={{ d.c.fin|date:'Y-m-d' }}&type=AVARIE">Détail de la casse</a></p>
+</section>
+
+{% if finances %}
+<section id="resultat" class="carte">
+  <h2>Charges et résultat</h2>
+  <div class="tableau"><table>
+    <tr><th></th><th class="nombre">Montant</th><th class="nombre">Part des recettes</th><th class="nombre">{{ libelle_avant }}</th></tr>
+    <tr><td><strong>Recettes</strong></td><td class="nombre">{{ d.c.total|nombre }}</td><td class="nombre">100 %</td><td class="nombre">{{ a.c.total|nombre }}</td></tr>
+    {% for x in d.depenses %}<tr><td>− {{ x.libelle }}</td><td class="nombre">{{ x.montant|nombre }}</td><td class="nombre">{% if x.part is not None %}{{ x.part|floatformat:"-1" }} %{% endif %}</td><td></td></tr>{% endfor %}
+    <tr><td>− Salaires bruts {% if d.mois_salaires %}(au prorata des jours){% else %}<span class="rouge">(aucune fiche validée)</span>{% endif %}</td><td class="nombre">{{ d.salaires|nombre }}</td>
+      <td class="nombre">{% if d.part_salaires is not None %}{{ d.part_salaires|floatformat:"-1" }} %{% endif %}</td><td class="nombre">{{ a.salaires|nombre }}</td></tr>
+    <tr class="total"><td>= Résultat de gestion</td><td class="nombre {% if d.resultat < 0 %}rouge{% endif %}">{{ d.resultat|nombre }}</td>
+      <td class="nombre">{% if d.taux_resultat is not None %}{{ d.taux_resultat|floatformat:"-1" }} %{% endif %}</td><td class="nombre">{{ a.resultat|nombre }}</td></tr>
+  </table></div>
+  <p class="discret">Comme au bilan du mois, les achats de marchandises comptent quand ils sont notés en dépenses. Sur la période : livraisons reçues {{ d.livraisons|fcfa }} au coût, achats notés en dépenses {{ d.achats_notes|fcfa }}. Les prélèvements du gérant sont une sortie d'argent, pas une charge.</p>
+</section>
+{% endif %}
+
+<section id="activite">
+<h2>Tout ce qui s'est passé dans l'application</h2>
+<div class="grille-activite">
+  {% for titre, lignes in d.activites %}
+  <div class="carte"><h3>{{ titre }}</h3>
+    <dl class="fiche">{% for libelle_ligne, valeur in lignes %}<dt>{{ libelle_ligne }}</dt><dd>{{ valeur }}</dd>{% empty %}<dt>Rien</dt><dd>–</dd>{% endfor %}</dl></div>
+  {% endfor %}
+</div>
+{% if user.est_gerant %}<p class="discret no-print">Le détail, action par action, est dans le <a href="{% url 'core:journal' %}">journal d'activité</a>.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}{% load static gestion %}
+{% block titre %}{{ nom_pdv }}{% endblock %}
+{% block classe_body %}mode-caisse{% endblock %}
+{% block contenu %}
+<form method="post" novalidate class="pdv" id="caisse" data-cle="caisse-{{ session.pk }}"{% if ouvrir_paiement %} data-ouvrir-paiement{% endif %}>{% csrf_token %}
+  {{ panier|json_script:"panier-initial" }}
+
+  <header class="pdv-barre">
+    <div class="pdv-nom">
+      <strong>{{ nom_pdv }}</strong>
+      <small>{{ user.first_name|default:user.username }} · caisse ouverte depuis {{ session.ouverte_le|date:"H:i" }}</small>
+    </div>
+    <nav class="pdv-liens no-print" aria-label="Autres actions">
+      {% if est_boutique %}<a class="pdv-lien" href="{% url 'postes:reception' %}">Chambres</a>{% endif %}
+      <button type="button" class="pdv-lien" data-ouvrir="pdv-ventes">Mes ventes ({{ nb_ventes }})</button>
+      <a class="pdv-lien" href="{% url 'caisse:avarie' %}">Casse ou périmé</a>
+      <a class="pdv-lien" href="{% url 'caisse:credits' %}">Crédits</a>
+      <a class="pdv-lien pdv-fermer" href="{% url 'caisse:remise_comptage' %}">Fermer ma caisse</a>
+    </nav>
+  </header>
+
+  <section class="pdv-commande" aria-label="Commande">
+    <div class="pdv-commande-tete">
+      <button type="button" class="pdv-lien pdv-seulement-telephone" data-vue="articles">← Articles</button>
+      <h2>Commande</h2>
+    </div>
+    {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+    <ul class="pdv-lignes" id="lignes-commande" aria-live="polite"></ul>
+    <div class="pdv-total"><span>Total</span><strong id="total-commande">0 FCFA</strong><em id="total-lettres"></em></div>
+    <p class="pdv-astuce" id="astuce">Touchez un article à droite pour l'ajouter.</p>
+    <div class="pdv-pave">
+      <div class="pdv-touches" aria-label="Pavé : quantité de la ligne choisie">
+        {% for t in "123456789" %}<button type="button" data-touche="{{ t }}">{{ t }}</button>{% endfor %}
+        <button type="button" data-touche="moins" aria-label="Un de moins">−1</button>
+        <button type="button" data-touche="0">0</button>
+        <button type="button" data-touche="efface" aria-label="Effacer le dernier chiffre">⌫</button>
+      </div>
+      <div class="pdv-actions">
+        <button type="button" class="pdv-vider" id="vider-commande">Vider</button>
+        <button type="button" class="pdv-payer" id="aller-paiement" disabled>Paiement</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="pdv-produits" aria-label="Articles à vendre">
+    <div class="pdv-filtres">
+      <input type="search" class="recherche-articles" id="recherche-article" placeholder="Chercher un article…"
+             autocomplete="off" aria-label="Chercher un article">
+      <div class="familles" aria-label="Familles d'articles">
+        <button type="button" class="famille active" data-famille="">Tout</button>
+        {% for f in familles %}<button type="button" class="famille" data-famille="{{ forloop.counter }}">{{ f.nom }}</button>{% endfor %}
+      </div>
+    </div>
+    <div class="pdv-catalogue">
+      {% for f in familles %}
+      <div class="groupe-articles" data-famille="{{ forloop.counter }}"{% if f.doublons %} data-doublons{% endif %}>
+        <h3>{{ f.nom }}</h3>
+        <div class="tuiles-articles">
+          {% for a in f.articles %}
+          <button type="button" class="tuile-article{% if a.suivi_stock and a.quantite <= 0 %} epuise{% endif %}"
+                  data-id="{{ a.pk }}" data-nom="{{ a.nom }}{% if a.code %} {{ a.code }}{% endif %}" data-prix="{{ a.prix_vente }}"
+                  {% if a.suivi_stock %}data-stock="{{ a.quantite }}"{% endif %}{% if a.suivi_stock and a.quantite <= 0 %} disabled{% endif %}>
+            <span class="prix">{{ a.prix_vente|nombre }} F</span>
+            <img src="{{ a.image_url }}" alt="" loading="lazy" width="120" height="90">
+            <span class="nom">{{ a.nom }}{% if a.code %} <small>{{ a.code }}</small>{% endif %}</span>
+            {% if a.suivi_stock %}<span class="stock">{% if a.quantite <= 0 %}Épuisé{% else %}reste {{ a.quantite }}{% endif %}</span>{% endif %}
+            <span class="compteur" aria-hidden="true" hidden></span>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="vide">Aucun article à vendre ici : le gérant les ajoute dans Stock.</p>
+      {% endfor %}
+      <p class="vide" id="aucun-article" hidden>Aucun article ne correspond. Essayez un autre mot.</p>
+    </div>
+  </section>
+
+  <div class="barre-commande no-print" id="barre-commande" hidden>
+    <span id="barre-resume"></span><button type="button" class="btn ok" data-vue="commande">Voir la commande</button>
+  </div>
+
+  <section class="pdv-paiement" id="ecran-paiement" hidden aria-label="Paiement">
+    <div class="pdv-paiement-tete">
+      <button type="button" class="pdv-lien" id="retour-commande">← Retour à la commande</button>
+      <h2>Paiement</h2>
+    </div>
+    <div class="pdv-paiement-corps">
+      <div class="pdv-moyens" role="radiogroup" aria-label="Comment le client paie ?">
+        <p class="etape">Comment le client paie ?</p>
+        {% for valeur, libelle in form.fields.paiement.choices %}
+        <label class="paiement paiement-{{ valeur|lower }}"><input type="radio" name="paiement" value="{{ valeur }}"{% if form.paiement.value == valeur %} checked{% endif %}><span>{{ libelle }}</span></label>
+        {% endfor %}
+        {% for e in form.paiement.errors %}<div class="erreur">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="pdv-paiement-detail">
+        <div class="pdv-a-payer"><span>À payer</span><strong id="a-payer">0 FCFA</strong><em id="a-payer-lettres"></em></div>
+        <p class="pdv-choisir" data-pour="">Touchez à gauche comment le client paie.</p>
+        <div class="detail-paiement" data-pour="ESPECES">
+          <label for="donne">Le client donne</label>
+          <input type="number" id="donne" inputmode="numeric" min="0" placeholder="Tapez ou touchez un billet">
+          <div class="billets-rapides">
+            <button type="button" class="btn secondaire" data-donne="juste">Le compte juste</button>
+            {% for b in billets_rapides %}<button type="button" class="btn secondaire" data-donne="{{ b }}">+ {{ b|nombre }}</button>{% endfor %}
+          </div>
+          <p class="monnaie" id="monnaie" aria-live="polite"></p>
+        </div>
+        <div class="detail-paiement" data-pour="ORANGE_MONEY">
+          <p>Le client paie avec <strong>Orange Money</strong>. Regardez sur le téléphone de la caisse que l'argent est bien arrivé, puis touchez « Valider ».</p>
+        </div>
+        <div class="detail-paiement" data-pour="MTN_MOMO">
+          <p>Le client paie avec <strong>MTN MoMo</strong>. Regardez sur le téléphone de la caisse que l'argent est bien arrivé, puis touchez « Valider ».</p>
+        </div>
+        <div class="detail-paiement" data-pour="CHAMBRE">
+          <p>Touchez la chambre du client : la somme ira sur sa note, payée à la réception.</p>
+          <div class="chambres-credit">
+            {% for s in form.fields.sejour.queryset %}
+            <label class="chambre-choix"><input type="radio" name="sejour" value="{{ s.pk }}"{% if form.sejour.value|stringformat:"s" == s.pk|stringformat:"s" %} checked{% endif %}>
+              <span><strong>{{ s.chambre.numero }}</strong>{{ s.client }}</span></label>
+            {% empty %}<p class="discret">Aucun client n'est logé en ce moment.</p>{% endfor %}
+          </div>
+          {% for e in form.sejour.errors %}<div class="erreur">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="detail-paiement" data-pour="CREDIT">
+          <p class="discret">Client qui n'est pas logé : la somme s'ajoute à son compte {% aide "credit" %}</p>
+          {% for f in form %}{% if f.name == "client" or f.name == "nouveau_client" or f.name == "telephone" %}
+          <div class="champ{% if f.errors %} en-erreur{% endif %}"><label for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}{% for e in f.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+          {% endif %}{% endfor %}
+        </div>
+        <div class="detail-paiement" data-pour="OFFERT">
+          <div class="champ{% if form.observation.errors %} en-erreur{% endif %}"><label for="id_observation">{{ form.observation.label }} {% aide "offert" %}</label>{{ form.observation }}
+            {% for e in form.observation.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+        </div>
+        <button type="submit" class="pdv-valider" id="bouton-encaisser" disabled>Valider</button>
+      </div>
+    </div>
+  </section>
+</form>
+
+{% if terminee %}
+<div class="pdv-termine" id="pdv-termine" role="dialog" aria-modal="true" aria-labelledby="termine-titre">
+  <div class="pdv-termine-boite">
+    <div class="pdv-coche" aria-hidden="true">✓</div>
+    <h2 id="termine-titre">C'est enregistré</h2>
+    <p>{{ terminee.message }}</p>
+    <p class="monnaie rendre" id="monnaie-rendue" hidden></p>
+    <div class="pdv-termine-boutons">
+      {% if terminee.recu %}<a class="btn secondaire grand" href="{% url 'caisse:recu_client' terminee.recu %}">Imprimer le reçu</a>{% endif %}
+      <button type="button" class="btn ok grand" id="nouvelle-commande">Nouvelle commande</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<dialog class="pdv-ventes" id="pdv-ventes" aria-labelledby="titre-ventes">
+  <div class="pdv-ventes-tete"><h2 id="titre-ventes">Mes ventes depuis l'ouverture de ma caisse</h2>
+    <form method="dialog"><button class="btn secondaire">Fermer</button></form></div>
+  <div class="tableau"><table>
+    <tr><th>Heure</th><th>Article</th><th class="nombre">Qté</th><th class="nombre">Montant</th><th>Payé</th><th></th></tr>
+    {% for v in ventes %}
+    <tr class="{% if v.annulee %}annule{% endif %}"><td>{{ v.date|date:"H:i" }}</td><td>{{ v.article }}{% if v.observation %}<br><small>{{ v.observation }}</small>{% endif %}</td>
+      <td class="nombre">{{ v.quantite }}</td><td class="nombre">{{ v.montant|nombre }}</td>
+      <td>{% if v.encaissement %}{{ v.encaissement.get_mode_display }} · reçu n°{{ v.encaissement.numero_recu }}{% else %}{{ v.get_reglement_display }}{% endif %}{% if v.beneficiaire %}<br><small>{{ v.beneficiaire }}</small>{% endif %}{% if v.annulee %}<br><small>annulée : {{ v.motif_annulation }}</small>{% endif %}</td>
+      <td>{% if not v.annulee %}<a href="{% url 'caisse:vente_annuler' v.pk %}">Annuler</a>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="6" class="vide">Aucune vente pour l'instant.</td></tr>{% endfor %}
+  </table></div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/caisse.js' %}?v={{ version_statique }}"></script>{% endblock %}

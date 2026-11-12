@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titre %}Congés et échanges{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Congés et échanges de shift</h1></div>
+  {% if employe %}<div class="actions"><a class="btn" href="{% url 'personnel:conge_nouveau' %}">Demander un congé</a>
+    <a class="btn secondaire" href="{% url 'personnel:echange_nouveau' %}">Échanger un shift</a></div>{% endif %}</div>
+
+{% if a_traiter or echanges_a_traiter %}
+<h2>À traiter</h2>
+<div class="tableau"><table><tr><th>Employé</th><th>Demande</th><th>Motif</th><th>Décision</th></tr>
+  {% for d in a_traiter %}<tr><td>{{ d.employe }}</td><td>{{ d.get_type_display }} du {{ d.date_debut|date:"d/m" }} au {{ d.date_fin|date:"d/m/Y" }} ({{ d.nb_jours }} j)</td><td>{{ d.motif }}</td>
+    <td><form method="post" action="{% url 'personnel:conge_traiter' d.pk %}" class="en-ligne">{% csrf_token %}
+      <input type="text" name="commentaire" placeholder="Commentaire" style="max-width:180px">
+      <button class="btn ok petit" name="decision" value="accepter">Accepter</button><button class="btn danger petit" name="decision" value="refuser">Refuser</button></form></td></tr>{% endfor %}
+  {% for d in echanges_a_traiter %}<tr><td>{{ d.affectation.employe }} ↔ {{ d.affectation_collegue.employe }}</td>
+    <td>Échange : {{ d.affectation.creneau.nom }} du {{ d.affectation.date|date:"d/m" }} contre {{ d.affectation_collegue.creneau.nom }} du {{ d.affectation_collegue.date|date:"d/m" }}</td><td>{{ d.motif }}</td>
+    <td><form method="post" action="{% url 'personnel:echange_traiter' d.pk %}" class="en-ligne">{% csrf_token %}
+      <button class="btn ok petit" name="decision" value="accepter">Accepter</button><button class="btn danger petit" name="decision" value="refuser">Refuser</button></form></td></tr>{% endfor %}
+</table></div>
+{% endif %}
+
+{% if employe %}
+<h2>Mes demandes de congé</h2>
+<div class="tableau"><table><tr><th>Type</th><th>Période</th><th>Statut</th><th>Traité par</th></tr>
+  {% for d in mes_demandes %}<tr><td>{{ d.get_type_display }}</td><td>{{ d.date_debut|date:"d/m" }} au {{ d.date_fin|date:"d/m/Y" }}</td>
+    <td><span class="badge {{ d.statut }}">{{ d.get_statut_display }}</span></td><td>{{ d.traite_par|default:"" }} {{ d.commentaire }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="vide">Aucune demande.</td></tr>{% endfor %}
+</table></div>
+<h2>Mes demandes d'échange</h2>
+<div class="tableau"><table><tr><th>Mon shift</th><th>Contre</th><th>Statut</th></tr>
+  {% for d in mes_echanges %}<tr><td>{{ d.affectation.creneau.nom }} du {{ d.affectation.date|date:"d/m" }}</td>
+    <td>{{ d.affectation_collegue.creneau.nom }} du {{ d.affectation_collegue.date|date:"d/m" }} ({{ d.affectation_collegue.employe }})</td>
+    <td><span class="badge {{ d.statut }}">{{ d.get_statut_display }}</span></td></tr>
+  {% empty %}<tr><td colspan="3" class="vide">Aucune demande.</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

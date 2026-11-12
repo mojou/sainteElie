@@ -1,0 +1,71 @@
+{% extends "base.html" %}{% load static gestion postes %}
+{% block titre %}Un client arrive{% endblock %}
+{% block contenu %}
+{% entete_poste "Réception · chambres" avec_caisse=True %}
+<p class="no-print"><a class="retour" href="{% if chambre_fixe %}{% url 'postes:chambre' chambre_fixe.pk %}{% else %}{% url 'postes:reception' %}{% endif %}">← Retour</a></p>
+{{ tarifs|json_script:"tarifs-chambres" }}
+<form method="post" novalidate class="carte assistant" id="assistant" data-aujourdhui="{{ jour|date:'Y-m-d' }}">{% csrf_token %}
+  <h1>Un client arrive{% if chambre_fixe %} · chambre {{ chambre_fixe.numero }}{% endif %}</h1>
+  <ol class="pas-indicateur" aria-hidden="true"><li>Le client</li><li>Les nuits</li><li>Le paiement</li><li>Vérifier</li></ol>
+  {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+
+  <fieldset class="pas" data-pas="0">
+    <legend>1. Qui est le client ?</legend>
+    {% if chambre_fixe %}
+      <input type="hidden" name="chambre" value="{{ chambre_fixe.pk }}">
+      <p class="discret">Chambre {{ chambre_fixe.numero }} · {{ chambre_fixe.tarif_nuit|fcfa }} la nuit</p>
+    {% else %}
+      <div class="champ{% if form.chambre.errors %} en-erreur{% endif %}"><label for="id_chambre">Quelle chambre ?</label>{{ form.chambre }}{% for e in form.chambre.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    {% endif %}
+    {% if chambre_fixe and form.chambre.errors %}<div class="erreur">{% for e in form.chambre.errors %}{{ e }} {% endfor %}</div>{% endif %}
+    <div class="champ{% if form.nom.errors %} en-erreur{% endif %}"><label for="id_nom">Son nom</label>
+      <input type="text" name="nom" id="id_nom" maxlength="120" value="{{ form.nom.value|default:'' }}" autocomplete="off" autocapitalize="words">
+      {% for e in form.nom.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <div class="champ{% if form.telephone.errors %} en-erreur{% endif %}"><label for="id_telephone">Son téléphone</label>
+      <input type="tel" name="telephone" id="id_telephone" maxlength="30" value="{{ form.telephone.value|default:'' }}" inputmode="tel" autocomplete="off">
+      <span class="aide">S'il est déjà venu, on retrouve sa fiche avec ce numéro.</span>
+      {% for e in form.telephone.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <div class="pas-boutons"><button type="button" class="btn grand" data-suivant>Suivant</button></div>
+  </fieldset>
+
+  <fieldset class="pas" data-pas="1">
+    <legend>2. Combien de nuits ?</legend>
+    <div class="choix-nuits">{% for n in nuits_rapides %}<button type="button" class="btn secondaire grand" data-nuits="{{ n }}">{{ n }}</button>{% endfor %}</div>
+    <div class="champ{% if form.nuits.errors %} en-erreur{% endif %}"><label for="id_nuits">Nombre de nuits</label>
+      <input type="number" name="nuits" id="id_nuits" min="1" max="90" inputmode="numeric" value="{{ form.nuits.value|default:'1' }}">
+      {% for e in form.nuits.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <p class="calcul" id="calcul-nuits" aria-live="polite"></p>
+    <div class="pas-boutons"><button type="button" class="btn secondaire" data-precedent>Retour</button><button type="button" class="btn grand" data-suivant>Suivant</button></div>
+  </fieldset>
+
+  <fieldset class="pas" data-pas="2">
+    <legend>3. Combien le client paie maintenant ?</legend>
+    {% if not session %}<div class="message warning">{% if user.tient_caisse %}Votre caisse est fermée : vous pouvez installer le client sans paiement, ou
+      <a href="{% url 'caisse:ma_caisse' %}?suite={{ request.get_full_path|urlencode }}">ouvrir votre caisse</a> d'abord.{% else %}Vous n'avez pas de caisse : installez le client sans paiement, la réception encaissera.{% endif %}</div>{% endif %}
+    <div class="choix-montant">
+      <button type="button" class="btn secondaire" data-montant-rapide="total">Tout <span></span></button>
+      <button type="button" class="btn secondaire" data-montant-rapide="nuit">Une nuit <span></span></button>
+      <button type="button" class="btn secondaire" data-montant-rapide="0">Rien maintenant</button>
+    </div>
+    <div class="champ{% if form.montant.errors %} en-erreur{% endif %}"><label for="id_montant">Montant reçu (FCFA)</label>
+      <input type="number" name="montant" id="id_montant" min="0" inputmode="numeric" value="{{ form.montant.value|default:'' }}"
+             data-montant data-confirmer-montant data-montant-max-texte="Le séjour coûte">
+      {% for e in form.montant.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <p class="etiquette">Payé en</p>
+    <div class="paiements trois">
+      {% for v, l in form.fields.moyen.choices %}
+      <label class="paiement paiement-{{ v|lower }}"><input type="radio" name="moyen" value="{{ v }}"{% if form.moyen.value == v %} checked{% endif %}><span>{{ l }}</span></label>
+      {% endfor %}
+    </div>
+    <div class="pas-boutons"><button type="button" class="btn secondaire" data-precedent>Retour</button><button type="button" class="btn grand" data-suivant>Suivant</button></div>
+  </fieldset>
+
+  <fieldset class="pas" data-pas="3">
+    <legend>4. Vérifiez, puis installez le client</legend>
+    <dl class="fiche recapitulatif" id="recapitulatif"></dl>
+    <div class="pas-boutons"><button type="button" class="btn secondaire" data-precedent>Retour</button>
+      <button type="submit" class="btn grand ok">Installer le client</button></div>
+  </fieldset>
+</form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/arrivee.js' %}?v={{ version_statique }}"></script>{% endblock %}

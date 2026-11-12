@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Stock bar{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Stock bar · {{ jour|date:"d/m/Y" }}</h1><p>Caisse bar : {{ receptionnistes|join:", "|default:"-" }}</p></div></div>
+{% include "fiches/_navigation.html" %}
+<div class="tableau"><table>
+  <tr><th>Produits</th><th>Code</th><th class="nombre">S.I</th><th class="nombre">Appro.</th><th class="nombre">Avaries</th><th class="nombre">S.T</th>
+    <th class="nombre">Qtés vendues</th><th class="nombre">P.V</th><th class="nombre">Montant</th><th class="nombre">S.F</th>{% if d.a_ajustements %}<th class="nombre">Ajust. inv.</th>{% endif %}</tr>
+  {% for x in d.lignes %}
+  <tr><td><a href="{% if user.voit_stock %}{% url 'stock:article' x.article.pk %}{% else %}#{% endif %}">{{ x.article.nom }}</a></td><td>{{ x.article.code }}</td>
+    <td class="nombre">{{ x.si }}</td><td class="nombre">{{ x.appro|nv }}</td><td class="nombre">{{ x.avaries|nv }}</td><td class="nombre">{{ x.st }}</td>
+    <td class="nombre">{{ x.quantite|nv }}</td><td class="nombre">{{ x.pv|nombre }}</td><td class="nombre">{{ x.montant|nv }}</td>
+    <td class="nombre {% if x.article.est_bas %}rouge{% endif %}">{{ x.sf }}</td>{% if d.a_ajustements %}<td class="nombre">{% if x.ajustement %}{{ x.ajustement|stringformat:"+d" }}{% endif %}</td>{% endif %}</tr>
+  {% empty %}<tr><td colspan="10" class="vide">Aucun article de bar.</td></tr>{% endfor %}
+</table></div>
+<div class="chiffres">
+  <div class="chiffre"><div class="valeur">{{ d.totaux.montant|nombre }}</div><div class="libelle">VENTES</div></div>
+  <div class="chiffre"><div class="valeur">{{ d.totaux.credit|nombre }}</div><div class="libelle">CRÉDITS</div></div>
+  <div class="chiffre"><div class="valeur">{{ d.totaux.offre|nombre }}</div><div class="libelle">OFFRES</div></div>
+  {% for m in d.totaux.moyens %}<div class="chiffre"><div class="valeur">{{ m.montant|nombre }}</div><div class="libelle">{{ m.libelle|upper }}</div></div>{% endfor %}
+</div>
+<p class="discret">S.T = S.I + appro − avaries. S.F = stock réel en fin de journée. Les ventes viennent de la main courante des réceptionnistes ; les approvisionnements, de la page Stock.</p>
+{% endblock %}

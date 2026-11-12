@@ -1,0 +1,8 @@
+<form class="filtres no-print" method="get">
+  <a class="btn secondaire petit" href="?date={{ veille }}{% if session %}&session={{ session.pk }}{% endif %}">← Veille</a>
+  <input type="date" name="date" value="{{ jour|date:'Y-m-d' }}" style="max-width:180px">
+  <button class="btn petit" type="submit">Afficher</button>
+  <a class="btn secondaire petit" href="?date={{ lendemain }}">Lendemain →</a>
+  <a class="btn petit" href="?date={{ jour|date:'Y-m-d' }}{% if session %}&session={{ session.pk }}{% endif %}&format=pdf">PDF à imprimer</a>
+  <a class="btn secondaire petit" href="{% url 'fiches:index' %}?date={{ jour|date:'Y-m-d' }}">Toutes les fiches</a>
+</form>
