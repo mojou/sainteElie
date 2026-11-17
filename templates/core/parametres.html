@@ -14,7 +14,8 @@
   <div class="carte"><h3>Chambres</h3><p>Numéros, catégories, tarifs de la grille.</p><a class="btn secondaire" href="{% url 'hotel:chambres' %}">Ouvrir</a></div>
   <div class="carte"><h3>Photos des chambres</h3><p>Plusieurs photos par chambre, prises au téléphone : elles défilent sur la réservation en ligne.</p>
     <a class="btn secondaire" href="{% url 'hotel:photos_chambres' %}">Ajouter des photos</a></div>
-  <div class="carte"><h3>Créneaux horaires</h3><p>Matin, après-midi, nuit…</p><a class="btn secondaire" {% href 'personnel:creneaux' %}>Ouvrir</a></div>
+  {% if 'personnel' in modules_ouverts %}<div class="carte"><h3>Créneaux horaires</h3><p>Matin, après-midi, nuit…</p><a class="btn secondaire" {% href 'personnel:creneaux' %}>Ouvrir</a></div>{% endif %}
+  <div class="carte"><h3>Journal d'activité</h3><p>Qui a fait quoi, et quand.</p><a class="btn secondaire" href="{% url 'core:journal' %}">Ouvrir</a></div>
   <div class="carte"><h3>Utilisateurs</h3><p>Comptes et rôles.</p><a class="btn secondaire" href="{% url 'accounts:utilisateurs' %}">Ouvrir</a></div>
 </div>
 {% endblock %}

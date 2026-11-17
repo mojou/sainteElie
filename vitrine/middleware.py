@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 class EspaceClientMiddleware:
     """Un client connecté ne voit que son espace, jamais les écrans du personnel (même en tapant l'adresse)."""
 
-    AUTORISES = ("/espace-client/", "/comptes/deconnexion/", "/static/", "/reserver/", "/site/")
+    AUTORISES = ("/espace-client/", "/comptes/deconnexion/", "/static/", "/reserver/", "/commander/", "/site/")
 
     def __init__(self, get_response):
         self.get_response = get_response

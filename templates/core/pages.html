@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titre %}Autres pages{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Autres pages</h1>
+  <p>Tout ce qui n'est pas dans le menu, rangé par sujet. Touchez un bouton pour y aller.</p></div></div>
+<div class="autres-pages">
+  {% for g in groupes %}
+  <section class="carte">
+    <h2>{{ g.titre }}</h2>
+    <div class="autres-pages-liens">
+      {% for l in g.liens %}<a class="btn secondaire" href="{{ l.url }}"{% if l.externe %} target="_blank" rel="noopener"{% endif %}>{{ l.texte }}</a>{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% if user.est_gerant and modules_fermes %}
+<p class="discret">Pas encore ouverts : {% for m in modules_fermes %}{{ m.nom|lower }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+  <a class="btn petit secondaire" href="{% url 'core:modules' %}">Ouvrir des modules</a></p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Plats commandés en ligne{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Plats commandés en ligne</h1>
+  <p>Les clients commandent sur le site pour un jour et une heure. Appelez le client, confirmez ; à l'heure dite, la
+    cuisine sert et encaisse à sa caisse « Cuisine / Bar », ou porte les plats sur la note de la chambre.</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'vitrine:commander' %}" target="_blank" rel="noopener">Voir la page de commande</a></div>
+</div>
+
+<h2>À confirmer ({{ nouvelles|length }})</h2>
+{% for c in nouvelles %}
+<article class="carte demande-resa">
+  <div class="demande-tete"><h2>N°{{ c.pk }} · {{ c.nom }}</h2><span class="badge alerte">À confirmer</span></div>
+  <dl class="fiche">
+    <dt>Téléphone</dt><dd>{{ c.telephone }} <a class="btn petit secondaire" href="tel:{{ c.telephone }}">Appeler</a></dd>
+    <dt>Pour le</dt><dd><strong>{{ c.pour_le|date:"l d/m à H:i" }}</strong> · {{ c.get_service_display }}{% if c.chambre %} (chambre {{ c.chambre }}){% endif %}</dd>
+    <dt>Plats</dt><dd>{% for l in c.lignes.all %}{{ l.quantite }} × {{ l.article.nom }}<br>{% endfor %}<strong>{{ c.total|fcfa }}</strong></dd>
+    {% if c.message %}<dt>Message</dt><dd>« {{ c.message }} »</dd>{% endif %}
+    <dt>Reçue</dt><dd>{{ c.cree_le|date:"d/m à H:i" }}</dd>
+  </dl>
+  <form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="commande" value="{{ c.pk }}">
+    <button class="btn ok grand" name="action" value="confirmer">Confirmer la commande</button></form>
+  <details class="demande-refuser"><summary class="btn secondaire petit">Refuser la commande</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="commande" value="{{ c.pk }}"><input type="hidden" name="action" value="refuser">
+      <label for="motif-{{ c.pk }}">Pourquoi ? (le client le verra)</label>
+      <input type="text" name="motif" id="motif-{{ c.pk }}" maxlength="200" placeholder="Ex. : plat épuisé, client injoignable">
+      <button class="btn danger">Refuser</button></form>
+  </details>
+</article>
+{% empty %}<div class="carte"><p class="vide">Aucune commande à confirmer.</p></div>{% endfor %}
+
+{% include "vitrine/_plats_a_servir.html" with titre="À servir aujourd'hui" liste=aujourdhui %}
+{% include "vitrine/_plats_a_servir.html" with titre="Demain" liste=demain %}
+{% include "vitrine/_plats_a_servir.html" with titre="Plus tard" liste=plus_tard %}
+
+<h2>Déjà traitées</h2>
+<div class="tableau"><table>
+  <tr><th>N°</th><th>Client</th><th>Pour le</th><th>Plats</th><th class="nombre">Total</th><th>Décision</th></tr>
+  {% for c in traitees %}<tr><td>{{ c.pk }}</td><td>{{ c.nom }}<br><small>{{ c.telephone }}</small></td>
+    <td>{{ c.pour_le|date:"d/m H:i" }}</td><td>{% for l in c.lignes.all %}{{ l.quantite }} × {{ l.article.nom }}<br>{% endfor %}</td>
+    <td class="nombre">{{ c.total|nombre }}</td>
+    <td><span class="badge {% if c.statut == 'SERVIE' %}ok{% else %}danger{% endif %}">{{ c.get_statut_display }}</span>
+      {% if c.recu_visible %}<a class="btn petit secondaire" href="{% url 'caisse:recu_client' c.encaissement.pk %}">Reçu n°{{ c.encaissement.numero_recu }}</a>{% elif c.encaissement %}<small>Reçu n°{{ c.encaissement.numero_recu }}</small>{% elif c.motif %}<small>{{ c.motif }}</small>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="vide">Rien encore.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

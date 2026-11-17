@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from accounts.models import Role
-from core.utils import aujourd_hui
+from core.utils import aujourd_hui, format_fcfa
 from hotel.models import Chambre, PhotoChambre
 
 from .base import BaseTest
@@ -96,3 +96,48 @@ class PhotosChambresTests(BaseTest):
         page = self.client.get(URL)
         self.assertContains(page, "Encore sans photo sur le site")
         self.assertContains(page, "Sans photo (1)")
+
+
+class VoirLaChambreTests(BaseTest):
+    """Le client voit la chambre avant de s'engager : sur le site, et à la réception avant de payer."""
+
+    def setUp(self):
+        super().setUp()
+        self.j = aujourd_hui() + timedelta(days=2)
+        self.recherche = {"arrivee": self.j.isoformat(), "depart": (self.j + timedelta(days=2)).isoformat(),
+                          "personnes": 1}
+        self.photos = [PhotoChambre.objects.create(chambre=self.chambre, image=f"chambres/p{i}.jpg", ordre=i)
+                       for i in range(3)]
+
+    def test_sur_le_site_voir_la_chambre_puis_reserver(self):
+        liste = self.client.get(reverse("vitrine:reserver"), self.recherche)
+        self.assertContains(liste, "Voir la chambre")
+        self.assertContains(liste, reverse("vitrine:reserver_chambre"))
+        page = self.client.get(reverse("vitrine:reserver_chambre"), {**self.recherche, "type": "SIMPLE-25000"})
+        for p in self.photos:
+            self.assertContains(page, p.url)
+        self.assertContains(page, "data-galerie")
+        self.assertContains(page, format_fcfa(50000))  # 2 nuits à 25 000
+        self.assertContains(page, "Réserver cette chambre")
+        self.assertContains(page, f"{reverse('vitrine:reserver_coordonnees')}?arrivee={self.j.isoformat()}")
+        self.assertContains(page, "type=SIMPLE-25000")
+
+    def test_type_inconnu_ou_plus_libre_renvoie_a_la_liste(self):
+        reponse = self.client.get(reverse("vitrine:reserver_chambre"), {**self.recherche, "type": "SUITE-99999"})
+        self.assertEqual(reponse.status_code, 302)
+        self.assertIn(reverse("vitrine:reserver"), reponse["Location"])
+
+    def test_sans_photo_le_dessin_et_un_mot(self):
+        PhotoChambre.objects.all().delete()
+        page = self.client.get(reverse("vitrine:reserver_chambre"), {**self.recherche, "type": "SIMPLE-25000"})
+        self.assertContains(page, "arrivent bientôt")
+
+    def test_a_la_reception_on_montre_la_chambre_avant_de_payer(self):
+        self.client.force_login(self.aicha)
+        fiche = self.client.get(reverse("postes:chambre", args=[self.chambre.pk]))
+        self.assertContains(fiche, "Montrez la chambre au client avant qu")
+        self.assertContains(fiche, self.photos[0].url)
+        arrivee = self.client.get(reverse("postes:arrivee"), {"chambre": self.chambre.pk})
+        self.assertContains(arrivee, 'id="photos-chambres"')
+        self.assertContains(arrivee, self.photos[2].url)
+        self.assertContains(arrivee, 'id="montrer-chambre"')

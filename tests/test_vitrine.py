@@ -165,7 +165,7 @@ class PageAnimeeTests(BaseTest):
 
         adjoint = self.utilisateur("julio", Role.ADJOINT)
         self.client.force_login(adjoint)
-        self.assertContains(self.client.get(reverse("core:accueil")), "Photos du site", msg_prefix="lien dans le menu")
+        self.assertContains(self.client.get(reverse("core:pages")), "Photos du site", msg_prefix="dans « Autres pages »")
         envoi = [PhotosSiteTests.image_png(), PhotosSiteTests.image_png(1600, 1200)]
         reponse = self.client.post(reverse("vitrine:photos"), {"rubrique": "CHAMBRES", "images": envoi}, follow=True)
         self.assertContains(reponse, "2 photo(s) ajoutée(s)")

@@ -64,14 +64,33 @@ compte maintenance non plus : la réception signale les pannes, la direction les
 
 ## Modules ouverts (lancement par la réservation des chambres)
 
+**Commander des plats sur le site** (ouvert avec les chambres) : bouton « Commander des plats » dans le bandeau, la
+carte et le menu du site (`/commander/`). Le client choisit ses plats (« − » / « + », total en direct), le jour et
+l'heure (de 7 h à 22 h, 45 minutes au moins à l'avance, 30 jours au plus), où il mange (au restaurant, à emporter,
+dans sa chambre avec son numéro), puis ses coordonnées : commande n°X, rien à payer en ligne. Côté hôtel, **Plats
+commandés en ligne** (réception, cuisine / bar, direction, gouvernante ; pastille dans le menu) : appeler, confirmer
+ou refuser avec un motif ; puis, par jour, les commandes à servir. La cuisine, caisse « Cuisine / Bar » ouverte, touche
+« Servie et encaissée » (espèces, Orange Money, MTN MoMo : un seul reçu, lignes dans la main courante cuisine ; ou
+« Sur sa chambre » : sur la note du séjour) ; « Annuler » si le client ne vient pas. Le personnel de cuisine arrive sur
+cette page tant que la caisse tactile est fermée. Mêmes protections que les chambres (piège à robots, 5 commandes par
+heure et par appareil, 40 au total, jeton anti-falsification, page de commande visible par son auteur seulement) ;
+un client avec compte suit et annule sa commande dans son espace tant qu'elle n'est pas confirmée. Règles et horaires
+dans `vitrine/commandes.py`.
+
 Au départ, seule **la réservation et la vente des chambres** est ouverte : réservations en ligne, séjours et clients,
 plan des chambres, arrivées et départs, paiements et reçus, caisse de la réception (ouvrir, fermer, valider), ménage
 des chambres, fiche recette chambres, comptes clients en ligne, utilisateurs et paramètres. Le reste (boutique,
 restaurant · bar et extras ; stock ; rapports d'activité ; personnel ; paie ; dépenses ; pannes et gardien ; projets)
-est **visible mais grisé** (« bientôt ») et bloqué côté serveur : une adresse tapée à la main affiche « pas encore
-ouvert ». Le gérant ouvre chaque module quand l'équipe est prête : **Paramètres → Modules** (une case par module).
-Règles dans `core/modules.py` ; dans les gabarits, `{% href 'espace:nom' %}` écrit le lien, ou le grise si sa page
-est dans un module fermé.
+**n'apparaît pas** et est bloqué côté serveur : une adresse tapée à la main affiche « pas encore ouvert ». Le gérant
+ouvre chaque module quand l'équipe est prête : **Paramètres → Modules** (une case par module) ; ses pages reviennent
+alors dans le menu et dans « Autres pages ». Règles dans `core/modules.py` ; dans les gabarits,
+`{% href 'espace:nom' %}` écrit le lien, ou le fait disparaître si sa page est dans un module fermé.
+
+**Menu court** : le menu de gauche ne garde que le travail du jour. Réception : Plan des chambres, Réservations en
+ligne, Plats commandés, Arrivées et réservations, Ma caisse. Cuisine : Plats commandés, Ma caisse. Direction : Tableau
+de bord, Réservations en ligne, Plats commandés, Plan des chambres, Séjours et clients, Ma caisse, Caisses à valider,
+Paramètres. « Comptes clients à relier » n'apparaît que s'il y en a. Tout le reste est dans **Autres pages**
+(`core/navigation.py`), en gros boutons rangés par sujet, selon les droits de chacun.
 
 **Parcours vérifié de bout en bout** (`tests/test_parcours_chambre.py`, en passant par les écrans) : demande sur le
 site → la réception la voit et la confirme (une seule réservation même si deux postes confirment en même temps) →
@@ -274,6 +293,10 @@ onglets le disent et demandent de recharger.
   fichier. Sur la réservation en ligne, les photos de toutes les chambres d'un même type (catégorie et prix)
   défilent au doigt sur sa carte : une chambre photographiée par type suffit. La page signale les types encore sans
   photo (le site montre alors un dessin). Photos publiques seulement pour les chambres en service.
+- **Voir la chambre avant de s'engager** : sur la réservation en ligne, « Voir la chambre » ouvre une page avec toutes
+  ses photos (glisser du doigt, flèches, vignettes), ce qu'elle offre, le prix de la nuit et du séjour, puis
+  « Réserver cette chambre ». À la réception, la fiche d'une chambre libre et l'écran « Un client arrive » montrent
+  ses photos dès qu'elle est choisie, avant l'étape du paiement : on tourne l'écran vers le client.
 - **Photos** : menu « Site public » → Photos du site (gérant et adjoints), plusieurs photos d'un coup. Cinq rubriques : l'hôtel, les chambres, la réception, nos plats,
   le parking. Chaque photo est tournée dans le bon sens et réduite à 1 600 pixels (page légère sur une connexion lente) ;
   elles défilent en fondu dans le bandeau du haut (celles de « L'hôtel » d'abord). La page est animée : blocs qui

@@ -18,6 +18,7 @@
     <nav class="v-nav" aria-label="Sections de la page">
       <a href="{% url 'vitrine:site' %}#galerie">En images</a>
       <a href="{% url 'vitrine:reserver' %}">Réserver</a>
+      <a href="{% url 'vitrine:commander' %}">Commander</a>
       <a href="{% url 'vitrine:site' %}#chambres">Chambres</a>
       <a href="{% url 'vitrine:site' %}#cuisine">La carte</a>
       <a href="{% url 'vitrine:site' %}#services">Services</a>
@@ -69,5 +70,6 @@
   <div class="v-conteneur v-copyright">© {% now "Y" %} {{ etablissement_nom }}</div>
 </footer>
 <script src="{% static 'js/app.js' %}?v={{ version_statique }}"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

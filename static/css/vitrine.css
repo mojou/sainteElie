@@ -291,3 +291,44 @@
 .v-type-photos img { flex: 0 0 100%; scroll-snap-align: start; }
 .v-type-nombre { position: absolute; right: .6rem; bottom: .6rem; padding: .2rem .55rem; border-radius: 999px;
   background: rgba(11, 31, 58, .72); color: #fff; font-size: .78rem; pointer-events: none; }
+/* Page « Voir la chambre » */
+.v-chambre-detail { margin-top: 1rem; align-items: start; }
+.v-chambre-photos { padding: 1rem 0 1rem 1rem; }
+.v-chambre-photos .galerie { box-shadow: 0 6px 18px rgba(16, 41, 74, .1); }
+@media (max-width: 760px) { .v-chambre-photos { padding: 1rem 1rem 0; } }
+.v-chambre-dessin { width: 100%; border-radius: 14px; background: var(--or-clair); }
+.v-chambre-description { font-size: 1.05rem; }
+.v-chambre-points { margin: .4rem 0 .8rem; padding-left: 1.2rem; color: var(--discret); }
+.v-chambre-points li { margin: .2rem 0; }
+.v-chambre-total { margin: 0 0 1rem; color: var(--discret); }
+.v-chambre-total strong { color: var(--texte); font-size: 1.15rem; }
+/* Commander des plats */
+.v-commande h2 { margin-top: 1.6rem; }
+.v-commande-rubrique { margin: 1.1rem 0 .5rem; color: var(--marine); }
+.v-commande-plats { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.v-plat { display: grid; grid-template-columns: 96px 1fr; gap: .4rem .8rem; align-items: center; background: #fff;
+  border: 2px solid transparent; border-radius: 12px; padding: .6rem; box-shadow: 0 4px 14px rgba(16, 41, 74, .07); }
+.v-plat.choisi { border-color: var(--or); }
+.v-plat img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; background: var(--or-clair); grid-row: span 2; }
+.v-plat-texte { display: grid; gap: .1rem; }
+.v-plat-texte small { color: var(--discret); }
+.v-plat-prix { font-weight: 700; color: var(--marine); }
+.v-plat-quantite { display: flex; align-items: center; gap: .35rem; }
+.v-plat-quantite .btn { width: 44px; height: 44px; padding: 0; font-size: 1.4rem; line-height: 1; }
+.v-plat-quantite input { width: 64px; text-align: center; font-size: 1.1rem; }
+.v-commande-suite { margin-top: 1.4rem; max-width: 720px; }
+.v-commande-suite .btn { width: auto; }
+.v-service { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem; margin-bottom: .8rem; }
+.v-service .paiement span { justify-content: center; text-align: center; min-height: 54px; }
+.v-commande-barre { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: .6rem; margin-top: 1.2rem; padding: .8rem 1rem; background: var(--marine-fonce);
+  color: #fff; border-radius: 14px 14px 0 0; box-shadow: 0 -6px 20px rgba(16, 41, 74, .2); }
+.v-commande-barre #commande-total { font-weight: 700; font-size: 1.05rem; }
+.v-commande-barre #commande-total.erreur { color: #ffd3cf; }
+@media (max-width: 600px) {
+  .v-commande-plats { grid-template-columns: 1fr; }
+  .v-plat { grid-template-columns: 72px 1fr; }
+  .v-plat img { width: 72px; height: 56px; }
+  .v-service { grid-template-columns: 1fr; }
+  .v-commande-barre .btn { width: 100%; }
+}

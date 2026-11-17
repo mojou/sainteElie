@@ -1,0 +1,29 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}Commande envoyée · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section v-resa">
+  <div class="v-conteneur">
+    <ol class="v-etapes-resa" aria-label="Étapes de la commande">
+      <li class="fait">Vos plats</li><li class="fait">Quand et où</li><li class="fait">Vos coordonnées</li><li class="actif">C'est envoyé</li>
+    </ol>
+    <div class="v-boite v-envoyee">
+      <div class="v-coche" aria-hidden="true">✓</div>
+      <h1>Commande n°{{ commande.pk }} envoyée</h1>
+      <p class="v-envoyee-texte">Merci {{ commande.nom }}. La réception vous appelle au <strong>{{ commande.telephone }}</strong> pour confirmer.</p>
+      <dl class="v-envoyee-recap">
+        <dt>Plats</dt><dd>{% for l in commande.lignes.all %}{{ l.quantite }} × {{ l.article.nom }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</dd>
+        <dt>Pour le</dt><dd>{{ commande.pour_le|date:"l d F à H:i" }}</dd>
+        <dt>Où</dt><dd>{{ commande.get_service_display }}{% if commande.chambre %} (chambre {{ commande.chambre }}){% endif %}</dd>
+        <dt>Total</dt><dd><strong>{{ commande.total|fcfa }}</strong></dd>
+        <dt>Où en est-elle ?</dt><dd><span class="badge {% if commande.statut == 'CONFIRMEE' or commande.statut == 'SERVIE' %}ok{% elif commande.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ commande.get_statut_display }}</span>{% if commande.motif and commande.statut == 'REFUSEE' %} · {{ commande.motif }}{% endif %}</dd>
+      </dl>
+      <p>Rien à payer maintenant : vous réglez quand on vous sert (espèces, Orange Money, MTN MoMo, ou sur votre note de chambre).</p>
+      {% if etab.telephone %}<p><a class="btn secondaire" href="tel:{{ etab.telephone|cut:' ' }}">Appeler la réception : {{ etab.telephone }}</a></p>{% endif %}
+      <div class="v-actions">
+        <a class="btn grand" href="{% url 'vitrine:commander' %}">Commander d'autres plats</a>
+        <a class="btn secondaire grand" href="{% url 'vitrine:site' %}">Retour à l'accueil</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

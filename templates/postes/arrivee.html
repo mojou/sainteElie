@@ -4,6 +4,7 @@
 {% entete_poste "Réception · chambres" avec_caisse=True %}
 <p class="no-print"><a class="btn secondaire retour" href="{% if chambre_fixe %}{% url 'postes:chambre' chambre_fixe.pk %}{% else %}{% url 'postes:reception' %}{% endif %}">← Retour</a></p>
 {{ tarifs|json_script:"tarifs-chambres" }}
+{{ photos|json_script:"photos-chambres" }}
 <form method="post" novalidate class="carte assistant" id="assistant" data-aujourdhui="{{ jour|date:'Y-m-d' }}">{% csrf_token %}
   <h1>Un client arrive{% if chambre_fixe %} · chambre {{ chambre_fixe.numero }}{% endif %}</h1>
   <ol class="pas-indicateur" aria-hidden="true"><li>Le client</li><li>Les nuits</li><li>Le paiement</li><li>Vérifier</li></ol>
@@ -17,6 +18,10 @@
     {% else %}
       <div class="champ{% if form.chambre.errors %} en-erreur{% endif %}"><label for="id_chambre">Quelle chambre ?</label>{{ form.chambre }}{% for e in form.chambre.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
     {% endif %}
+    <div class="montrer-chambre" id="montrer-chambre" hidden>
+      <p class="etape">Montrez la chambre au client avant qu'il paie :</p>
+      <div class="galerie" data-galerie><div class="galerie-piste" tabindex="0" aria-label="Photos de la chambre"></div></div>
+    </div>
     {% if chambre_fixe and form.chambre.errors %}<div class="erreur">{% for e in form.chambre.errors %}{{ e }} {% endfor %}</div>{% endif %}
     <div class="champ{% if form.nom.errors %} en-erreur{% endif %}"><label for="id_nom">Son nom</label>
       <input type="text" name="nom" id="id_nom" maxlength="120" value="{{ form.nom.value|default:'' }}" autocomplete="off" autocapitalize="words">

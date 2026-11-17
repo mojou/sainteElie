@@ -20,6 +20,10 @@
 <div class="message info no-print"><strong>{{ nb_demandes_reservation }} réservation{{ nb_demandes_reservation|pluralize }} en ligne à confirmer.</strong>
   <a class="btn petit" href="{% url 'vitrine:demandes' %}">Les confirmer</a></div>
 {% endif %}
+{% if nb_commandes_plats %}
+<div class="message info no-print"><strong>{{ nb_commandes_plats }} commande{{ nb_commandes_plats|pluralize }} de plats en ligne à confirmer.</strong>
+  <a class="btn petit" href="{% url 'vitrine:commandes_plats' %}">Les confirmer</a></div>
+{% endif %}
 <div class="raccourcis-reception no-print">
   <a class="btn grand" href="{% url 'postes:arrivee' %}">Un client arrive</a>
   {% if user.tient_caisse %}<a class="btn grand or" {% href 'caisse:ventes' %}>Boutique</a>{% endif %}

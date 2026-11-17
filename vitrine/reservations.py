@@ -23,7 +23,7 @@ from .models import DemandeReservation
 NUITS_MAX = 30          # au-delà, on appelle la réception
 JOURS_AVANCE_MAX = 365  # on réserve au plus un an à l'avance
 PERSONNES_MAX = 6
-PHOTOS_PAR_TYPE = 8  # photos qui défilent sur la carte d'un type de chambre
+PHOTOS_PAR_TYPE = 12  # photos montrées pour un type de chambre (carte et page « Voir la chambre »)
 DEMANDES_PAR_HEURE_MAX = 40  # toutes adresses confondues : au-delà, c'est un robot, pas des clients
 LIBELLES = {"SIMPLE": "Chambre simple", "DOUBLE": "Chambre double", "SUITE": "Suite", "AUTRE": "Chambre"}
 JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]

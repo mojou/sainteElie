@@ -58,7 +58,7 @@ def poste(request):
         from core import modules
 
         if not modules.est_ouvert("caisse:ventes", request):
-            return render(request, "module_ferme.html", {"module": modules.PAR_CLE["ventes"], "sans_retour": True})
+            return redirect("vitrine:commandes_plats")  # en attendant la caisse tactile : les plats commandés en ligne
         return redirect("caisse:ventes")
     if u.departement == Departement.MAINTENANCE:
         return redirect("postes:maintenance")
@@ -133,7 +133,7 @@ def reception_vue(request):
 @acces_requis(reception)
 def chambre_vue(request, pk):
     """Une chambre : seulement ce qu'on peut y faire maintenant (encaisser, départ, ménage, arrivée…)."""
-    chambre = get_object_or_404(Chambre, pk=pk, active=True)
+    chambre = get_object_or_404(Chambre.objects.prefetch_related("photos"), pk=pk, active=True)
     jour = aujourd_hui()
     sejour = Sejour.objects.filter(chambre=chambre, statut=Sejour.Statut.EN_COURS).select_related("client").first()
     attendu = (Sejour.objects.filter(chambre=chambre, statut=Sejour.Statut.RESERVE, date_arrivee__lte=jour)
@@ -146,6 +146,7 @@ def chambre_vue(request, pk):
         "chambre": chambre, "sejour": sejour, "attendu": attendu, "form": form, "jour": jour,
         "session": caisse.session_ouverte_de(request.user),
         "pannes": Intervention.objects.filter(chambre=chambre).exclude(statut=Intervention.Statut.FAITE),
+        "photos": [p.url for p in chambre.photos.all()], "titre_photos": f"Chambre {chambre.numero}",
     })
 
 
@@ -170,6 +171,8 @@ def arrivee(request):
     return render(request, "postes/arrivee.html", {
         "form": form, "session": session, "chambre_fixe": chambre_fixe, "jour": aujourd_hui(),
         "tarifs": {str(c.pk): c.tarif_nuit for c in libres}, "nuits_rapides": [1, 2, 3, 4, 5, 7],
+        # Les photos de chaque chambre libre : on les montre au client dès qu'on a choisi la chambre, avant qu'il paie.
+        "photos": {str(c.pk): [p.url for p in c.photos.all()] for c in libres.prefetch_related("photos")},
     })
 
 

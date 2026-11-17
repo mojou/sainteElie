@@ -48,10 +48,13 @@ class PagesParRoleTests(BaseTest):
         self.client.force_login(self.aicha)
         page = self.client.get(reverse("core:accueil"), follow=True)
         self.assertContains(page, "Saisie réception")
-        self.assertContains(page, "Extras sur chambre")
-        self.assertNotContains(page, "Journal d'activité")
+        menu = page.content.decode().split('<nav class="menu"')[1].split("</nav>")[0]
+        self.assertLessEqual(menu.count("<a "), 9, "menu court : le travail du jour seulement")
+        autres = self.client.get(reverse("core:pages"))
+        self.assertContains(autres, "Extras sur chambre")
+        self.assertNotContains(autres, "Journal d'activité")
         self.client.force_login(self.gerant)
-        self.assertContains(self.client.get(reverse("core:accueil")), "Saisies des départements")
+        self.assertContains(self.client.get(reverse("core:pages")), "Saisies des départements")
 
     def test_un_employe_voit_son_espace(self):
         employe = self.utilisateur("odile", Role.EMPLOYE)
@@ -220,7 +223,7 @@ class GouvernanteTests(BaseTest):
         self.remettre(session, 30000)
         self.client.force_login(adelaide)
         menu = self.client.get(reverse("core:accueil"))
-        self.assertContains(menu, "Sessions de caisse")
+        self.assertContains(menu, "Caisses à valider")
         self.assertNotContains(menu, "Ma caisse")
         self.assertEqual(self.client.get(reverse("caisse:session", args=[session.pk])).status_code, 200)
         caisse.valider_session(session, adelaide)

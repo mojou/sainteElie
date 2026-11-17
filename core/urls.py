@@ -12,4 +12,5 @@ urlpatterns = [
     path("parametres/", views.parametres, name="parametres"),
     path("parametres/etablissement/", views.etablissement, name="etablissement"),
     path("parametres/modules/", views.modules_vue, name="modules"),
+    path("autres-pages/", views.pages, name="pages"),
 ]

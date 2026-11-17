@@ -944,7 +944,8 @@ dl.recapitulatif dd::first-letter { text-transform: uppercase; }
 }
 
 /* Modules pas encore ouverts : visibles mais grisés (lien sans adresse), voir core/modules.py */
-a[aria-disabled="true"] {
+a[aria-disabled="true"] { display: none !important; }
+.ancien-grise {
   color: #8a94a0 !important; cursor: not-allowed; text-decoration: none; filter: grayscale(1);
 }
 a.btn[aria-disabled="true"] { background: #eceff2 !important; border-color: #d7dce1 !important; opacity: .8; }
@@ -977,7 +978,11 @@ nav.menu a[aria-disabled="true"]:hover { background: transparent; }
 
 /* Piège à robots du formulaire de réservation : hors de l'écran pour un humain, rempli par un robot. */
 .champ:has(input[name="site_web"]), input[name="site_web"] { position: absolute !important; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
-nav.menu a[aria-disabled="true"] strong { color: inherit; font-weight: 600; }
+nav.menu .menu-separateur { border: 0; border-top: 1px solid rgba(255, 255, 255, .12); margin: .7rem .4rem; }
+.autres-pages { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); align-items: start; }
+.autres-pages h2 { margin-top: 0; }
+.autres-pages-liens { display: grid; gap: .45rem; }
+.autres-pages-liens .btn { text-align: left; }
 a.btn.retour { padding: .5rem 1rem; }
 /* Photos des chambres */
 .photos-chambre { margin-bottom: .9rem; }
@@ -991,3 +996,26 @@ a.btn.retour { padding: .5rem 1rem; }
 .ajout-photos { margin-top: .6rem; }
 .ajout-photos .prendre-photo { display: inline-flex; min-width: 220px; }
 @media (max-width: 600px) { .ajout-photos .prendre-photo { width: 100%; } }
+/* Galerie de photos d'une chambre (site et réception) */
+.galerie { position: relative; border-radius: 12px; overflow: hidden; background: #e9ecef; }
+.galerie-piste { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth; }
+.galerie-piste::-webkit-scrollbar { display: none; }
+.galerie-piste img { flex: 0 0 100%; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; scroll-snap-align: start; display: block; }
+.galerie-fleche {
+  position: absolute; top: calc(50% - 22px); width: 44px; height: 44px; border-radius: 50%; border: 0;
+  background: rgba(11, 31, 58, .6); color: #fff; font-size: 1.8rem; line-height: 1; cursor: pointer;
+}
+.galerie-fleche.precedente { left: .5rem; }
+.galerie-fleche.suivante { right: .5rem; }
+.galerie:has(.galerie-vignettes) .galerie-fleche { top: calc(50% - 50px); }
+.galerie-vignettes { display: flex; gap: .4rem; padding: .5rem; overflow-x: auto; background: #fff; }
+.galerie-vignettes button { flex: 0 0 auto; padding: 0; border: 2px solid transparent; border-radius: 6px; overflow: hidden; cursor: pointer; background: none; }
+.galerie-vignettes button.actif { border-color: var(--or); }
+.galerie-vignettes img { display: block; width: 64px; height: 48px; object-fit: cover; }
+.montrer-chambre { margin: .6rem 0 1rem; }
+.montrer-chambre .galerie { max-width: 560px; }
+/* Plats commandés en ligne (réception, cuisine) */
+.plat-a-servir.en-retard { border-left: 4px solid var(--danger); }
+.plats-liste { margin: .3rem 0 .6rem; padding-left: 1.1rem; font-size: 1.05rem; }
+.servir-plats .paiements { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 600px) { .servir-plats .paiements { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

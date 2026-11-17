@@ -5,7 +5,7 @@
   <p>Les fiches papier, remplies automatiquement à partir des ventes, des séjours et des mouvements de stock.</p></div></div>
 {% include "fiches/_navigation.html" %}
 <div class="grille">
-  {% if voit_bar %}
+  {% if voit_bar and 'ventes' in modules_ouverts %}
   <div class="carte"><h3>Main courante bar</h3><p>Désignation, Qté V, Cash, Crédit, Total, Offre, Obs.</p>
     <a class="btn secondaire petit" {% href 'fiches:main_courante' 'bar' date=jour|date:'Y-m-d' %}>Ouvrir</a>
     <a class="btn petit" {% href 'fiches:main_courante' 'bar' date=jour|date:'Y-m-d' format='pdf' %}>PDF</a></div>
@@ -16,7 +16,7 @@
     <a class="btn secondaire petit" {% href 'fiches:main_courante' 'cuisine' date=jour|date:'Y-m-d' %}>Ouvrir</a>
     <a class="btn petit" {% href 'fiches:main_courante' 'cuisine' date=jour|date:'Y-m-d' format='pdf' %}>PDF</a></div>
   {% endif %}
-  {% if voit_reception %}
+  {% if voit_reception and 'ventes' in modules_ouverts %}
   <div class="carte"><h3>Stock et main courante boutique</h3><p>Prix, S.I, Approv, R1, R2, R3 (ventes de chaque réceptionniste), S.F, Montant, Cumulé, Crédit.</p>
     <a class="btn secondaire petit" {% href 'fiches:stock' 'boutique' date=jour|date:'Y-m-d' %}>Ouvrir</a>
     <a class="btn petit" {% href 'fiches:stock' 'boutique' date=jour|date:'Y-m-d' format='pdf' %}>PDF</a></div>
@@ -24,14 +24,14 @@
   {% if voit_chambres %}
   <div class="carte"><h3>Chambres à faire</h3><p>Pour le personnel des chambres : chaque chambre à faire et quoi y faire. Il coche, puis rapporte la fiche à la réception.</p>
     <a class="btn petit" {% href 'fiches:chambres_a_faire' date=jour|date:'Y-m-d' %} target="_blank" rel="noopener">Imprimer</a></div>
-  <div class="carte"><h3>Main courante du gardien</h3><p>Feuille vierge pour la nuit : heure, ronde, visiteur, livraison, incident. La réception recopie le matin.</p>
-    <a class="btn petit" {% href 'fiches:main_courante_gardien' date=jour|date:'Y-m-d' %} target="_blank" rel="noopener">Imprimer</a></div>
+  {% if 'pannes' in modules_ouverts %}<div class="carte"><h3>Main courante du gardien</h3><p>Feuille vierge pour la nuit : heure, ronde, visiteur, livraison, incident. La réception recopie le matin.</p>
+    <a class="btn petit" {% href 'fiches:main_courante_gardien' date=jour|date:'Y-m-d' %} target="_blank" rel="noopener">Imprimer</a></div>{% endif %}
   <div class="carte"><h3>Recette chambres</h3><p>Recette jr, Imp jr, Extras jr (cuisine, bar…), Offre jr, Compensation, Avance, Rég. dette, Reste dette.</p>
     <a class="btn secondaire petit" {% href 'fiches:hebergement' date=jour|date:'Y-m-d' %}>Ouvrir</a>
     <a class="btn petit" {% href 'fiches:hebergement' date=jour|date:'Y-m-d' format='pdf' %}>PDF</a></div>
   {% endif %}
 </div>
-{% if sessions %}
+{% if sessions and 'ventes' in modules_ouverts %}
 <h2>Main courante par personne</h2>
 <div class="tableau"><table><tr><th>Personne</th><th>Caisse</th><th>Service</th><th>Fiches</th></tr>
   {% for s in sessions %}<tr><td>{{ s.receptionniste }}</td><td>{{ s.tiroir }}</td><td>{{ s.get_shift_display }}</td>

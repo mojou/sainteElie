@@ -1,0 +1,13 @@
+{# Photos d'une chambre : on fait glisser du doigt, ou on touche les flèches et les vignettes. Paramètres : photos (adresses), titre. #}
+<div class="galerie" data-galerie>
+  <div class="galerie-piste" tabindex="0" aria-label="Photos : {{ titre }}{% if photos|length > 1 %} (faites glisser){% endif %}">
+    {% for url in photos %}<img src="{{ url }}" alt="{{ titre }}, photo {{ forloop.counter }} sur {{ photos|length }}"{% if not forloop.first %} loading="lazy"{% endif %}>{% endfor %}
+  </div>
+  {% if photos|length > 1 %}
+  <button type="button" class="galerie-fleche precedente" data-galerie-pas="-1" aria-label="Photo précédente">‹</button>
+  <button type="button" class="galerie-fleche suivante" data-galerie-pas="1" aria-label="Photo suivante">›</button>
+  <div class="galerie-vignettes">
+    {% for url in photos %}<button type="button" data-galerie-index="{{ forloop.counter0 }}" aria-label="Photo {{ forloop.counter }}"><img src="{{ url }}" alt="" loading="lazy"></button>{% endfor %}
+  </div>
+  {% endif %}
+</div>

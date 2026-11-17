@@ -123,3 +123,76 @@ class DemandeReservation(models.Model):
         from .reservations import LIBELLES
 
         return LIBELLES.get(self.categorie, "Chambre")
+
+
+class CommandePlats(models.Model):
+    """Plats commandés sur le site pour un jour et une heure, confirmés par la réception ou la cuisine, puis servis
+    et encaissés à la caisse Cuisine / Bar (voir commandes.py). Rien n'est payé en ligne."""
+
+    class Statut(models.TextChoices):
+        NOUVELLE = "NOUVELLE", "À confirmer"
+        CONFIRMEE = "CONFIRMEE", "Confirmée"
+        SERVIE = "SERVIE", "Servie"
+        REFUSEE = "REFUSEE", "Refusée"
+        ANNULEE = "ANNULEE", "Annulée"
+
+    class Service(models.TextChoices):
+        SUR_PLACE = "SUR_PLACE", "Au restaurant"
+        A_EMPORTER = "A_EMPORTER", "À emporter"
+        EN_CHAMBRE = "EN_CHAMBRE", "Dans ma chambre"
+
+    pour_le = models.DateTimeField("pour le")
+    service = models.CharField(max_length=12, choices=Service.choices, default=Service.SUR_PLACE)
+    chambre = models.CharField("n° de chambre", max_length=10, blank=True)
+    nom = models.CharField(max_length=120)
+    telephone = models.CharField("téléphone", max_length=30)
+    email = models.EmailField("e-mail", blank=True)
+    message = models.CharField(max_length=300, blank=True)
+    compte = models.ForeignKey(CompteClient, null=True, blank=True, on_delete=models.SET_NULL,
+                               related_name="commandes_plats")
+    statut = models.CharField(max_length=10, choices=Statut.choices, default=Statut.NOUVELLE)
+    motif = models.CharField(max_length=200, blank=True)
+    traitee_par = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT,
+                                    related_name="+")
+    traitee_le = models.DateTimeField(null=True, blank=True)
+    servie_par = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT,
+                                   related_name="+")
+    servie_le = models.DateTimeField(null=True, blank=True)
+    encaissement = models.ForeignKey("caisse.Encaissement", null=True, blank=True, on_delete=models.SET_NULL,
+                                     related_name="+", help_text="Le reçu, quand le client a payé en servant.")
+    sejour = models.ForeignKey("hotel.Sejour", null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
+                               help_text="La chambre sur la note de laquelle les plats ont été portés.")
+    cree_le = models.DateTimeField("reçue le", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-cree_le"]
+        verbose_name = "commande de plats en ligne"
+        verbose_name_plural = "commandes de plats en ligne"
+
+    def __str__(self):
+        return f"Commande de plats n°{self.pk} : {self.nom}"
+
+    @property
+    def total(self):
+        return sum(ligne.montant for ligne in self.lignes.all())
+
+    @property
+    def nb_plats(self):
+        return sum(ligne.quantite for ligne in self.lignes.all())
+
+
+class LignePlat(models.Model):
+    commande = models.ForeignKey(CommandePlats, on_delete=models.CASCADE, related_name="lignes")
+    article = models.ForeignKey("stock.Article", on_delete=models.PROTECT, related_name="+")
+    quantite = models.PositiveSmallIntegerField()
+    prix_unitaire = models.PositiveIntegerField("prix annoncé")
+
+    class Meta:
+        ordering = ["pk"]
+
+    def __str__(self):
+        return f"{self.quantite} × {self.article.nom}"
+
+    @property
+    def montant(self):
+        return self.quantite * self.prix_unitaire

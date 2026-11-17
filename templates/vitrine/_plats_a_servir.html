@@ -1,0 +1,42 @@
+{% load gestion %}{# Commandes confirmées d'un jour : servir et encaisser, ou annuler. Paramètres : titre, liste. #}
+<h2>{{ titre }} ({{ liste|length }})</h2>
+{% for c in liste %}
+<article class="carte plat-a-servir{% if c.pour_le < maintenant %} en-retard{% endif %}">
+  <div class="demande-tete">
+    <h3>{{ c.pour_le|date:"H:i" }}{% if titre != "À servir aujourd'hui" %} · {{ c.pour_le|date:"l d/m" }}{% endif %} · N°{{ c.pk }} · {{ c.nom }}</h3>
+    <span class="badge {% if c.pour_le < maintenant %}danger{% else %}ok{% endif %}">{% if c.pour_le < maintenant %}L'heure est passée{% else %}Confirmée{% endif %}</span>
+  </div>
+  <p><strong>{{ c.get_service_display }}</strong>{% if c.chambre %} · chambre {{ c.chambre }}{% endif %} · {{ c.telephone }}
+    <a class="btn petit secondaire" href="tel:{{ c.telephone }}">Appeler</a></p>
+  <ul class="plats-liste">{% for l in c.lignes.all %}<li><strong>{{ l.quantite }} ×</strong> {{ l.article.nom }}</li>{% endfor %}</ul>
+  {% if c.message %}<p class="discret">« {{ c.message }} »</p>{% endif %}
+  <p>Total : <strong>{{ c.total|fcfa }}</strong></p>
+  {% if peut_servir %}
+  <form method="post" class="servir-plats">{% csrf_token %}<input type="hidden" name="commande" value="{{ c.pk }}"><input type="hidden" name="action" value="servir">
+    <p class="etiquette">Servie : le client paie comment ?</p>
+    <div class="paiements">
+      {% for v, l in paiements %}
+      <label class="paiement paiement-{{ v|lower }}"><input type="radio" name="paiement" value="{{ v }}"{% if v == "CHAMBRE" and c.sejour_propose or v == "ESPECES" and not c.sejour_propose %} checked{% endif %}><span>{{ l }}</span></label>
+      {% endfor %}
+    </div>
+    <div class="champ"><label for="sejour-{{ c.pk }}">Chambre (si « Sur sa chambre »)</label>
+      <select name="sejour" id="sejour-{{ c.pk }}" data-sans-recherche>
+        <option value="">—</option>
+        {% for s in sejours %}<option value="{{ s.pk }}"{% if s == c.sejour_propose %} selected{% endif %}>Ch. {{ s.chambre.numero }} · {{ s.client }}</option>{% endfor %}
+      </select></div>
+    <button class="btn ok grand" type="submit" data-confirmer="Commande n°{{ c.pk }} servie, {{ c.total|fcfa }} ?" data-oui="Oui, servie" data-non="Non">Servie et encaissée</button>
+  </form>
+  {% elif user.est_bar %}
+  <p class="message warning">Pour servir et encaisser, ouvrez d'abord votre caisse « Cuisine / Bar ».
+    <a class="btn petit" href="{% url 'caisse:ma_caisse' %}?suite={{ request.path|urlencode }}">Ouvrir ma caisse</a></p>
+  {% else %}
+  <p class="discret">À l'heure dite, la cuisine sert ces plats et les encaisse à sa caisse « Cuisine / Bar ».</p>
+  {% endif %}
+  <details class="demande-refuser"><summary class="btn secondaire petit">Annuler (client pas venu…)</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="commande" value="{{ c.pk }}"><input type="hidden" name="action" value="annuler">
+      <label for="annul-{{ c.pk }}">Pourquoi ?</label>
+      <input type="text" name="motif" id="annul-{{ c.pk }}" maxlength="200" placeholder="Ex. : client pas venu, annulé par téléphone">
+      <button class="btn danger">Annuler la commande</button></form>
+  </details>
+</article>
+{% empty %}<p class="discret">Aucune commande.</p>{% endfor %}

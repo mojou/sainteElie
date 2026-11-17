@@ -7,15 +7,19 @@
   <div class="tuile"><strong>Réception · chambres</strong><span>Arrivées, encaissements, départs</span>
     <span class="actions"><a class="btn petit" href="{% url 'postes:reception' %}">Ouvrir la saisie</a> <a class="btn petit secondaire" href="{% url 'fiches:hebergement' %}">Fiche du jour</a></span></div>
   {% endif %}
+  {% if 'ventes' in modules_ouverts %}
   <div class="tuile"><strong>Boutique</strong><span>Ventes de la réception</span>
     <span class="actions">{% if user.tient_caisse %}<a class="btn petit" {% href 'caisse:ventes' %}>Ouvrir la saisie</a> {% endif %}<a class="btn petit secondaire" {% href 'fiches:stock' 'boutique' %}>Fiche du jour</a></span></div>
   <div class="tuile"><strong>Restaurant · Bar</strong><span>Boissons et plats : payés sur place, ou à crédit sur la chambre (payés à la réception)</span>
     <span class="actions"><a class="btn petit secondaire" {% href 'fiches:main_courante' 'bar' %}>Main courante bar</a> <a class="btn petit secondaire" {% href 'fiches:main_courante' 'cuisine' %}>Main courante cuisine</a> <a class="btn petit secondaire" {% href 'fiches:stock' 'bar' %}>Fiche de stock</a></span></div>
+  {% endif %}
   <div class="tuile"><strong>Chambres et blanchisserie</strong><span>Pas de compte : la réception note les chambres faites</span>
     <span class="actions"><a class="btn petit" href="{% url 'hotel:menage' %}">Ouvrir la saisie</a></span></div>
+  {% if 'pannes' in modules_ouverts %}
   <div class="tuile"><strong>Maintenance</strong><span>Pannes signalées et réparées</span>
     <span class="actions"><a class="btn petit" {% href 'postes:maintenance' %}>Ouvrir la saisie</a></span></div>
   <div class="tuile"><strong>Gardiennage</strong><span>Pas de compte : la réception tient la main courante du gardien</span>
     <span class="actions"><a class="btn petit" {% href 'postes:securite' %}>Ouvrir la saisie</a></span></div>
+  {% endif %}
 </div>
 {% endblock %}

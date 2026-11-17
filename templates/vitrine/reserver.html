@@ -16,6 +16,7 @@
     <h2>Choisissez votre chambre</h2>
     <div class="v-types">
       {% for t in types %}
+      {% url 'vitrine:reserver_chambre' as url_chambre %}
       <article class="v-type">
         {% if t.photos|length > 1 %}
         <div class="v-type-galerie">
@@ -31,12 +32,12 @@
           {% if t.libres <= 2 %}<p class="v-plus-que">Plus que {{ t.libres }} libre{{ t.libres|pluralize }} à ces dates</p>{% endif %}
           <p class="v-type-prix"><strong>{{ t.tarif|fcfa }}</strong> la nuit</p>
           <p class="v-type-total">{{ t.nuits }} nuit{{ t.nuits|pluralize }} : <strong>{{ t.total|fcfa }}</strong></p>
-          <a class="btn grand v-type-choisir" href="{% url 'vitrine:reserver_coordonnees' %}?arrivee={{ d.arrivee|date:'Y-m-d' }}&depart={{ d.depart|date:'Y-m-d' }}&personnes={{ d.personnes }}&type={{ t.cle }}">Choisir</a>
+          <a class="btn grand v-type-choisir" href="{{ url_chambre }}?arrivee={{ d.arrivee|date:'Y-m-d' }}&depart={{ d.depart|date:'Y-m-d' }}&personnes={{ d.personnes }}&type={{ t.cle }}">Voir la chambre</a>
         </div>
       </article>
       {% endfor %}
     </div>
-    <p class="v-petit-gris">Rien à payer maintenant : vous réglez à l'hôtel, en espèces, Orange Money ou MTN MoMo.</p>
+    <p class="v-petit-gris">Touchez « Voir la chambre » : ses photos, ce qu'elle offre et le prix de votre séjour. Rien à payer maintenant : vous réglez à l'hôtel, en espèces, Orange Money ou MTN MoMo.</p>
     {% else %}
     <div class="carte v-complet">
       <h2>Complet à ces dates</h2>

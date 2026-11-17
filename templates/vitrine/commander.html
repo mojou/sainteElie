@@ -1,0 +1,77 @@
+{% extends "vitrine/base.html" %}{% load static gestion %}
+{% block titre %}Commander des plats · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section v-resa">
+  <div class="v-conteneur">
+    <ol class="v-etapes-resa" aria-label="Étapes de la commande">
+      <li class="actif">Vos plats</li><li class="actif">Quand et où</li><li class="actif">Vos coordonnées</li><li class="">C'est envoyé</li>
+    </ol>
+    <h1>Commander des plats</h1>
+    <p class="v-sous-titre">Choisissez vos plats, le jour et l'heure : la cuisine les prépare pour vous. La cuisine sert
+      {{ horaires }}. Rien à payer maintenant : la réception vous appelle pour confirmer, et vous réglez sur place
+      (espèces, Orange Money, MTN MoMo, ou sur votre note de chambre).</p>
+
+    <form method="post" novalidate class="v-commande" id="commande-plats" data-quantite-max="{{ quantite_max }}">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+
+      <h2>1. Vos plats</h2>
+      {% for g in groupes %}
+      <h3 class="v-commande-rubrique">{{ g.titre }}</h3>
+      <div class="v-commande-plats">
+        {% for p in g.plats %}
+        <div class="v-plat{% if p.choisi %} choisi{% endif %}" data-plat data-prix="{{ p.prix_vente }}">
+          <img src="{{ p.image_url }}" alt="{{ p.nom }}" loading="lazy" width="96" height="72">
+          <div class="v-plat-texte">
+            <strong>{{ p.nom }}</strong>
+            {% if p.description %}<small>{{ p.description }}</small>{% endif %}
+            <span class="v-plat-prix">{{ p.prix_vente|fcfa }}</span>
+          </div>
+          <div class="v-plat-quantite">
+            <button type="button" class="btn secondaire" data-moins aria-label="Un {{ p.nom }} de moins">−</button>
+            <input type="number" name="q_{{ p.pk }}" value="{{ p.choisi|default:'' }}" min="0" max="{{ quantite_max }}"
+                   inputmode="numeric" placeholder="0" aria-label="Nombre de {{ p.nom }}">
+            <button type="button" class="btn" data-plus aria-label="Un {{ p.nom }} de plus">+</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% empty %}
+      <p class="carte">La carte n'est pas encore en ligne : appelez la réception.</p>
+      {% endfor %}
+
+      <div class="v-boite v-commande-suite">
+        <h2>2. Quand et où ?</h2>
+        <div class="ligne-champs">
+          <div class="champ{% if form.jour.errors %} en-erreur{% endif %}"><label for="id_jour">{{ form.jour.label }}</label>
+            <input type="date" name="jour" id="id_jour" value="{{ form.jour.value|date:'Y-m-d'|default:form.jour.value }}" min="{% now 'Y-m-d' %}">
+            {% for e in form.jour.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+          <div class="champ{% if form.heure.errors %} en-erreur{% endif %}"><label for="id_heure">{{ form.heure.label }}</label>
+            {{ form.heure }}{% for e in form.heure.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+        </div>
+        <p class="etiquette">{{ form.service.label }}</p>
+        <div class="v-service">
+          {% for v, l in form.fields.service.choices %}
+          <label class="paiement"><input type="radio" name="service" value="{{ v }}"{% if form.service.value == v %} checked{% endif %}><span>{{ l }}</span></label>
+          {% endfor %}
+        </div>
+        <div class="champ{% if form.chambre.errors %} en-erreur{% endif %}" id="bloc-chambre"><label for="id_chambre">{{ form.chambre.label }}</label>
+          {{ form.chambre }}<span class="aide">Les plats vous sont montés ; vous payez à la livraison ou sur votre note.</span>
+          {% for e in form.chambre.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+
+        <h2>3. Vos coordonnées</h2>
+        {% for champ in form %}{% if champ.name in "nom telephone email message site_web" %}
+        <div class="champ{% if champ.errors %} en-erreur{% endif %}"><label for="{{ champ.id_for_label }}">{{ champ.label }}{% if champ.field.required %} *{% endif %}</label>
+          {{ champ }}{% if champ.help_text %}<span class="aide">{{ champ.help_text }}</span>{% endif %}
+          {% for e in champ.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+        {% endif %}{% endfor %}
+      </div>
+
+      <div class="v-commande-barre" aria-live="polite">
+        <span id="commande-total">Aucun plat choisi</span>
+        <button class="btn or grand" type="submit">Envoyer ma commande</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/commander.js' %}?v={{ version_statique }}"></script>{% endblock %}

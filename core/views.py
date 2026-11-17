@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -137,6 +138,17 @@ def etablissement(request):
              "(avec le slogan et la présentation).")
     return render(request, "form_page.html", {"form": form, "titre": "Établissement", "retour": "core:parametres",
                                               "intro": intro})
+
+
+@login_required
+def pages(request):
+    """Autres pages : tout ce qui n'est pas dans le menu court, en gros boutons rangés par sujet."""
+    from . import navigation
+
+    ouverts = modules.ouverts(request)
+    return render(request, "core/pages.html", {
+        "groupes": navigation.groupes(request.user, request),
+        "modules_fermes": [m for m in modules.MODULES if m.cle not in ouverts]})
 
 
 @acces_requis(gerant)

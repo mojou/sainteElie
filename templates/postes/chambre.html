@@ -9,7 +9,13 @@
     <h1>Chambre {{ chambre.numero }}</h1>
     <span class="badge {{ chambre.statut }}">{{ chambre.get_statut_display }}</span>
   </div>
-  <p class="discret">{{ chambre.get_categorie_display }} · {{ chambre.tarif_nuit|fcfa }} la nuit</p>
+  <p class="discret">{{ chambre.get_categorie_display }} · {{ chambre.tarif_nuit|fcfa }} la nuit{% if chambre.description %} · {{ chambre.description }}{% endif %}</p>
+  {% if not sejour and photos %}
+  <div class="montrer-chambre">
+    <p class="etape">Montrez la chambre au client avant qu'il paie :</p>
+    {% include "partials/galerie.html" with photos=photos titre=titre_photos %}
+  </div>
+  {% endif %}
 
   {% if sejour %}
     <dl class="fiche">

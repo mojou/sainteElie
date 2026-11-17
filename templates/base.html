@@ -30,130 +30,56 @@
 </header>
 <div class="mise-en-page">
   <nav class="menu" aria-label="Menu principal">
+  {# Menu court : le travail de tous les jours. Tout le reste est dans « Autres pages ». Un module fermé n'apparaît pas. #}
   {% if user.est_terrain %}
-    {# Menu court : d'abord la saisie du département, puis le reste en mots simples. #}
-    <div class="groupe">Mon poste</div>
     {% if user.est_reception %}
-      <a href="{% url 'postes:reception' %}" class="{% actif '/poste/reception' %}"><strong>Saisie réception</strong></a>
-      <a {% href 'caisse:ventes' %} class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Boutique</strong></a>
-      <a {% href 'hotel:extras' %} class="{% actif '/hotel/extras' %}">Extras sur chambre</a>
-      <a href="{% url 'hotel:sejours' %}" class="{% actif '/hotel/sejours' '/hotel/clients' '/hotel/chambres' %}">Réservations</a>
+      <a href="{% url 'postes:reception' %}" class="{% actif '/poste/reception' %}"><strong>Plan des chambres</strong></a>
       <a href="{% url 'vitrine:demandes' %}" class="{% actif '/hotel/reservations-en-ligne' %}">Réservations en ligne{% if nb_demandes_reservation %}<span class="pastille">{{ nb_demandes_reservation }}</span>{% endif %}</a>
-      <a href="{% url 'vitrine:comptes' %}" class="{% actif '/hotel/comptes-en-ligne' %}">Comptes clients en ligne{% if nb_comptes_a_relier %}<span class="pastille">{{ nb_comptes_a_relier }}</span>{% endif %}</a>
+      <a href="{% url 'vitrine:commandes_plats' %}" class="{% actif '/hotel/plats-commandes' %}">Plats commandés{% if nb_commandes_plats %}<span class="pastille">{{ nb_commandes_plats }}</span>{% endif %}</a>
+      <a href="{% url 'hotel:sejours' %}" class="{% actif '/hotel/sejours' '/hotel/clients' %}">Arrivées et réservations</a>
       <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/sessions' %}">Ma caisse</a>
-      <a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches du jour</a>
-      <a {% href 'postes:maintenance' %} class="{% actif '/poste/maintenance' %}">Signaler une panne</a>
-      <a {% href 'postes:securite' %} class="{% actif '/poste/securite' %}">Main courante du gardien</a>
+      {% if 'ventes' in modules_ouverts %}<a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}">Boutique</a>{% endif %}
+      {% if nb_comptes_a_relier %}<a href="{% url 'vitrine:comptes' %}" class="{% actif '/hotel/comptes-en-ligne' %}">Comptes clients à relier<span class="pastille">{{ nb_comptes_a_relier }}</span></a>{% endif %}
     {% elif user.est_bar %}
-      <a {% href 'caisse:ventes' %} class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Restaurant · Bar</strong></a>
+      <a href="{% url 'vitrine:commandes_plats' %}" class="{% actif '/hotel/plats-commandes' %}"><strong>Plats commandés</strong>{% if nb_commandes_plats %}<span class="pastille">{{ nb_commandes_plats }}</span>{% endif %}</a>
+      {% if 'ventes' in modules_ouverts %}<a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Restaurant · Bar</strong></a>{% endif %}
       <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/sessions' %}">Ma caisse</a>
-      <a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches du jour</a>
+      {% if 'ventes' in modules_ouverts %}<a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches du jour</a>{% endif %}
     {% elif user.departement == "MAINTENANCE" %}
-      <a {% href 'postes:maintenance' %} class="{% actif '/poste/maintenance' %}"><strong>Saisie maintenance</strong></a>
+      {% if 'pannes' in modules_ouverts %}<a href="{% url 'postes:maintenance' %}" class="{% actif '/poste/maintenance' %}"><strong>Saisie maintenance</strong></a>{% endif %}
     {% elif user.departement == "SECURITE" %}
-      <a {% href 'postes:securite' %} class="{% actif '/poste/securite' %}"><strong>Saisie sécurité</strong></a>
+      {% if 'pannes' in modules_ouverts %}<a href="{% url 'postes:securite' %}" class="{% actif '/poste/securite' %}"><strong>Saisie sécurité</strong></a>{% endif %}
     {% elif user.departement == "MENAGE" %}
       <a href="{% url 'hotel:menage' %}" class="{% actif '/hotel/menage' %}"><strong>Saisie ménage</strong></a>
-    {% elif user.profil_employe %}
-      <a {% href 'personnel:mon_espace' %} class="{% actif '/personnel' '/paie' '/projets' %}"><strong>Mon planning et pointage</strong></a>
     {% endif %}
-    <div class="groupe">Moi</div>
-    {% if user.profil_employe and not user.poste_sans_saisie %}
-      <a {% href 'personnel:mon_espace' %} class="{% actif '/personnel' '/paie' '/projets' %}">Mon planning et mes congés</a>
+    {% if user.profil_employe and 'personnel' in modules_ouverts %}
+      <a href="{% url 'personnel:mon_espace' %}" class="{% actif '/personnel' %}">Mon planning et mes congés</a>
     {% endif %}
-    <a href="{% url 'accounts:mon_compte' %}" class="{% actif '/comptes/mon-compte' %}">Mon compte</a>
   {% else %}
-    <div class="groupe">Pilotage</div>
     <a href="{% url 'core:accueil' %}" class="{% if request.path == '/' %}active{% endif %}">Tableau de bord</a>
-    <a href="{% url 'postes:tous' %}" class="{% actif '/poste' %}">Saisies des départements</a>
-    {% if user.est_direction or user.est_gouvernante %}<a {% href 'rapports:rapport' %} class="{% actif '/rapports' %}">Rapports (jour, semaine, mois, année)</a>{% endif %}
-
     {% if user.voit_reception %}
-      <div class="groupe">Réception · chambres</div>
-      <a href="{% url 'hotel:sejours' %}" class="{% actif '/hotel/sejours' %}">Séjours et réservations</a>
       <a href="{% url 'vitrine:demandes' %}" class="{% actif '/hotel/reservations-en-ligne' %}">Réservations en ligne{% if nb_demandes_reservation %}<span class="pastille">{{ nb_demandes_reservation }}</span>{% endif %}</a>
-      <a href="{% url 'hotel:chambres' %}" class="{% if request.path == '/hotel/chambres/' or '/hotel/chambres/nouvelle' in request.path %}active{% endif %}">Chambres</a>
-      {% if user.est_direction or user.est_gouvernante %}<a href="{% url 'hotel:photos_chambres' %}" class="{% actif '/hotel/chambres/photos' %}">Photos des chambres</a>{% endif %}
-      <a href="{% url 'hotel:clients' %}" class="{% actif '/hotel/clients' %}">Clients</a>
-      <a href="{% url 'vitrine:comptes' %}" class="{% actif '/hotel/comptes-en-ligne' %}">Comptes clients en ligne{% if nb_comptes_a_relier %}<span class="pastille">{{ nb_comptes_a_relier }}</span>{% endif %}</a>
+      <a href="{% url 'vitrine:commandes_plats' %}" class="{% actif '/hotel/plats-commandes' %}">Plats commandés{% if nb_commandes_plats %}<span class="pastille">{{ nb_commandes_plats }}</span>{% endif %}</a>
+      <a href="{% url 'postes:reception' %}" class="{% actif '/poste/reception' %}">Plan des chambres</a>
+      <a href="{% url 'hotel:sejours' %}" class="{% actif '/hotel/sejours' '/hotel/clients' %}">Séjours et clients</a>
+      {% if nb_comptes_a_relier %}<a href="{% url 'vitrine:comptes' %}" class="{% actif '/hotel/comptes-en-ligne' %}">Comptes clients à relier<span class="pastille">{{ nb_comptes_a_relier }}</span></a>{% endif %}
     {% endif %}
-
-    {% if user.tient_caisse or user.peut_valider_caisse %}
-      <div class="groupe">Caisses</div>
-      {% if user.tient_caisse %}
-      <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/ouvrir' %}">Ma caisse</a>
-      <a {% href 'caisse:ventes' %} class="{% actif '/caisse/ventes' '/caisse/avarie' %}">Point de vente (boutique, restaurant · bar)</a>
-      <a {% href 'hotel:extras' %} class="{% actif '/hotel/extras' %}">Extras sur chambre</a>
-      <a {% href 'caisse:credits' %} class="{% actif '/caisse/credits' %}">Crédits clients</a>
-      {% endif %}
-      <a href="{% url 'caisse:sessions' %}" class="{% actif '/caisse/sessions' %}">Sessions de caisse</a>
-      {% if user.peut_valider_caisse %}
-        <a href="{% url 'caisse:rapports' %}" class="{% actif '/caisse/rapports' %}">Rapports quotidiens de caisse</a>
-      {% endif %}
-      {% if user.est_gerant %}<a href="{% url 'caisse:virements' %}" class="{% actif '/caisse/virements' %}">Virements reçus</a>{% endif %}
-    {% endif %}
-
-    {% if user.tient_caisse or user.voit_stock %}
-      <div class="groupe">Fiches du jour</div>
-      <a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches imprimables</a>
-    {% endif %}
-
-    <div class="groupe">Chambres et blanchisserie</div>
-    <a href="{% url 'hotel:menage' %}" class="{% actif '/hotel/menage' %}">Ménage des chambres</a>
-
-    <div class="groupe">Personnel</div>
-    {% if user.profil_employe %}
-      <a {% href 'personnel:mon_espace' %} class="{% actif '/personnel/mon-espace' %}">Mon planning et pointage</a>
-    {% endif %}
-    <a {% href 'personnel:conges' %} class="{% actif '/personnel/conges' '/personnel/echanges' %}">Congés et échanges</a>
-    {% if user.est_encadrement %}
-      <a {% href 'personnel:planning' %} class="{% actif '/personnel/planning' %}">Planning</a>
-      <a {% href 'personnel:pointages' %} class="{% actif '/personnel/pointages' %}">Pointages</a>
-      <a {% href 'personnel:employes' %} class="{% actif '/personnel/employes' %}">Employés</a>
-    {% endif %}
-    {% if user.est_gerant %}
-      <a {% href 'paie:fiches' %} class="{% actif '/paie/fiches' %}">Paie</a>
-      <a {% href 'paie:acomptes' %} class="{% actif '/paie/acomptes' %}">Acomptes</a>
-    {% elif user.profil_employe %}
-      <a {% href 'paie:mes_bulletins' %} class="{% actif '/paie/mes-bulletins' %}">Mes bulletins de paie</a>
-    {% endif %}
-
-    {% if user.voit_stock %}
-      <div class="groupe">Stock</div>
-      <a {% href 'stock:articles' %} class="{% actif '/stock/articles' '/stock/mouvements' '/stock/saisie' %}">Articles et mouvements</a>
-      <a {% href 'stock:ecarts' %} class="{% actif '/stock/ecarts' %}">Écarts d'inventaire</a>
-      <a {% href 'stock:photos' %} class="{% actif '/stock/photos' %}">Photos des articles</a>
-      <a {% href 'rapports:inventaire' %} class="{% actif '/rapports/inventaire' %}">Inventaire et rentabilité</a>
-    {% endif %}
-
-    {% if user.est_direction %}
-      <div class="groupe">Site public</div>
-      <a href="{% url 'vitrine:photos' %}" class="{% actif '/parametres/photos-du-site' %}">Photos du site</a>
-      <a href="{% url 'hotel:photos_chambres' %}" class="{% actif '/hotel/chambres/photos' %}">Photos des chambres</a>
-      <a href="{% url 'vitrine:site' %}" target="_blank" rel="noopener">Voir la page d'accueil</a>
-    {% endif %}
-
-    {% if user.est_gerant %}
-      <div class="groupe">Finances</div>
-      <a {% href 'finances:bilan' %} class="{% actif '/finances/bilan' %}">Bilan du mois</a>
-      <a {% href 'finances:depenses' %} class="{% actif '/finances/depenses' %}">Dépenses</a>
-    {% endif %}
-
-    <div class="groupe">Projets</div>
-    {% if user.est_encadrement %}
-      <a {% href 'projets:liste' %} class="{% actif '/projets/liste' '/projets/projet' %}">Projets internes</a>
-    {% endif %}
-    <a {% href 'projets:mes_taches' %} class="{% actif '/projets/mes-taches' %}">Mes tâches</a>
-
-    {% if user.est_gerant %}
-      <div class="groupe">Administration</div>
-      <a href="{% url 'accounts:utilisateurs' %}" class="{% actif '/comptes/utilisateurs' %}">Utilisateurs</a>
-      <a href="{% url 'core:parametres' %}" class="{% actif '/parametres' %}">Paramètres</a>
-      <a href="{% url 'core:journal' %}" class="{% actif '/journal' %}">Journal d'activité</a>
-    {% endif %}
-    <div class="groupe">Compte</div>
-    <a href="{% url 'accounts:mon_compte' %}" class="{% actif '/comptes/mon-compte' %}">Mon compte et code PIN</a>
+    {% if user.tient_caisse %}<a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/ouvrir' %}">Ma caisse</a>{% endif %}
+    {% if user.peut_valider_caisse %}<a href="{% url 'caisse:sessions' %}" class="{% actif '/caisse/sessions' '/caisse/rapports' %}">Caisses à valider</a>{% endif %}
+    {# Les modules ouverts plus tard prennent leur place ici. #}
+    {% if 'ventes' in modules_ouverts and user.tient_caisse %}<a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' %}">Point de vente</a>{% endif %}
+    {% if 'rapports' in modules_ouverts %}{% if user.est_direction or user.est_gouvernante %}<a href="{% url 'rapports:rapport' %}" class="{% if request.path == '/rapports/' %}active{% endif %}">Rapports</a>{% endif %}{% endif %}
+    {% if 'stock' in modules_ouverts and user.voit_stock %}<a href="{% url 'stock:articles' %}" class="{% actif '/stock' '/rapports/inventaire' %}">Stock</a>{% endif %}
+    {% if 'personnel' in modules_ouverts %}<a href="{% url 'personnel:planning' %}" class="{% actif '/personnel' %}">Planning</a>{% endif %}
+    {% if 'paie' in modules_ouverts and user.est_gerant %}<a href="{% url 'paie:fiches' %}" class="{% actif '/paie' %}">Paie</a>{% endif %}
+    {% if 'finances' in modules_ouverts and user.est_gerant %}<a href="{% url 'finances:depenses' %}" class="{% actif '/finances' %}">Dépenses</a>{% endif %}
+    {% if 'pannes' in modules_ouverts and user.voit_reception %}<a href="{% url 'postes:maintenance' %}" class="{% actif '/poste/maintenance' %}">Pannes</a>{% endif %}
+    {% if 'projets' in modules_ouverts %}<a href="{% url 'projets:liste' %}" class="{% actif '/projets' %}">Projets</a>{% endif %}
+    {% if user.est_gerant %}<a href="{% url 'core:parametres' %}" class="{% actif '/parametres' %}">Paramètres</a>{% endif %}
   {% endif %}
+    <hr class="menu-separateur">
+    <a href="{% url 'core:pages' %}" class="{% actif '/autres-pages' %}">Autres pages</a>
+    <a href="{% url 'accounts:mon_compte' %}" class="{% actif '/comptes/mon-compte' %}">Mon compte</a>
     <form class="deconnexion" method="post" action="{% url 'accounts:deconnexion' %}">{% csrf_token %}
       <button type="submit">Se déconnecter</button>
     </form>

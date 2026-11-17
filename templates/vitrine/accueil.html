@@ -13,6 +13,7 @@
       <p class="v-intro">{% if etablissement.presentation %}{{ etablissement.presentation|linebreaksbr }}{% else %}Chambres et suites, restaurant, bar et boutique : tout est sur place. Créez votre compte client pour suivre vos séjours, ce que vous avez payé et ce qu'il reste à régler.{% endif %}</p>
       <div class="v-actions">
         <a class="btn or grand" href="#reserver">Réserver une chambre</a>
+        <a class="btn or grand" href="{% url 'vitrine:commander' %}">Commander des plats</a>
         <a class="btn v-fantome grand" href="{% url 'vitrine:inscription' %}">Créer un compte</a>
         <a class="btn v-fantome grand" href="{% url 'accounts:connexion' %}">Se connecter</a>
       </div>
@@ -114,7 +115,8 @@
   <div class="v-conteneur">
     <p class="v-surtitre">Notre cuisine</p>
     <h2 class="v-apparait">Notre carte</h2>
-    <p class="v-sous-titre">Servis sur place ; logé chez nous, vos repas peuvent aller sur votre note de chambre.</p>
+    <p class="v-sous-titre">Servis sur place, à emporter ou dans votre chambre ; logé chez nous, vos repas peuvent aller sur votre note de chambre.</p>
+    <p><a class="btn or grand" href="{% url 'vitrine:commander' %}">Commander des plats</a></p>
     {% if plats %}<div class="v-cartes v-plats-photo">
       {% for p in plats %}
       <article class="v-carte v-apparait avec-photo">

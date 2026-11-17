@@ -1,0 +1,37 @@
+{% extends "vitrine/base.html" %}{% load gestion %}
+{% block titre %}{{ choix.libelle }} · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section v-resa">
+  <div class="v-conteneur">
+    <ol class="v-etapes-resa" aria-label="Étapes de la réservation">
+      <li class="fait">Vos dates</li><li class="actif">La chambre</li><li class="">Vos coordonnées</li><li class="">C'est envoyé</li>
+    </ol>
+    <a class="btn secondaire" href="{% url 'vitrine:reserver' %}?{{ recherche }}">← Voir les autres chambres</a>
+
+    <div class="v-double v-resa-double v-chambre-detail">
+      <div class="v-chambre-photos">
+        {% if choix.photos %}
+          {% include "partials/galerie.html" with photos=choix.photos titre=choix.libelle %}
+        {% else %}
+          <img class="v-chambre-dessin" src="{{ choix.photo }}" alt="Illustration : {{ choix.libelle|lower }}">
+          <p class="v-petit-gris">Les photos de cette chambre arrivent bientôt.</p>
+        {% endif %}
+      </div>
+      <div class="v-boite">
+        <h1>{{ choix.libelle }}</h1>
+        {% if choix.description %}<p class="v-chambre-description">{{ choix.description }}</p>{% endif %}
+        <ul class="v-chambre-points">
+          <li>Jusqu'à {{ choix.capacite }} personne{{ choix.capacite|pluralize }}</li>
+          <li>{% if choix.libres <= 2 %}Plus que {{ choix.libres }} libre{{ choix.libres|pluralize }} à ces dates{% else %}{{ choix.libres }} chambres de ce type libres à ces dates{% endif %}</li>
+          <li>Du {{ arrivee_texte }} au {{ depart_texte }}</li>
+        </ul>
+        <p class="v-type-prix"><strong>{{ choix.tarif|fcfa }}</strong> la nuit</p>
+        <p class="v-chambre-total">{{ choix.nuits }} nuit{{ choix.nuits|pluralize }} : <strong>{{ choix.total|fcfa }}</strong></p>
+        <a class="btn or grand v-type-choisir" href="{% url 'vitrine:reserver_coordonnees' %}?{{ recherche }}&type={{ choix.cle }}">Réserver cette chambre</a>
+        <p class="v-petit-gris">Rien à payer maintenant : la réception vous appelle pour confirmer, et vous réglez à l'hôtel
+          (espèces, Orange Money ou MTN MoMo). Sur place, vous pouvez aussi demander à voir la chambre.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

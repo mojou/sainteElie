@@ -36,6 +36,24 @@
     </div>
     {% endif %}
 
+    <h2>Mes commandes de plats</h2>
+    <p><a class="btn or" href="{% url 'vitrine:commander' %}">Commander des plats</a></p>
+    {% if commandes %}
+    <div class="grille">
+      {% for c in commandes %}
+      <div class="carte">
+        <span class="badge {% if c.statut == 'CONFIRMEE' or c.statut == 'SERVIE' %}ok{% elif c.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ c.get_statut_display }}</span>
+        <h3>Commande n°{{ c.pk }} · {{ c.pour_le|date:"l d F à H:i" }}</h3>
+        <p>{% for l in c.lignes.all %}{{ l.quantite }} × {{ l.article.nom }}{% if not forloop.last %}, {% endif %}{% endfor %} · {{ c.total|fcfa }}</p>
+        <p class="discret">{{ c.get_service_display }}{% if c.chambre %} (chambre {{ c.chambre }}){% endif %}</p>
+        {% if c.statut == "NOUVELLE" %}<p class="discret">La réception vous appelle pour confirmer.</p>
+          <form method="post" action="{% url 'vitrine:commande_annuler' c.pk %}">{% csrf_token %}<button class="btn secondaire petit" data-confirmer="Annuler votre commande n°{{ c.pk }} ?" data-oui="Oui, annuler">Annuler ma commande</button></form>
+        {% elif c.motif %}<p class="discret">{{ c.motif }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     {% if compte.statut == "EN_ATTENTE" %}
     <div class="carte v-attente">
       <h2>Votre compte est presque prêt</h2>

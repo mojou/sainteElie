@@ -288,6 +288,40 @@
 
   document.querySelectorAll("select:not([multiple]):not([data-sans-recherche])").forEach(rendreCherchable);
 
+  // --- Galerie de photos (chambres) : glisser du doigt, flèches, vignettes ---------------------
+  function activerGalerie(galerie) {
+    var piste = galerie.querySelector(".galerie-piste");
+    if (!piste || galerie.getAttribute("data-galerie-active")) { return; }
+    galerie.setAttribute("data-galerie-active", "1");
+    var vignettes = galerie.querySelectorAll("[data-galerie-index]");
+    function rang() { return piste.clientWidth ? Math.round(piste.scrollLeft / piste.clientWidth) : 0; }
+    function aller(i) {
+      var n = piste.children.length;
+      if (!n) { return; }
+      i = (i + n) % n;
+      piste.scrollTo({ left: i * piste.clientWidth, behavior: "smooth" });
+    }
+    function marquer() {
+      var i = rang();
+      Array.prototype.forEach.call(vignettes, function (b, k) { b.classList.toggle("actif", k === i); });
+    }
+    galerie.querySelectorAll("[data-galerie-pas]").forEach(function (b) {
+      b.addEventListener("click", function () { aller(rang() + parseInt(b.getAttribute("data-galerie-pas"), 10)); });
+    });
+    Array.prototype.forEach.call(vignettes, function (b) {
+      b.addEventListener("click", function () { aller(parseInt(b.getAttribute("data-galerie-index"), 10)); });
+    });
+    piste.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight") { e.preventDefault(); aller(rang() + 1); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); aller(rang() - 1); }
+    });
+    var minuterie = null;
+    piste.addEventListener("scroll", function () { window.clearTimeout(minuterie); minuterie = window.setTimeout(marquer, 80); });
+    marquer();
+  }
+  window.activerGalerie = activerGalerie;
+  document.querySelectorAll("[data-galerie]").forEach(activerGalerie);
+
   // Photo prise : elle part tout de suite, sans bouton de plus à toucher.
   document.querySelectorAll("input[type=file][data-envoi-auto]").forEach(function (champ) {
     champ.addEventListener("change", function () {

@@ -27,6 +27,11 @@ def site(request):
     user = getattr(request, "user", None)
     if user is not None and user.is_authenticated:
         contexte["nb_alertes"] = Alerte.visibles_par(user).filter(lue_le__isnull=True).count()
+        if user.voit_reception or user.est_bar:
+            from vitrine.models import CommandePlats
+
+            contexte["nb_commandes_plats"] = CommandePlats.objects.filter(
+                statut=CommandePlats.Statut.NOUVELLE).count()
         if user.voit_reception:
             from vitrine.models import CompteClient
 

@@ -214,7 +214,8 @@ def espace(request):
         return redirect("core:accueil")
     compte = request.user.compte_client
     ctx = {"compte": compte, "etab": Etablissement.get(),
-           "demandes": compte.demandes.select_related("sejour__chambre")[:10]}
+           "demandes": compte.demandes.select_related("sejour__chambre")[:10],
+           "commandes": compte.commandes_plats.prefetch_related("lignes__article")[:10]}
     if compte.client_id:
         sejours = list(compte.client.sejours.exclude(statut=Sejour.Statut.ANNULE).select_related("chambre")
                        .prefetch_related("extras").order_by("-date_arrivee"))
@@ -302,6 +303,26 @@ def reserver(request):
         "arrivee_texte": reservations.date_longue(d["arrivee"]) if d else "",
         "depart_texte": reservations.date_longue(d["depart"]) if d else "",
         "nuits": (d["depart"] - d["arrivee"]).days if d else 0})
+
+
+def reserver_chambre(request):
+    """Étape 2 bis : le client voit la chambre (photos, ce qu'elle offre, prix du séjour) avant de la réserver."""
+    from urllib.parse import urlencode
+
+    from django.urls import reverse
+
+    from . import reservations
+
+    recherche, d = _recherche(request)
+    choix = reservations.trouver_type(d["arrivee"], d["depart"], d["personnes"], request.GET.get("type", "")) if d else None
+    if choix is None:
+        messages.warning(request, "Ce type de chambre n'est plus libre à ces dates : choisissez-en un autre.")
+        return redirect(f"{reverse('vitrine:reserver')}?{request.GET.urlencode()}")
+    return render(request, "vitrine/reserver_chambre.html", {
+        "choix": choix, "d": d, "etab": Etablissement.get(),
+        "recherche": urlencode({"arrivee": d["arrivee"].isoformat(), "depart": d["depart"].isoformat(),
+                                "personnes": d["personnes"]}),
+        "arrivee_texte": reservations.date_longue(d["arrivee"]), "depart_texte": reservations.date_longue(d["depart"])})
 
 
 def reserver_coordonnees(request):
@@ -415,3 +436,183 @@ def demandes(request):
         "nouvelles": nouvelles,
         "traitees": DemandeReservation.objects.exclude(statut=DemandeReservation.Statut.NOUVELLE)
         .select_related("sejour__chambre", "traitee_par")[:30]})
+
+
+# --- Commander des plats depuis le site -------------------------------------------------------------------------------
+def _groupes_de_plats(plats):
+    rubriques = {}
+    for p in plats:
+        rubriques.setdefault(p.rubrique or "La carte", []).append(p)
+    return [{"titre": titre, "plats": liste} for titre, liste in rubriques.items()]
+
+
+def _premiere_heure_libre():
+    """L'heure proposée d'office : le premier créneau où la cuisine a le temps de préparer (demain matin sinon)."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from core.utils import aujourd_hui
+
+    from . import commandes
+
+    limite = timezone.localtime(timezone.now() + timedelta(minutes=commandes.DELAI_MINUTES))
+    for h in commandes.creneaux():
+        if limite.date() == aujourd_hui() and h >= limite.time():
+            return aujourd_hui(), h.strftime("%H:%M")
+    return aujourd_hui() + timedelta(days=1), commandes.creneaux()[0].strftime("%H:%M")
+
+
+def commander(request):
+    """Le client choisit ses plats, le jour et l'heure, où il mange, puis envoie : la cuisine le rappelle."""
+    from . import commandes
+    from .forms import CommandePlatsForm
+
+    compte = request.user.compte_client if request.user.is_authenticated and request.user.est_client else None
+    jour, heure = _premiere_heure_libre()
+    initial = {"jour": jour, "heure": heure, "service": "SUR_PLACE"}
+    if compte:
+        initial.update(nom=compte.nom, telephone=compte.telephone, email=compte.email)
+    form = CommandePlatsForm(request.POST or None, initial=initial)
+    cle = f"commandes-plats:{ip_client(request)}"
+    if request.method == "POST" and cache.get(cle, 0) >= 5:
+        form.is_valid()
+        form.add_error(None, "Trop de commandes envoyées depuis cet appareil : appelez la réception, ou réessayez "
+                             "dans une heure.")
+    elif request.method == "POST" and commandes.trop_de_commandes():
+        form.is_valid()
+        form.add_error(None, "Beaucoup de commandes arrivent en ce moment : appelez la réception, ou réessayez "
+                             "dans une heure.")
+    elif request.method == "POST" and form.is_valid():
+        f = form.cleaned_data
+        if f.get("site_web"):  # un robot a rempli le champ caché
+            return redirect("vitrine:site")
+        cache.set(cle, cache.get(cle, 0) + 1, 3600)
+        try:
+            commande = commandes.creer_commande(
+                {a.pk: q for a, q in f["lignes"]}, f["pour_le"], f["service"], f["nom"], f["telephone"],
+                chambre=f.get("chambre", ""), email=f.get("email", ""), message=f.get("message", ""), compte=compte)
+        except ValidationError as exc:
+            form.add_error(None, exc)
+        else:
+            request.session["commandes_plats"] = request.session.get("commandes_plats", [])[-9:] + [commande.pk]
+            return redirect("vitrine:commande_envoyee", pk=commande.pk)
+    try:
+        choisis = form.quantites() if form.is_bound else {}
+    except ValidationError:
+        choisis = {}
+    plats = list(commandes.plats_a_commander())
+    for p in plats:
+        p.choisi = choisis.get(p.pk, 0)
+    return render(request, "vitrine/commander.html", {
+        "form": form, "groupes": _groupes_de_plats(plats), "etab": Etablissement.get(), "compte": compte,
+        "quantite_max": commandes.QUANTITE_MAX,
+        "horaires": f"de {commandes.HEURE_OUVERTURE} h à {commandes.HEURE_FERMETURE} h"})
+
+
+def commande_envoyee(request, pk):
+    """Le numéro de la commande et ce qui va se passer. Visible seulement par qui l'a envoyée."""
+    from django.http import Http404
+
+    from .models import CommandePlats
+
+    commande = get_object_or_404(CommandePlats.objects.prefetch_related("lignes__article"), pk=pk)
+    sienne = (request.user.is_authenticated and request.user.est_client and commande.compte_id
+              and commande.compte.user_id == request.user.pk)
+    if pk not in request.session.get("commandes_plats", []) and not sienne:
+        raise Http404
+    return render(request, "vitrine/commande_envoyee.html", {"commande": commande, "etab": Etablissement.get()})
+
+
+@require_POST
+@login_required
+def commande_annuler(request, pk):
+    from . import commandes
+    from .models import CommandePlats
+
+    if not request.user.est_client:
+        return redirect("core:accueil")
+    commande = get_object_or_404(CommandePlats, pk=pk)
+    try:
+        commandes.annuler_par_le_client(commande, request.user.compte_client)
+        messages.success(request, "Votre commande de plats est annulée.")
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
+    return redirect("vitrine:espace")
+
+
+def cuisine_ou_reception(u):
+    """Les plats commandés en ligne : la réception les confirme, la cuisine aussi, et c'est elle qui les sert."""
+    return u.voit_reception or u.est_bar
+
+
+@acces_requis(cuisine_ou_reception)
+def commandes_plats(request):
+    """Côté hôtel : confirmer les commandes (après avoir appelé le client), puis les servir et les encaisser."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from caisse.services import session_ouverte_de
+    from core.utils import aujourd_hui
+
+    from . import commandes
+    from .models import CommandePlats
+
+    if request.method == "POST":
+        commande = get_object_or_404(CommandePlats, pk=request.POST.get("commande"))
+        action = request.POST.get("action")
+        try:
+            if action == "confirmer":
+                commandes.confirmer(commande, request.user)
+                messages.success(request, f"Commande n°{commande.pk} confirmée : prévenez le client.")
+            elif action == "refuser":
+                commandes.refuser(commande, request.user, request.POST.get("motif", ""))
+                messages.success(request, f"Commande n°{commande.pk} refusée.")
+            elif action == "annuler":
+                commandes.annuler(commande, request.user, request.POST.get("motif", ""))
+                messages.success(request, f"Commande n°{commande.pk} annulée.")
+            elif action == "servir":
+                sejour = None
+                if request.POST.get("paiement") == "CHAMBRE" and request.POST.get("sejour"):
+                    sejour = get_object_or_404(Sejour, pk=request.POST["sejour"], statut=Sejour.Statut.EN_COURS)
+                commandes.servir(commande, request.user, session_ouverte_de(request.user),
+                                 request.POST.get("paiement", ""), sejour=sejour)
+                if commande.encaissement:
+                    messages.success(request, f"Commande n°{commande.pk} servie et payée : reçu "
+                                              f"n°{commande.encaissement.numero_recu}.")
+                else:
+                    messages.success(request, f"Commande n°{commande.pk} servie : portée sur la note de la "
+                                              f"chambre {sejour.chambre.numero}.")
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+        return redirect("vitrine:commandes_plats")
+    from stock.models import Article
+
+    jour = aujourd_hui()
+    user = request.user
+    session = session_ouverte_de(user)
+    qs = CommandePlats.objects.prefetch_related("lignes__article").select_related(
+        "compte", "encaissement__session")
+    confirmees = list(qs.filter(statut=CommandePlats.Statut.CONFIRMEE).order_by("pour_le"))
+    traitees = list(qs.filter(statut__in=[CommandePlats.Statut.SERVIE, CommandePlats.Statut.REFUSEE,
+                                          CommandePlats.Statut.ANNULEE]).order_by("-pour_le")[:30])
+    for c in traitees:  # un reçu ne s'ouvre que pour la réception, les valideurs et la personne de la caisse
+        c.recu_visible = bool(c.encaissement) and (user.voit_reception or user.peut_valider_caisse
+                                                   or c.encaissement.session.receptionniste_id == user.pk)
+    sejours = list(Sejour.objects.filter(statut=Sejour.Statut.EN_COURS).select_related("chambre", "client")
+                   .order_by("chambre__numero"))
+    par_chambre = {s.chambre.numero.lower(): s for s in sejours}
+    for c in confirmees:
+        c.sejour_propose = par_chambre.get(c.chambre.lower()) if c.chambre else None
+        c.jour = timezone.localtime(c.pour_le).date()
+    return render(request, "vitrine/commandes_plats.html", {
+        "nouvelles": qs.filter(statut=CommandePlats.Statut.NOUVELLE).order_by("pour_le"),
+        "aujourdhui": [c for c in confirmees if c.jour <= jour],
+        "demain": [c for c in confirmees if c.jour == jour + timedelta(days=1)],
+        "plus_tard": [c for c in confirmees if c.jour > jour + timedelta(days=1)],
+        "traitees": traitees, "maintenant": timezone.now(), "sejours": sejours, "paiements": commandes.PAIEMENTS,
+        # Servir = encaisser à la caisse « Cuisine / Bar » : seule la personne qui la tient voit le bouton.
+        "peut_servir": session is not None and Article.Categorie.RESTAURANT in session.tiroir.categories_vendues,
+        "session": session})

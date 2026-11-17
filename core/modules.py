@@ -49,7 +49,9 @@ MODULES = (
 )
 PAR_CLE = {m.cle: m for m in MODULES}
 
-TOUJOURS_OUVERT = ("Réservations et vente des chambres : réservations en ligne, séjours et clients, plan des chambres, "
+TOUJOURS_OUVERT = ("Réservations et vente des chambres, et plats commandés en ligne (confirmés par la réception ou la "
+                   "cuisine, servis et encaissés à la caisse Cuisine / Bar) : réservations en ligne, séjours et clients, "
+                   "plan des chambres, "
                    "arrivées et départs, paiements et reçus, caisse de la réception (ouvrir, fermer, valider), ménage "
                    "des chambres, fiche recette chambres, comptes clients en ligne, utilisateurs et paramètres.")
 

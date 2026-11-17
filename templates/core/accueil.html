@@ -12,6 +12,7 @@
 {% if user.voit_reception %}
 <nav class="raccourcis-accueil" aria-label="Réservations et chambres">
   <a class="btn grand" href="{% url 'vitrine:demandes' %}">Réservations en ligne{% if nb_demandes_reservation %} <span class="pastille">{{ nb_demandes_reservation }}</span>{% endif %}</a>
+  <a class="btn grand" href="{% url 'vitrine:commandes_plats' %}">Plats commandés{% if nb_commandes_plats %} <span class="pastille">{{ nb_commandes_plats }}</span>{% endif %}</a>
   <a class="btn grand secondaire" href="{% url 'postes:reception' %}">Plan des chambres</a>
   <a class="btn grand secondaire" href="{% url 'hotel:sejour_nouveau' %}">Nouvelle réservation</a>
   <a class="btn grand secondaire" href="{% url 'hotel:sejours' %}">Arrivées et départs du jour</a>
@@ -83,12 +84,8 @@
   {% endif %}
 </div>
 
-{% if modules_fermes %}
-<div class="carte">
-  <h3>Pas encore ouverts</h3>
-  <p class="discret">Pour l'instant, l'application sert à la réservation et à la vente des chambres.</p>
-  <div class="actions">{% for m in modules_fermes %}<a class="btn secondaire petit" aria-disabled="true" title="{{ m.contenu }}">{{ m.nom }}</a>{% endfor %}</div>
-  {% if user.est_gerant %}<p><a class="btn petit" href="{% url 'core:modules' %}">Ouvrir des modules</a></p>{% endif %}
-</div>
+{% if modules_fermes and user.est_gerant %}
+<p class="discret">Pour l'instant, l'application sert à la réservation des chambres et aux plats commandés ; les autres
+  modules sont fermés. <a class="btn petit secondaire" href="{% url 'core:modules' %}">Ouvrir des modules</a></p>
 {% endif %}
 {% endblock %}

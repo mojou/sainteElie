@@ -11,6 +11,8 @@
   var reperes = form.querySelectorAll(".pas-indicateur li");
   var tarifs = {};
   try { tarifs = JSON.parse(document.getElementById("tarifs-chambres").textContent) || {}; } catch (e) { tarifs = {}; }
+  var photos = {};
+  try { photos = JSON.parse(document.getElementById("photos-chambres").textContent) || {}; } catch (e) { photos = {}; }
   var champChambre = form.elements.chambre;
   var champNom = form.elements.nom, champTel = form.elements.telephone;
   var champNuits = form.elements.nuits, champMontant = form.elements.montant;
@@ -20,6 +22,51 @@
   var courant = 0;
 
   function tarif() { return parseInt(tarifs[champChambre ? champChambre.value : ""] || "0", 10) || 0; }
+
+  // Le client voit la chambre avant de payer : ses photos s'affichent dès qu'elle est choisie.
+  var blocPhotos = document.getElementById("montrer-chambre");
+  var montree = null;
+  function montrerChambre() {
+    if (!blocPhotos || !champChambre) { return; }
+    var choisie = champChambre.value || "";
+    if (choisie === montree) { return; }
+    montree = choisie;
+    var liste = photos[choisie] || [];
+    var ancienne = blocPhotos.querySelector("[data-galerie]");
+    var galerie = document.createElement("div");
+    galerie.className = "galerie";
+    galerie.setAttribute("data-galerie", "");
+    var piste = document.createElement("div");
+    piste.className = "galerie-piste";
+    piste.tabIndex = 0;
+    piste.setAttribute("aria-label", "Photos de la chambre");
+    liste.forEach(function (url, i) {
+      var img = document.createElement("img");
+      img.src = url;
+      img.alt = "Photo " + (i + 1) + " sur " + liste.length;
+      piste.appendChild(img);
+    });
+    galerie.appendChild(piste);
+    if (liste.length > 1) {
+      [["precedente", -1, "‹", "Photo précédente"], ["suivante", 1, "›", "Photo suivante"]].forEach(function (f) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "galerie-fleche " + f[0];
+        b.setAttribute("data-galerie-pas", f[1]);
+        b.setAttribute("aria-label", f[3]);
+        b.textContent = f[2];
+        galerie.appendChild(b);
+      });
+    }
+    ancienne.parentNode.replaceChild(galerie, ancienne);
+    blocPhotos.hidden = !liste.length;
+    if (window.activerGalerie) { window.activerGalerie(galerie); }
+  }
+  if (champChambre) {
+    champChambre.addEventListener("change", montrerChambre);
+    form.addEventListener("click", function () { window.setTimeout(montrerChambre, 0); });
+    montrerChambre();
+  }
   function nuits() { return Math.max(parseInt(champNuits.value, 10) || 0, 0); }
   function total() { return tarif() * nuits(); }
   function montant() { return Math.max(parseInt(champMontant.value, 10) || 0, 0); }

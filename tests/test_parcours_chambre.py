@@ -146,12 +146,18 @@ class ModulesGrisesTests(BaseTest):
         super().setUp()
         modules.ouvrir([])
 
-    def test_un_module_ferme_est_grise_et_bloque(self):
+    def test_un_module_ferme_disparait_du_menu_et_reste_bloque(self):
         self.client.force_login(self.gerant)
         accueil = self.client.get("/")
-        self.assertContains(accueil, "Pas encore ouverts")
-        self.assertNotContains(accueil, 'href="/stock/"')
-        self.assertContains(accueil, 'aria-disabled="true"')
+        self.assertContains(accueil, "Ouvrir des modules")
+        menu = accueil.content.decode().split('<nav class="menu"')[1].split("</nav>")[0]
+        for absent in ("/stock/", "/rapports/", "/personnel/", "/paie/", "/finances/", "/projets/", "/caisse/ventes/"):
+            self.assertNotIn(absent, menu, absent)
+        self.assertLessEqual(menu.count("<a "), 10, "menu court")
+        autres = self.client.get(reverse("core:pages"))
+        self.assertContains(autres, "Photos des chambres")
+        self.assertNotContains(autres, "/stock/")
+        self.assertContains(autres, "Pas encore ouverts")
         for url in ("/stock/", "/rapports/", "/personnel/planning/", "/paie/fiches/", "/finances/bilan/",
                     "/projets/liste/", "/caisse/ventes/", "/hotel/extras/", "/poste/maintenance/"):
             page = self.client.get(url)

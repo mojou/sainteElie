@@ -43,7 +43,7 @@ class PostesDepartementsTests(BaseTest):
         Chambre.objects.filter(pk=self.chambre.pk).update(statut=Chambre.Statut.A_NETTOYER)
         page = self.client.get(reverse("postes:reception"))
         self.assertContains(page, "Chambres à nettoyer (1)")
-        self.assertContains(page, "Main courante du gardien")
+        self.assertContains(self.client.get(reverse("core:pages")), "Main courante du gardien")
         self.client.post(reverse("postes:reception"), {"action": "menage", "chambre": self.chambre.pk})
         self.chambre.refresh_from_db()
         self.assertEqual(self.chambre.statut, Chambre.Statut.LIBRE, "le ménage l'a dit à la réception")
