@@ -115,8 +115,9 @@ def _carte():
     rubriques = {}
     for p in plats:
         rubriques.setdefault(p.rubrique or "La carte", []).append(p)
+    avec_photo = [p for p in plats if p.photo][:8]
     return {"carte": [{"titre": titre, "plats": liste} for titre, liste in rubriques.items()],
-            "plats": [p for p in plats if p.photo][:8]}
+            "plats": avec_photo, "illustrations": any(p.photo_credit for p in avec_photo)}
 
 
 def _image_publique(champ):
@@ -142,6 +143,16 @@ def dessin_article(request, pk):
     reponse["Cache-Control"] = "public, max-age=86400"
     reponse["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
     return reponse
+
+
+def credits_photos(request):
+    """Les photos d'illustration du site (libres de droits) : auteur, licence et source de chacune."""
+    from stock.models import Article
+
+    return render(request, "vitrine/credits_photos.html", {
+        "etab": Etablissement.get(),
+        "articles": Article.objects.filter(actif=True).exclude(photo="").exclude(photo_credit="").order_by(
+            "ordre", "nom")})
 
 
 def photo_chambre(request, pk):
@@ -523,6 +534,7 @@ def commander(request):
         p.choisi = choisis.get(p.pk, 0)
     return render(request, "vitrine/commander.html", {
         "form": form, "groupes": _groupes_de_plats(plats), "etab": Etablissement.get(), "compte": compte,
+        "illustrations": any(p.photo_credit for p in plats if p.photo),
         "quantite_max": commandes.QUANTITE_MAX,
         "horaires": f"de {commandes.HEURE_OUVERTURE} h à {commandes.HEURE_FERMETURE} h"})
 

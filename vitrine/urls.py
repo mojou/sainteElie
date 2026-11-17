@@ -24,6 +24,7 @@ urlpatterns = [
     path("site/images/article/<int:pk>/", views.image_article, name="image_article"),
     path("site/images/article/<int:pk>/dessin.svg", views.dessin_article, name="dessin_article"),
     path("site/images/chambres/<int:pk>/", views.photo_chambre, name="photo_chambre"),
+    path("site/credits-photos/", views.credits_photos, name="credits_photos"),
     path("parametres/photos-du-site/", views.photos, name="photos"),
     path("parametres/photos-du-site/<int:pk>/retirer/", views.photo_retirer, name="photo_retirer"),
 ]

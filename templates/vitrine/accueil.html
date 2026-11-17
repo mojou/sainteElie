@@ -120,12 +120,15 @@
     {% if plats %}<div class="v-cartes v-plats-photo">
       {% for p in plats %}
       <article class="v-carte v-apparait avec-photo">
-        <img class="v-carte-photo" src="{{ p.photo_url }}" alt="{{ p.nom }}" loading="lazy">
+        <img class="v-carte-photo" src="{{ p.photo_url }}" alt="{{ p.nom }}{% if p.photo_credit %} (photo d'illustration){% endif %}" loading="lazy">
         <h3>{{ p.nom }}</h3>
+        {% if p.description %}<p class="v-plat-composition">{{ p.description }}</p>{% endif %}
         <p class="v-prix"><strong>{{ p.prix_vente|fcfa }}</strong></p>
       </article>
       {% endfor %}
-    </div>{% endif %}
+    </div>
+    {% if illustrations %}<p class="v-petit-gris v-mention-illustration">Photos d'illustration : l'assiette servie peut être
+      présentée autrement. <a href="{% url 'vitrine:credits_photos' %}">Crédits photos</a></p>{% endif %}{% endif %}
     <div class="v-menu">
       {% for r in carte %}
       <div class="v-menu-rubrique v-apparait">

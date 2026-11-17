@@ -85,7 +85,8 @@
       <p><a href="{% url 'accounts:connexion' %}">Se connecter</a></p>{% endif %}
     </div>
   </div>
-  <div class="v-conteneur v-copyright">© {% now "Y" %} {{ etablissement_nom }}</div>
+  <div class="v-conteneur v-copyright">© {% now "Y" %} {{ etablissement_nom }} ·
+    <a href="{% url 'vitrine:credits_photos' %}">Crédits photos</a></div>
 </footer>
 <script src="{% static 'js/app.js' %}?v={{ version_statique }}"></script>
 {% block scripts %}{% endblock %}

@@ -360,3 +360,12 @@
   .v-service { grid-template-columns: 1fr; }
   .v-commande-barre .btn { width: 100%; }
 }
+/* Photos d'illustration et crédits */
+.v-mention-illustration { margin-top: .8rem; }
+.v-mention-illustration a, .v-copyright a { color: inherit; }
+.v-plat-composition { margin: 0; color: var(--discret); font-size: .88rem; }
+.v-credits { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin: 1.2rem 0 1.6rem; }
+.v-credit { margin: 0; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 18px rgba(16, 41, 74, .08); }
+.v-credit img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.v-credit figcaption { display: grid; gap: .2rem; padding: .7rem .8rem; font-size: .86rem; color: var(--discret); }
+.v-credit figcaption strong { color: var(--marine); font-size: .95rem; }

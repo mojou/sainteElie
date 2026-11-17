@@ -1,0 +1,29 @@
+{% extends "vitrine/base.html" %}
+{% block titre %}Crédits photos · {{ etablissement_nom }}{% endblock %}
+{% block contenu %}
+<section class="v-section">
+  <div class="v-conteneur">
+    <h1>Crédits photos</h1>
+    <p class="v-sous-titre">Certaines photos de nos plats sont des <strong>photos d'illustration</strong> : elles montrent le
+      plat tel qu'on le prépare souvent, pas l'assiette servie chez nous, qui peut être présentée autrement. Elles sont
+      publiées sous licence libre par leurs auteurs sur Wikimedia Commons, que nous remercions.</p>
+    {% if articles %}
+    <div class="v-credits">
+      {% for a in articles %}
+      <figure class="v-credit">
+        <img src="{{ a.photo_url }}" alt="{{ a.nom }} (photo d'illustration)" loading="lazy">
+        <figcaption>
+          <strong>{{ a.nom }}</strong>
+          <span>Photo : {{ a.photo_credit }}</span>
+          <span>{% if a.photo_licence_url %}<a href="{{ a.photo_licence_url }}" rel="noopener nofollow" target="_blank">Voir la licence</a> · {% endif %}{% if a.photo_source %}<a href="{{ a.photo_source }}" rel="noopener nofollow" target="_blank">Source</a>{% endif %}</span>
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p>Toutes les photos du site sont les nôtres.</p>
+    {% endif %}
+    <p><a class="btn secondaire" href="{% url 'vitrine:site' %}">Retour à l'accueil</a></p>
+  </div>
+</section>
+{% endblock %}

@@ -87,7 +87,10 @@ def article_form(request, pk=None):
     article = get_object_or_404(Article, pk=pk) if pk else None
     form = ArticleForm(request.POST or None, request.FILES or None, instance=article)
     if request.method == "POST" and form.is_valid():
-        obj = form.save()
+        obj = form.save(commit=False)
+        if "photo" in form.changed_data:
+            obj.oublier_credit()
+        obj.save()
         journaliser(request.user, "Article modifié" if article else "Article créé", obj)
         messages.success(request, f"{obj} enregistré.")
         return redirect("stock:article", pk=obj.pk)
@@ -104,7 +107,8 @@ def photos(request):
         fichier = request.FILES.get("photo")
         if request.POST.get("action") == "retirer":
             article.photo = ""
-            article.save(update_fields=["photo"])
+            article.oublier_credit()
+            article.save(update_fields=["photo", "photo_credit", "photo_source", "photo_licence_url"])
             journaliser(request.user, "Photo d'article retirée", article)
             messages.success(request, f"Photo de {article} retirée : le dessin revient.")
         elif fichier:
@@ -115,7 +119,8 @@ def photos(request):
             except ValidationError as exc:
                 messages.error(request, " ".join(exc.messages))
             else:
-                article.save(update_fields=["photo"])
+                article.oublier_credit()
+                article.save(update_fields=["photo", "photo_credit", "photo_source", "photo_licence_url"])
                 journaliser(request.user, "Photo d'article ajoutée", article)
                 messages.success(request, f"Photo de {article} enregistrée.")
         return redirect(f"{request.path}?categorie={request.POST.get('categorie', '')}#article-{article.pk}")

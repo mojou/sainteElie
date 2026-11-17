@@ -39,6 +39,9 @@
       <p class="carte">La carte n'est pas encore en ligne : appelez la réception.</p>
       {% endfor %}
 
+      {% if illustrations %}<p class="v-petit-gris v-mention-illustration">Photos d'illustration : l'assiette servie peut être
+        présentée autrement. <a href="{% url 'vitrine:credits_photos' %}">Crédits photos</a></p>{% endif %}
+
       <div class="v-boite v-commande-suite">
         <h2>2. Quand et où ?</h2>
         <div class="ligne-champs">

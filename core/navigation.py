@@ -9,6 +9,9 @@ from django.urls import reverse
 from . import modules, permissions
 
 
+SUITES = {"stock:photos": "?categorie=RESTAURANT"}
+
+
 def _photographe(u):
     return u.est_direction or u.est_gouvernante
 
@@ -28,6 +31,7 @@ def groupes(user, request=None):
             ("vitrine:comptes", "Comptes clients en ligne", u.voit_reception),
             ("hotel:chambres", "Chambres et tarifs", u.voit_reception),
             ("hotel:photos_chambres", "Photos des chambres", _photographe(u)),
+            ("stock:photos", "Photos des plats", u.voit_stock),
             ("hotel:menage", "Ménage des chambres", permissions.menage(u)),
         ]),
         ("Caisse", [
@@ -97,7 +101,7 @@ def groupes(user, request=None):
     ]
     resultat = []
     for titre, liens in liste:
-        visibles = [{"url": reverse(nom), "texte": texte, "externe": nom == "vitrine:site"}
+        visibles = [{"url": reverse(nom) + SUITES.get(nom, ""), "texte": texte, "externe": nom == "vitrine:site"}
                     for nom, texte, permis in liens if permis and modules.est_ouvert(nom, request)]
         if visibles:
             resultat.append({"titre": titre, "liens": visibles})

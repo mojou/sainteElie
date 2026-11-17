@@ -156,7 +156,8 @@ class ModulesGrisesTests(BaseTest):
         self.assertLessEqual(menu.count("<a "), 10, "menu court")
         autres = self.client.get(reverse("core:pages"))
         self.assertContains(autres, "Photos des chambres")
-        self.assertNotContains(autres, "/stock/")
+        self.assertNotContains(autres, 'href="/stock/"', msg_prefix="le stock est fermé")
+        self.assertContains(autres, "Photos des plats", msg_prefix="sauf les photos des plats, commandés en ligne")
         self.assertContains(autres, "Pas encore ouverts")
         for url in ("/stock/", "/rapports/", "/personnel/planning/", "/paie/fiches/", "/finances/bilan/",
                     "/projets/liste/", "/caisse/ventes/", "/hotel/extras/", "/poste/maintenance/"):

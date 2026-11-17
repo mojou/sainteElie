@@ -56,9 +56,13 @@ TOUJOURS_OUVERT = ("Réservations et vente des chambres, et plats commandés en 
                    "des chambres, fiche recette chambres, comptes clients en ligne, utilisateurs et paramètres.")
 
 
+# Pages d'un module fermable qui servent aussi au socle : les photos des plats (commandés en ligne).
+TOUJOURS_OUVERTES = {"stock:photos"}
+
+
 def module_de(nom_url):
     """Le module (fermable) auquel appartient une adresse, ou None si elle fait partie du socle toujours ouvert."""
-    if not nom_url or ":" not in nom_url:
+    if not nom_url or ":" not in nom_url or nom_url in TOUJOURS_OUVERTES:
         return None
     return next((m for m in MODULES if m.contient(nom_url)), None)
 

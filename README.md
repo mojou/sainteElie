@@ -64,6 +64,15 @@ compte maintenance non plus : la réception signale les pannes, la direction les
 
 ## Modules ouverts (lancement par la réservation des chambres)
 
+**Photos des plats** : chaque plat de la carte a une composition (vérifiée pour les spécialités camerounaises :
+Poulet DG, Ndolé, Folong…) et, en attendant les vraies photos de l'hôtel, une **photo d'illustration libre de droits**
+(Wikimedia Commons, licences CC0 / CC BY / CC BY-SA) rangée dans `stock/photos_plats/` avec `credits.json` (auteur,
+licence, source). `python manage.py charger_photos_plats` les pose sur les plats sans photo ; `charger_saint_elie`
+remplit les compositions vides. Le site les signale (« Photos d'illustration : l'assiette servie peut être présentée
+autrement ») et les cite toutes sur la page **Crédits photos** (lien en bas de chaque page), comme l'exigent leurs
+licences. Une vraie photo prise dans **Photos des plats** (Autres pages ; ouverte même avec le module Stock fermé)
+remplace l'illustration et efface son crédit ; `charger_photos_plats` ne remplace jamais une vraie photo.
+
 **Commander des plats sur le site** (ouvert avec les chambres) : bouton « Commander des plats » dans le bandeau, la
 carte et le menu du site (`/commander/`). Le client choisit ses plats (« − » / « + », total en direct), le jour et
 l'heure (de 7 h à 22 h, 45 minutes au moins à l'avance, 30 jours au plus), où il mange (au restaurant, à emporter,

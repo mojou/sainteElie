@@ -36,6 +36,11 @@ class Article(models.Model):
     actif = models.BooleanField(default=True)
     photo = models.ImageField(storage=stockage_prive, upload_to="articles/", blank=True,
                               help_text="Facultatif : aide à reconnaître l'article à la vente (et les plats sur le site).")
+    # Photo d'illustration libre de droits (pas la vraie photo du plat) : à citer sur le site (« Crédits photos »).
+    # Vide dès que le gérant prend la vraie photo.
+    photo_credit = models.CharField("crédit de la photo", max_length=300, blank=True)
+    photo_source = models.URLField("source de la photo", blank=True)
+    photo_licence_url = models.URLField("licence de la photo", blank=True)
 
     class Meta:
         ordering = ["categorie", "ordre", "nom"]
@@ -47,6 +52,14 @@ class Article(models.Model):
     @property
     def photo_url(self):
         return reverse("vitrine:image_article", args=[self.pk]) if self.photo else ""
+
+    @property
+    def photo_d_illustration(self):
+        return bool(self.photo and self.photo_credit)
+
+    def oublier_credit(self):
+        """La vraie photo remplace l'illustration : plus rien à citer."""
+        self.photo_credit = self.photo_source = self.photo_licence_url = ""
 
     @property
     def image_url(self):
