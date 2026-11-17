@@ -1,8 +1,10 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load gestion %}
 {% block titre %}Paramètres{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>Paramètres</h1></div></div>
 <div class="grille">
+  <div class="carte"><h3>Modules</h3><p>Ce qui est ouvert : {% if modules_ouverts %}réservation et vente des chambres, plus {{ modules_ouverts|length }} module{{ modules_ouverts|length|pluralize }}{% else %}réservation et vente des chambres seulement ; le reste est grisé{% endif %}.</p>
+    <a class="btn" href="{% url 'core:modules' %}">Ouvrir ou fermer des modules</a></div>
   <div class="carte"><h3>Établissement</h3><p>{{ etablissement.nom }}<br><small>{{ etablissement.adresse }} {{ etablissement.telephone }}</small></p>
     <a class="btn secondaire" href="{% url 'core:etablissement' %}">Modifier</a></div>
   <div class="carte"><h3>Photos du site</h3><p>Les photos de la page d'accueil : l'hôtel, les chambres, la réception, les plats, le parking.</p>
@@ -10,7 +12,7 @@
   <div class="carte"><h3>Caisse</h3><p>Fond de caisse, seuil de tolérance, heure de coupure, plafonds.</p>
     <a class="btn secondaire" href="{% url 'caisse:parametres' %}">Ouvrir</a></div>
   <div class="carte"><h3>Chambres</h3><p>Numéros, catégories, tarifs de la grille.</p><a class="btn secondaire" href="{% url 'hotel:chambres' %}">Ouvrir</a></div>
-  <div class="carte"><h3>Créneaux horaires</h3><p>Matin, après-midi, nuit…</p><a class="btn secondaire" href="{% url 'personnel:creneaux' %}">Ouvrir</a></div>
+  <div class="carte"><h3>Créneaux horaires</h3><p>Matin, après-midi, nuit…</p><a class="btn secondaire" {% href 'personnel:creneaux' %}>Ouvrir</a></div>
   <div class="carte"><h3>Utilisateurs</h3><p>Comptes et rôles.</p><a class="btn secondaire" href="{% url 'accounts:utilisateurs' %}">Ouvrir</a></div>
 </div>
 {% endblock %}

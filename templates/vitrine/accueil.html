@@ -164,12 +164,13 @@
       <div>
         <p class="v-surtitre">Contact</p>
         <h2 class="v-apparait">Une question, une réservation ?</h2>
-        <p>Notre réception vous répond et vous accueille. Vous pouvez aussi <a href="#reserver">réserver en ligne</a>.</p>
+        <p>Notre réception vous répond et vous accueille. Vous pouvez aussi réserver en ligne.</p>
+          <p><a class="btn or" href="{% url 'vitrine:reserver' %}">Réserver une chambre</a></p>
       </div>
       <dl>
         {% if etablissement.adresse %}<div><dt>Adresse</dt><dd>{{ etablissement.adresse }}</dd></div>{% endif %}
-        {% if etablissement.telephone %}<div><dt>Téléphone</dt><dd><a href="tel:{{ etablissement.telephone|cut:' ' }}">{{ etablissement.telephone }}</a></dd></div>{% endif %}
-        {% if etablissement.email %}<div><dt>E-mail</dt><dd><a href="mailto:{{ etablissement.email }}">{{ etablissement.email }}</a></dd></div>{% endif %}
+        {% if etablissement.telephone %}<div><dt>Téléphone</dt><dd><a class="btn petit secondaire" href="tel:{{ etablissement.telephone|cut:' ' }}">Appeler le {{ etablissement.telephone }}</a></dd></div>{% endif %}
+        {% if etablissement.email %}<div><dt>E-mail</dt><dd><a class="btn petit secondaire" href="mailto:{{ etablissement.email }}">Écrire à {{ etablissement.email }}</a></dd></div>{% endif %}
         {% if not etablissement.adresse and not etablissement.telephone and not etablissement.email %}<div><dt>Réception</dt><dd>Passez nous voir à l'hôtel.</dd></div>{% endif %}
       </dl>
     </div>

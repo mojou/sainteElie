@@ -13,6 +13,17 @@ def normaliser_telephone(texte):
     return chiffres
 
 
+def ip_client(request):
+    """L'adresse IP du visiteur (limites anti-abus). Derrière un hébergeur comme PythonAnywhere, REMOTE_ADDR est celle
+    de son serveur intermédiaire, la même pour tout le monde : l'en-tête qu'il remplit est alors indiqué dans
+    ENTETE_IP_CLIENT (ex. HTTP_X_REAL_IP). On ne fait jamais confiance à un en-tête que l'hébergeur ne remplace pas."""
+    from django.conf import settings
+
+    entete = getattr(settings, "ENTETE_IP_CLIENT", "")
+    valeur = request.META.get(entete, "") if entete else ""
+    return (valeur.split(",")[0].strip() or request.META.get("REMOTE_ADDR", ""))[:64]
+
+
 def maintenant():
     return timezone.now()
 

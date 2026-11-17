@@ -73,7 +73,7 @@
   </div>
 </div>
 <p class="discret no-print">Touchez « + » dans une case pour ajouter un créneau, ou un créneau pour le changer. À la souris, glissez un créneau vers un autre jour ou une autre personne.
-  {% if user.est_gerant %}<a href="{% url 'personnel:creneaux' %}">Les créneaux horaires</a> · {% endif %}<a href="{% url 'personnel:conges' %}">Congés et échanges</a></p>
+  {% if user.est_gerant %}<a {% href 'personnel:creneaux' %}>Les créneaux horaires</a> · {% endif %}<a {% href 'personnel:conges' %}>Congés et échanges</a></p>
 
 <dialog class="dialogue-planning" id="dialogue-shift" aria-labelledby="titre-shift">
   <form method="post">{% csrf_token %}

@@ -1,11 +1,11 @@
 {% extends "base.html" %}{% load static gestion %}
 {% block titre %}{{ projet }}{% endblock %}
 {% block contenu %}
-<p class="no-print"><a class="retour" href="{% url 'projets:liste' %}">← Tous les projets</a></p>
+<p class="no-print"><a class="retour" {% href 'projets:liste' %}>← Tous les projets</a></p>
 <div class="entete"><div><h1>{{ projet }}</h1>
   <p>{{ projet.responsable }}{% if projet.echeance %} · pour le <span class="{% if projet.en_retard %}rouge{% endif %}">{{ projet.echeance|date:"d/m/Y" }}</span>{% endif %}{% if projet.budget %} · budget {{ projet.budget|fcfa }}{% endif %}
     · <span class="badge {{ projet.statut }}">{{ projet.get_statut_display }}</span> · {{ faites }}/{{ nb }} tâches faites</p></div>
-  <div class="actions"><a class="btn secondaire" href="{% url 'projets:projet_modifier' projet.pk %}">Modifier le projet</a></div></div>
+  <div class="actions"><a class="btn secondaire" {% href 'projets:projet_modifier' projet.pk %}>Modifier le projet</a></div></div>
 {% if projet.description %}<div class="carte">{{ projet.description|linebreaksbr }}</div>{% endif %}
 <p class="discret no-print">Faites glisser une tâche d'une colonne à l'autre (à la souris), ou touchez-la pour changer son étape.</p>
 <div class="kanban" data-kanban>

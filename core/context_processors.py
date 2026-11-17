@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.conf import settings
 
+from . import modules
 from .models import Alerte, Etablissement
 
 
@@ -22,6 +23,7 @@ def site(request):
     if settings.DEBUG:
         version_statique.cache_clear()  # en développement, un style modifié se voit sans redémarrer le serveur
     contexte["version_statique"] = version_statique()
+    contexte["modules_ouverts"] = modules.ouverts(request)
     user = getattr(request, "user", None)
     if user is not None and user.is_authenticated:
         contexte["nb_alertes"] = Alerte.visibles_par(user).filter(lue_le__isnull=True).count()

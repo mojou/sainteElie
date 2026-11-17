@@ -1,6 +1,6 @@
-<article class="carte-tache{% if t.priorite == 'HAUTE' %} prioritaire{% endif %}" draggable="true" data-id="{{ t.pk }}"
+{% load gestion %}<article class="carte-tache{% if t.priorite == 'HAUTE' %} prioritaire{% endif %}" draggable="true" data-id="{{ t.pk }}"
          data-url-statut="{% url 'projets:tache_statut' t.pk %}">
-  <a class="carte-tache-titre" href="{% url 'projets:tache' t.pk %}">{{ t.titre }}</a>
+  <a class="carte-tache-titre" {% href 'projets:tache' t.pk %}>{{ t.titre }}</a>
   {% if avec_projet %}<span class="carte-tache-projet">{{ t.projet }}</span>{% endif %}
   {% if t.description %}<p class="carte-tache-texte">{{ t.description|truncatechars:90 }}</p>{% endif %}
   <div class="carte-tache-pied">

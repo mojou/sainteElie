@@ -13,7 +13,7 @@
       <a class="btn danger" href="{% url 'caisse:cloture_office' session.pk %}">Clôture d'office</a>{% endif %}
   </div>
 </div>
-{% if session.est_rectificative %}<div class="message info">Correction de la <a href="{% url 'caisse:session' session.rectifie_session.pk %}">session n°{{ session.rectifie_session.pk }}</a> : {{ session.motif_rectification }}</div>{% endif %}
+{% if session.est_rectificative %}<div class="message info">Correction de la session n°{{ session.rectifie_session.pk }} : {{ session.motif_rectification }} <a class="btn petit secondaire" href="{% url 'caisse:session' session.rectifie_session.pk %}">Voir la session</a></div>{% endif %}
 
 <div class="chiffres">
   {% for m in moyens %}{% if m.montant or m.cle != "CARTE" and m.cle != "CHEQUE" %}
@@ -72,8 +72,8 @@
 <div class="tableau"><table>
   <tr><th>Reçu</th><th>Heure</th><th>Objet</th><th>Nature</th><th>Mode</th><th>Référence</th><th class="nombre">Montant</th></tr>
   {% for e in encaissements %}
-  <tr class="{% if e.est_annule %}annule{% endif %}"><td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m H:i" }}</td>
-    <td>{% if e.sejour %}<a href="{% url 'hotel:sejour' e.sejour.pk %}">{{ e.libelle }}</a>{% else %}{{ e.libelle }}{% endif %}</td>
+  <tr class="{% if e.est_annule %}annule{% endif %}"><td><a class="btn petit secondaire" href="{% url 'caisse:recu_client' e.pk %}">Reçu n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m H:i" }}</td>
+    <td>{{ e.libelle }}{% if e.sejour %} <a class="btn petit secondaire" href="{% url 'hotel:sejour' e.sejour.pk %}">Séjour</a>{% endif %}</td>
     <td>{{ e.get_nature_display }}{% if e.annule %} du n°{{ e.annule.numero_recu }}<br><small>{{ e.motif }}</small>{% endif %}</td>
     <td>{{ e.moyen_libelle }}</td><td>{{ e.reference }}</td>
     <td class="nombre">{{ e.montant_signe|nombre }}</td></tr>
@@ -85,7 +85,7 @@
   <tr><th>Date</th><th>Type</th><th>Motif</th><th>Saisie par</th><th>Statut</th><th class="nombre">Montant</th><th></th></tr>
   {% for s in sorties %}
   <tr><td>{{ s.date|date:"d/m H:i" }}</td><td>{{ s.get_type_display }}</td>
-    <td>{{ s.motif }}{% if s.justificatif %} · <a href="{% url 'caisse:justificatif' s.pk %}">justificatif</a>{% endif %}</td>
+    <td>{{ s.motif }}{% if s.justificatif %} <a class="btn petit secondaire" {% href 'caisse:justificatif' s.pk %}>Justificatif</a>{% endif %}</td>
     <td>{{ s.saisi_par }}{% if s.valide_par %}<br><small>validée par {{ s.valide_par }}</small>{% endif %}</td>
     <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td class="nombre">{{ s.montant|nombre }}</td>
     <td>{% if s.statut == "A_VALIDER" and user.peut_valider_caisse and s.saisi_par != user %}
@@ -96,5 +96,5 @@
 </table></div>
 
 {% if consignes %}<h2>Consignes de passation</h2><div class="carte">{% for c in consignes %}<p><small>{{ c.date|date:"d/m H:i" }} · {{ c.auteur }}</small><br>{{ c.texte|linebreaksbr }}</p>{% endfor %}</div>{% endif %}
-{% if rectifications %}<h2>Rectifications</h2><ul>{% for r in rectifications %}<li><a href="{% url 'caisse:session' r.pk %}">Session n°{{ r.pk }}</a> : {{ r.motif_rectification }}</li>{% endfor %}</ul>{% endif %}
+{% if rectifications %}<h2>Rectifications</h2><ul>{% for r in rectifications %}<li>Session n°{{ r.pk }} : {{ r.motif_rectification }} <a class="btn petit secondaire" href="{% url 'caisse:session' r.pk %}">Voir</a></li>{% endfor %}</ul>{% endif %}
 {% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titre %}Pas encore ouvert{% endblock %}
+{% block contenu %}
+<div class="carte module-ferme">
+  <h1>{{ module.nom }} : pas encore ouvert</h1>
+  <p>Pour l'instant, l'application sert à la réservation et à la vente des chambres. Cette partie ({{ module.contenu|lower }}) sera ouverte plus tard.</p>
+  {% if user.est_gerant %}<p>Vous pouvez l'ouvrir maintenant dans Paramètres → Modules.</p>{% endif %}
+  <div class="actions">
+    {% if not sans_retour %}<a class="btn grand" href="/">Retour à l'accueil</a>{% endif %}
+    <a class="btn secondaire grand" href="{% url 'accounts:mon_compte' %}">Mon compte</a>
+    {% if user.est_gerant %}<a class="btn secondaire grand" href="{% url 'core:modules' %}">Ouvrir des modules</a>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block public %}<div class="carte"><h1>Page pas encore ouverte</h1><a class="btn grand" href="/">Retour à l'accueil</a></div>{% endblock %}

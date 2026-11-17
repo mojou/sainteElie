@@ -2,7 +2,7 @@
 {% block titre %}Chambre {{ chambre.numero }}{% endblock %}
 {% block contenu %}
 {% entete_poste "Réception · chambres" avec_caisse=True %}
-<p class="no-print"><a class="retour" href="{% url 'postes:reception' %}">← Toutes les chambres</a></p>
+<p class="no-print"><a class="btn secondaire retour" href="{% url 'postes:reception' %}">← Toutes les chambres</a></p>
 
 <div class="carte fiche-chambre {{ chambre.statut }}">
   <div class="fiche-chambre-tete">
@@ -13,7 +13,7 @@
 
   {% if sejour %}
     <dl class="fiche">
-      <dt>Client</dt><dd><a href="{% url 'hotel:sejour' sejour.pk %}">{{ sejour.client }}</a>{% if sejour.client.telephone %} · {{ sejour.client.telephone }}{% endif %}</dd>
+      <dt>Client</dt><dd>{{ sejour.client }}{% if sejour.client.telephone %} · {{ sejour.client.telephone }}{% endif %} <a class="btn petit secondaire" href="{% url 'hotel:sejour' sejour.pk %}">Fiche du séjour</a></dd>
       <dt>Arrivé le</dt><dd>{{ sejour.date_arrivee|date:"l d/m" }}</dd>
       <dt>Départ prévu</dt><dd>{{ sejour.date_depart|date:"l d/m" }}{% if sejour.date_depart <= jour %} <span class="badge alerte">aujourd'hui</span>{% endif %}</dd>
       <dt>Nuits ({{ sejour.nb_nuits }})</dt><dd>{{ sejour.montant_chambre_prevu|fcfa }}</dd>
@@ -46,7 +46,7 @@
 
     <h2>Autre chose</h2>
     <div class="actions-chambre">
-      <a class="btn secondaire grand" href="{% url 'hotel:extras' %}?sejour={{ sejour.pk }}">Ajouter un repas ou une boisson</a>
+      <a class="btn secondaire grand" {% href 'hotel:extras' sejour=sejour.pk %}>Ajouter un repas ou une boisson</a>
       <form method="post" action="{% url 'postes:reception' %}">{% csrf_token %}
         <input type="hidden" name="action" value="depart"><input type="hidden" name="sejour" value="{{ sejour.pk }}">
         <button class="btn secondaire grand bouton-plein" data-oui="Oui, il part" data-non="Non"
@@ -71,14 +71,15 @@
       <input type="hidden" name="action" value="checkin"><input type="hidden" name="sejour" value="{{ attendu.pk }}">
       <button class="btn ok grand bouton-plein" type="submit">{{ attendu.client }} est arrivé</button>
     </form>
-    <p class="discret">Un autre client à la place ? Changez d'abord <a href="{% url 'hotel:sejour' attendu.pk %}">la réservation</a>.</p>
+    <p class="discret">Un autre client à la place ? Changez d'abord la réservation.</p>
+    <a class="btn secondaire" href="{% url 'hotel:sejour' attendu.pk %}">Voir la réservation</a>
 
   {% else %}
     <p class="etape">La chambre est libre.</p>
     <a class="btn grand bouton-plein" href="{% url 'postes:arrivee' %}?chambre={{ chambre.pk }}">Un client arrive</a>
-    <p><a href="{% url 'hotel:sejour_nouveau' %}">Réserver pour plus tard</a></p>
+    <p><a class="btn secondaire grand bouton-plein" href="{% url 'hotel:sejour_nouveau' %}">Réserver pour plus tard</a></p>
   {% endif %}
 
-  <p class="signaler no-print"><a href="{% url 'postes:maintenance' %}?chambre={{ chambre.pk }}">Signaler une panne dans cette chambre</a></p>
+  <p class="signaler no-print"><a class="btn secondaire" {% href 'postes:maintenance' chambre=chambre.pk %}>Signaler une panne dans cette chambre</a></p>
 </div>
 {% endblock %}

@@ -942,3 +942,40 @@ dl.recapitulatif dd::first-letter { text-transform: uppercase; }
   main { padding: 0; max-width: none; }
   .carte, .tableau { border-color: #999; break-inside: avoid; }
 }
+
+/* Modules pas encore ouverts : visibles mais grisés (lien sans adresse), voir core/modules.py */
+a[aria-disabled="true"] {
+  color: #8a94a0 !important; cursor: not-allowed; text-decoration: none; filter: grayscale(1);
+}
+a.btn[aria-disabled="true"] { background: #eceff2 !important; border-color: #d7dce1 !important; opacity: .8; }
+a[aria-disabled="true"]::after {
+  content: "bientôt"; margin-left: .45em; padding: .05em .45em; border-radius: 999px; font-size: .7em; font-weight: 600;
+  vertical-align: middle; background: #dde2e7; color: #5d6773; letter-spacing: .02em;
+}
+nav.menu a[aria-disabled="true"] { color: rgba(255, 255, 255, .38) !important; }
+nav.menu a[aria-disabled="true"]::after { background: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .55); }
+nav.menu a[aria-disabled="true"]:hover { background: transparent; }
+.carte.grise { opacity: .55; filter: grayscale(1); }
+.module-ferme { max-width: 640px; }
+.module-socle { border-left: 4px solid var(--ok); }
+.liste-modules { display: grid; gap: .6rem; margin: .4rem 0 1rem; }
+.module-choix {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .8rem; padding: .8rem 1rem;
+  border: 1px solid var(--bord, #dde2e7); border-radius: var(--rayon); cursor: pointer; background: #f6f7f9;
+}
+.module-choix input { width: 1.4rem; height: 1.4rem; margin: 0; }
+.module-texte { display: grid; gap: .15rem; }
+.module-choix:has(input:checked) { background: #eaf6ef; border-color: var(--ok); }
+.module-etat::after { content: "Fermé (grisé)"; font-size: .85rem; font-weight: 600; color: var(--discret); }
+.module-choix:has(input:checked) .module-etat::after { content: "Ouvert"; color: var(--ok); }
+.raccourcis-accueil { display: flex; flex-wrap: wrap; gap: .6rem; margin: .4rem 0 1.2rem; }
+.raccourcis-accueil .pastille { margin-left: .35rem; }
+.ligne-action { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .3rem 0; border-bottom: 1px solid var(--bord); }
+.ligne-action:last-child { border-bottom: 0; }
+.chiffre .btn { margin-top: .45rem; }
+@media (max-width: 600px) { .raccourcis-accueil .btn { flex: 1 1 100%; text-align: center; } }
+
+/* Piège à robots du formulaire de réservation : hors de l'écran pour un humain, rempli par un robot. */
+.champ:has(input[name="site_web"]), input[name="site_web"] { position: absolute !important; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+nav.menu a[aria-disabled="true"] strong { color: inherit; font-weight: 600; }
+a.btn.retour { padding: .5rem 1rem; }

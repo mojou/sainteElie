@@ -13,7 +13,7 @@
         {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
         <button class="btn grand" type="submit">Se connecter</button>
       </form>
-      <p class="v-lien-bas">Pas encore de compte client ? <a href="{% url 'vitrine:inscription' %}">Créer un compte</a></p>
+      <p class="v-lien-bas">Pas encore de compte client ? <a class="btn secondaire petit" href="{% url 'vitrine:inscription' %}">Créer un compte</a></p>
       <p class="v-lien-bas"><small>Mot de passe oublié ? Adressez-vous à la réception.</small></p>
     </div>
   </div>

@@ -87,7 +87,7 @@
 <div class="tableau"><table>
   <tr><th>Article</th><th class="nombre">Vendu</th><th class="nombre">Prix</th><th class="nombre">Coût d'achat</th><th class="nombre">Marge unit.</th><th class="nombre">Taux de marque</th><th class="nombre">Coef.</th><th class="nombre">Chiffre d'affaires</th><th class="nombre">Marge</th><th class="nombre">Part du CA</th></tr>
   {% for l in d.lignes|dictsortreversed:"ca" %}{% if l.vendu %}
-  <tr><td><a href="{% url 'stock:article' l.article.pk %}">{{ l.article }}</a><br><small class="discret">{{ l.categorie }}</small></td>
+  <tr><td><a {% href 'stock:article' l.article.pk %}>{{ l.article }}</a><br><small class="discret">{{ l.categorie }}</small></td>
     <td class="nombre">{{ l.vendu }}</td><td class="nombre">{{ l.prix|nombre }}</td>
     <td class="nombre">{% if l.avec_cout %}{{ l.cout|nombre }}{% else %}<span class="rouge">à noter</span>{% endif %}</td>
     <td class="nombre {% if l.marge_unitaire is not None and l.marge_unitaire <= 0 %}rouge{% endif %}">{{ l.marge_unitaire|default_if_none:"–" }}</td>
@@ -107,7 +107,7 @@
   <summary><strong>{{ c.nom }}</strong> · stock {{ c.valeur_debut|nombre }} → {{ c.valeur_fin|nombre }} FCFA au coût · livraisons {{ c.entrees_valeur|nombre }}</summary>
   <div class="tableau"><table>
     <tr><th>Article</th><th class="nombre">Début</th><th class="nombre">1er comptage</th><th class="nombre">Livré</th><th class="nombre">Vendu ou offert</th><th class="nombre">Casse</th><th class="nombre">Sorties</th><th class="nombre">Écart</th><th class="nombre">Fin</th><th class="nombre">Valeur fin</th><th class="nombre">Jours de stock</th></tr>
-    {% for l in c.lignes %}<tr><td><a href="{% url 'stock:article' l.article.pk %}">{{ l.article }}</a></td>
+    {% for l in c.lignes %}<tr><td><a {% href 'stock:article' l.article.pk %}>{{ l.article }}</a></td>
       <td class="nombre">{{ l.debut }}</td><td class="nombre">{{ l.premier_comptage|nv }}</td><td class="nombre">{{ l.entrees|nv }}</td><td class="nombre">{{ l.sorti_vente|nv }}</td>
       <td class="nombre {% if l.pertes %}rouge{% endif %}">{{ l.pertes|nv }}</td><td class="nombre">{{ l.sorties|nv }}</td>
       <td class="nombre {% if l.ecart < 0 %}rouge{% endif %}">{% if l.ecart %}{{ l.ecart|stringformat:"+d" }}{% endif %}</td>
@@ -126,7 +126,7 @@
     <tr><td>Pertes en part du coût des ventes</td><td class="nombre">{% if d.taux_pertes is not None %}{{ d.taux_pertes|floatformat:"-1" }} %{% else %}–{% endif %}</td></tr>
     {% if finances %}<tr><td>Prélèvements du gérant dans les caisses</td><td class="nombre">{{ d.prelevements|fcfa }}</td></tr>{% endif %}
   </table>
-  <p><a href="{% url 'stock:ecarts' %}">Détail des écarts d'inventaire</a> · <a href="{% url 'stock:mouvements' %}?du={{ d.c.debut|date:'Y-m-d' }}&au={{ d.c.fin|date:'Y-m-d' }}&type=AVARIE">Détail de la casse</a></p>
+  <p><a {% href 'stock:ecarts' %}>Détail des écarts d'inventaire</a> · <a href="{% url 'stock:mouvements' %}?du={{ d.c.debut|date:'Y-m-d' }}&au={{ d.c.fin|date:'Y-m-d' }}&type=AVARIE">Détail de la casse</a></p>
 </section>
 
 {% if finances %}

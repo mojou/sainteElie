@@ -6,9 +6,9 @@
     <p>Ouverte le {{ session.ouverte_le|date:"d/m à H:i" }} · caisse {{ session.tiroir }} ·
       argent compté à l'ouverture : {{ session.especes_ouverture_comptees|fcfa }}</p></div>
   <div class="actions">
-    <a class="btn" href="{% url 'caisse:ventes' %}">{% if session.tiroir.poste == "BAR" %}Restaurant · Bar{% else %}Boutique{% endif %}</a>
+    <a class="btn" {% href 'caisse:ventes' %}>{% if session.tiroir.poste == "BAR" %}Restaurant · Bar{% else %}Boutique{% endif %}</a>
     {% if session.tiroir.poste == "RECEPTION" %}<a class="btn secondaire" href="{% url 'hotel:sejours' %}">Encaisser un séjour</a>{% endif %}
-    <a class="btn secondaire" href="{% url 'caisse:sortie_nouvelle' %}">Sortir de l'argent</a>
+    <a class="btn secondaire" {% href 'caisse:sortie_nouvelle' %}>Sortir de l'argent</a>
     <a class="btn ok" href="{% url 'caisse:remise_comptage' %}">Fermer ma caisse</a>
   </div>
 </div>
@@ -20,14 +20,16 @@
   <div class="chiffre"><div class="valeur">{{ session.total_encaisse|nombre }}</div><div class="libelle">Total reçu</div></div>
 </div>
 <p class="discret">Ce que la caisse devrait contenir s'affiche seulement quand vous la fermez, après votre comptage.
-  · <a href="{% url 'caisse:credits' %}">Crédits clients</a> · <a href="{% url 'caisse:sessions' %}">Mes caisses précédentes</a></p>
+</p>
+<div class="actions"><a class="btn petit secondaire" {% href 'caisse:credits' %}>Crédits clients</a>
+  <a class="btn petit secondaire" href="{% url 'caisse:sessions' %}">Mes caisses précédentes</a></div>
 
 <h2>Paiements reçus</h2>
 <div class="tableau"><table>
   <tr><th>Reçu</th><th>Heure</th><th>Pour quoi</th><th>Type</th><th>Payé en</th><th class="nombre">Montant</th></tr>
   {% for e in encaissements %}
-  <tr class="{% if e.est_annule %}annule{% endif %}"><td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"H:i" }}</td>
-    <td>{% if e.sejour %}<a href="{% url 'hotel:sejour' e.sejour.pk %}">{{ e.libelle }}</a>{% else %}{{ e.libelle }}{% endif %}</td>
+  <tr class="{% if e.est_annule %}annule{% endif %}"><td><a class="btn petit secondaire" href="{% url 'caisse:recu_client' e.pk %}">Reçu n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"H:i" }}</td>
+    <td>{{ e.libelle }}{% if e.sejour %} <a class="btn petit secondaire" href="{% url 'hotel:sejour' e.sejour.pk %}">Séjour</a>{% endif %}</td>
     <td>{{ e.get_nature_display }}</td><td>{{ e.moyen_libelle }}</td>
     <td class="nombre">{{ e.montant_signe|nombre }}</td></tr>
   {% empty %}<tr><td colspan="6" class="vide">Aucun paiement pour l'instant.</td></tr>{% endfor %}

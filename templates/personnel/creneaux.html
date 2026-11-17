@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load gestion %}
 {% block titre %}Créneaux horaires{% endblock %}
 {% block contenu %}
-<div class="entete"><div><h1>Créneaux horaires</h1></div><div class="actions"><a class="btn" href="{% url 'personnel:creneau_nouveau' %}">Nouveau créneau</a></div></div>
+<div class="entete"><div><h1>Créneaux horaires</h1></div><div class="actions"><a class="btn" {% href 'personnel:creneau_nouveau' %}>Nouveau créneau</a></div></div>
 <div class="tableau"><table><tr><th>Nom</th><th>Horaires</th><th>Département</th><th>État</th><th></th></tr>
   {% for c in creneaux %}<tr><td>{{ c.nom }}</td><td>{{ c.heure_debut|time:"H:i" }} - {{ c.heure_fin|time:"H:i" }}</td><td>{{ c.get_departement_display|default:"Tous" }}</td>
-    <td>{% if c.actif %}<span class="badge ok">Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td><td><a href="{% url 'personnel:creneau_modifier' c.pk %}">Modifier</a></td></tr>
+    <td>{% if c.actif %}<span class="badge ok">Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td><td><a {% href 'personnel:creneau_modifier' c.pk %}>Modifier</a></td></tr>
   {% empty %}<tr><td colspan="5" class="vide">Aucun créneau.</td></tr>{% endfor %}
 </table></div>
 {% endblock %}

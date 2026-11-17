@@ -12,6 +12,22 @@ from core.utils import alerter, aujourd_hui, journaliser, maintenant
 from .models import Chambre, Extra, Nettoyage, Nuitee, Sejour
 
 
+def client_au_numero(nom, telephone, email=""):
+    """La fiche du client à ce numéro, écrit de n'importe quelle façon (« +237 677 12 34 56 » = « 677123456 ») ;
+    une nouvelle fiche s'il n'est jamais venu."""
+    from core.utils import normaliser_telephone
+
+    from .models import Client
+
+    numero = normaliser_telephone(telephone)
+    if numero:
+        for c in Client.objects.exclude(telephone="").only("pk", "telephone", "nom"):
+            if normaliser_telephone(c.telephone) == numero:
+                return c
+    return Client.objects.create(nom=(nom or "").strip()[:120], telephone=numero or (telephone or "").strip(),
+                                 email=email or "")
+
+
 def conflits(chambre, arrivee, depart, exclure=None):
     """Séjours actifs qui chevauchent [arrivee, depart[ sur la chambre.
 

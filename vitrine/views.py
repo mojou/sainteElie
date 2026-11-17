@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 from caisse.models import Encaissement
 from core.models import Etablissement
 from core.permissions import acces_requis, direction, reception
+from core.utils import ip_client
 from core.stockage import reponse_fichier
 from hotel.models import Chambre, Client, Sejour
 
@@ -187,7 +188,7 @@ def inscription(request):
     if request.user.is_authenticated:
         return redirect("core:accueil")
     form = InscriptionForm(request.POST or None)
-    cle = f"inscriptions:{request.META.get('REMOTE_ADDR', '')}"
+    cle = f"inscriptions:{ip_client(request)}"
     if request.method == "POST" and cache.get(cle, 0) >= 5:
         form.is_valid()
         form.add_error(None, "Trop de comptes créés depuis cet appareil : réessayez dans une heure.")
@@ -313,10 +314,13 @@ def reserver_coordonnees(request):
     compte = request.user.compte_client if request.user.is_authenticated and request.user.est_client else None
     form = DemandeReservationForm(request.POST or None, initial={"nom": compte.nom, "telephone": compte.telephone,
                                                                  "email": compte.email} if compte else None)
-    cle = f"reservations-en-ligne:{request.META.get('REMOTE_ADDR', '')}"
+    cle = f"reservations-en-ligne:{ip_client(request)}"
     if request.method == "POST" and cache.get(cle, 0) >= 5:
         form.is_valid()
         form.add_error(None, "Trop de demandes envoyées depuis cet appareil : appelez la réception, ou réessayez dans une heure.")
+    elif request.method == "POST" and reservations.trop_de_demandes():
+        form.is_valid()
+        form.add_error(None, "Beaucoup de demandes arrivent en ce moment : appelez la réception, ou réessayez dans une heure.")
     elif request.method == "POST" and form.is_valid():
         f = form.cleaned_data
         if f.get("site_web"):  # un robot a rempli le champ caché : on fait comme si de rien n'était
@@ -385,9 +389,12 @@ def demandes(request):
             else:
                 chambre = get_object_or_404(Chambre, pk=request.POST.get("chambre"))
                 sejour = reservations.confirmer(demande, request.user, chambre)
-                messages.success(request, f"Réservation confirmée : {sejour.client}, chambre {chambre.numero}, du "
-                                          f"{sejour.date_arrivee:%d/%m} au {sejour.date_depart:%d/%m}. "
-                                          "Pensez à prévenir le client.")
+                prix = f"{sejour.tarif_nuit:,} F la nuit".replace(",", " ")
+                ecart = (f" Attention : ce n'est pas le prix demandé ({demande.tarif_nuit:,} F), dites-le au client."
+                         .replace(",", " ") if sejour.tarif_nuit != demande.tarif_nuit else "")
+                messages.success(request, f"Réservation confirmée : {sejour.client}, chambre {chambre.numero} à {prix}, "
+                                          f"du {sejour.date_arrivee:%d/%m} au {sejour.date_depart:%d/%m}. "
+                                          f"Pensez à prévenir le client.{ecart}")
         except ValidationError as exc:
             for msg in exc.messages:
                 messages.error(request, msg)

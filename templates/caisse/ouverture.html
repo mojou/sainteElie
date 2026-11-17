@@ -7,7 +7,7 @@
 {% if bloquante %}
   <div class="message error"><strong>{{ bloquante.receptionniste }}</strong> n'a pas encore fermé sa caisse.
     Elle doit la fermer d'abord, ou un chef la ferme à sa place {% aide "cloture_office" %}.
-    {% if user.peut_valider_caisse and bloquante.receptionniste != user %}<a href="{% url 'caisse:cloture_office' bloquante.pk %}">Fermer sa caisse à sa place</a>{% endif %}</div>
+    {% if user.peut_valider_caisse and bloquante.receptionniste != user %}<a class="btn petit" href="{% url 'caisse:cloture_office' bloquante.pk %}">Fermer sa caisse à sa place</a>{% endif %}</div>
 {% endif %}
 {% if consignes %}
 <div class="carte">

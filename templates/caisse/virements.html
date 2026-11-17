@@ -5,7 +5,7 @@
   <p>Un virement arrive sur le compte bancaire, pas au tiroir : il n'entre dans aucune caisse. Enregistrez-le quand il apparaît sur le relevé.</p></div></div>
 <div class="carte"><form method="post" novalidate>{% csrf_token %}{% include "partials/champs.html" %}<button class="btn">Enregistrer le virement</button></form></div>
 <div class="tableau"><table><tr><th>Date de valeur</th><th>Séjour</th><th>Référence</th><th>Saisi par</th><th class="nombre">Montant</th></tr>
-  {% for v in virements %}<tr><td>{{ v.date_valeur|date:"d/m/Y" }}</td><td><a href="{% url 'hotel:sejour' v.sejour.pk %}">{{ v.sejour }}</a></td>
+  {% for v in virements %}<tr><td>{{ v.date_valeur|date:"d/m/Y" }}</td><td>{{ v.sejour }} <a class="btn petit secondaire" href="{% url 'hotel:sejour' v.sejour.pk %}">Séjour</a></td>
     <td>{{ v.reference_bancaire }}</td><td>{{ v.saisi_par }}</td><td class="nombre">{{ v.montant|nombre }}</td></tr>
   {% empty %}<tr><td colspan="5" class="vide">Aucun virement.</td></tr>{% endfor %}
 </table></div>

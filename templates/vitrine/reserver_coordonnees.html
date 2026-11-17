@@ -17,7 +17,8 @@
           <dt>Prix</dt><dd>{{ choix.tarif|fcfa }} × {{ choix.nuits }} nuit{{ choix.nuits|pluralize }}</dd>
           <dt>Total du séjour</dt><dd class="v-recap-total">{{ choix.total|fcfa }}</dd>
         </dl>
-        <p class="v-petit-gris">Rien à payer maintenant. <a href="{% url 'vitrine:reserver' %}?arrivee={{ d.arrivee|date:'Y-m-d' }}&depart={{ d.depart|date:'Y-m-d' }}&personnes={{ d.personnes }}">Changer de chambre ou de dates</a></p>
+        <p class="v-petit-gris">Rien à payer maintenant.</p>
+        <a class="btn secondaire" href="{% url 'vitrine:reserver' %}?arrivee={{ d.arrivee|date:'Y-m-d' }}&depart={{ d.depart|date:'Y-m-d' }}&personnes={{ d.personnes }}">← Changer de chambre ou de dates</a>
       </aside>
       <div class="v-boite">
         <h1>Vos coordonnées</h1>
@@ -26,7 +27,8 @@
           {% include "partials/champs.html" %}
           <button class="btn or grand" type="submit">Envoyer ma demande</button>
         </form>
-        {% if not compte %}<p class="v-lien-bas"><small>Vous avez un compte client ? <a href="{% url 'accounts:connexion' %}?next={{ request.get_full_path|urlencode }}">Connectez-vous</a> : la demande apparaîtra dans votre espace.</small></p>{% endif %}
+        {% if not compte %}<p class="v-lien-bas"><small>Vous avez un compte client ? Connectez-vous : la demande apparaîtra dans votre espace.</small></p>
+        <p class="v-lien-bas"><a class="btn secondaire" href="{% url 'accounts:connexion' %}?next={{ request.get_full_path|urlencode }}">Me connecter</a></p>{% endif %}
       </div>
     </div>
   </div>

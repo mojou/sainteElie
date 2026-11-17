@@ -4,7 +4,7 @@
 <div class="actions no-print" style="margin-bottom:1rem">
   <button class="btn" onclick="window.print()">Imprimer</button>
   {% if sejour %}<a class="btn secondaire" href="{% url 'hotel:sejour' sejour.pk %}">Retour au séjour</a>
-  {% elif ventes and user.tient_caisse %}<a class="btn secondaire" href="{% url 'caisse:ventes' %}">Retour aux ventes</a>
+  {% elif ventes and user.tient_caisse %}<a class="btn secondaire" {% href 'caisse:ventes' %}>Retour aux ventes</a>
   {% elif user.tient_caisse %}<a class="btn secondaire" href="{% url 'caisse:ma_caisse' %}">Retour à ma caisse</a>
   {% else %}<a class="btn secondaire" href="{% url 'caisse:sessions' %}">Retour aux sessions</a>{% endif %}
 </div>

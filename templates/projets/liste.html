@@ -2,7 +2,7 @@
 {% block titre %}Projets internes{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>Projets internes</h1><p>Travaux, rénovations, améliorations : qui fait quoi, pour quand.</p></div>
-  <div class="actions"><a class="btn" href="{% url 'projets:projet_nouveau' %}">Nouveau projet</a></div></div>
+  <div class="actions"><a class="btn" {% href 'projets:projet_nouveau' %}>Nouveau projet</a></div></div>
 <div class="segment" role="group" aria-label="Quels projets" style="margin-bottom:1rem">
   <a class="{% if filtre == 'actifs' %}actif{% endif %}" href="?voir=actifs">En cours</a>
   <a class="{% if filtre == 'termines' %}actif{% endif %}" href="?voir=termines">Terminés</a>
@@ -10,7 +10,7 @@
 </div>
 <div class="cartes-projets">
   {% for p in projets %}
-  <a class="carte-projet projet-c{{ p.couleur }}" href="{% url 'projets:projet' p.pk %}">
+  <a class="carte-projet projet-c{{ p.couleur }}" {% href 'projets:projet' p.pk %}>
     <span class="carte-projet-tete"><strong>{{ p.nom }}</strong><span class="badge {{ p.statut }}">{{ p.get_statut_display }}</span></span>
     <span class="discret">{{ p.responsable }}{% if p.echeance %} · <span class="{% if p.en_retard %}rouge{% endif %}">pour le {{ p.echeance|date:"d/m/Y" }}</span>{% endif %}</span>
     <span class="avancement" aria-label="{{ p.faites }} tâches faites sur {{ p.nb }}"><span style="width: {% if p.nb %}{% widthratio p.faites p.nb 100 %}{% else %}0{% endif %}%"></span></span>
@@ -22,7 +22,7 @@
     {% if p.budget %}<span class="discret">Budget {{ p.budget|fcfa }}</span>{% endif %}
   </a>
   {% empty %}
-  <p class="vide">Aucun projet ici. <a href="{% url 'projets:projet_nouveau' %}">Créer le premier</a>.</p>
+  <p class="vide">Aucun projet ici. <a {% href 'projets:projet_nouveau' %}>Créer le premier</a>.</p>
   {% endfor %}
 </div>
 {% endblock %}

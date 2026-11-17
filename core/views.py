@@ -15,6 +15,7 @@ from projets.models import Tache
 from stock.models import Article
 from vitrine.views import page_vitrine
 
+from . import modules
 from .forms import FormulaireModele
 from .models import Alerte, Etablissement, JournalAction
 from .permissions import acces_requis, encadrement, gerant
@@ -36,7 +37,8 @@ def accueil(request):
         executer_taches_periodiques()
     jour = aujourd_hui()
     debut_jour = timezone.make_aware(datetime.combine(jour, datetime.min.time()))
-    ctx = {"jour": jour}
+    ouverts = modules.ouverts(request)
+    ctx = {"jour": jour, "modules_fermes": [m for m in modules.MODULES if m.cle not in ouverts]}
 
     if user.voit_reception:
         chambres = Chambre.objects.filter(active=True)
@@ -66,10 +68,11 @@ def accueil(request):
             "recette_jour": (Nuitee.objects.filter(date_nuit=jour - timedelta(days=1)).aggregate(s=Sum("montant"))["s"]
                              or 0) + (Extra.objects.filter(statut=Extra.Statut.ACTIF, date_conso__gte=debut_jour)
                                       .aggregate(s=Sum("montant"))["s"] or 0),
-            "stock_bas": [a for a in Article.objects.filter(actif=True, suivi_stock=True) if a.est_bas],
+            "stock_bas": [a for a in Article.objects.filter(actif=True, suivi_stock=True) if a.est_bas]
+            if "stock" in ouverts else [],
             "alertes": Alerte.visibles_par(user).filter(lue_le__isnull=True)[:8],
         })
-    if user.est_encadrement:
+    if user.est_encadrement and "personnel" in ouverts:
         geres = employes_geres(user)
         ctx.update({
             "equipe_du_jour": Affectation.objects.filter(date=jour, employe__in=geres).select_related(
@@ -78,14 +81,15 @@ def accueil(request):
             "conges_en_attente": DemandeConge.objects.filter(statut=Statut.EN_ATTENTE, employe__in=geres).count(),
         })
     employe = user.profil_employe
-    if employe:
+    if employe and "personnel" in ouverts:
         ctx.update({
             "mon_planning": Affectation.objects.filter(employe=employe, date__gte=jour,
                                                        date__lte=jour + timedelta(days=6)).select_related("creneau"),
             "pointage_ouvert": Pointage.objects.filter(employe=employe, depart__isnull=True).first(),
         })
-    ctx["mes_taches"] = Tache.objects.filter(assigne_a=user).exclude(statut=Tache.Statut.FAITE).select_related(
-        "projet")[:6]
+    if "projets" in ouverts:
+        ctx["mes_taches"] = Tache.objects.filter(assigne_a=user).exclude(statut=Tache.Statut.FAITE).select_related(
+            "projet")[:6]
     return render(request, "core/accueil.html", ctx)
 
 
@@ -133,6 +137,27 @@ def etablissement(request):
              "(avec le slogan et la présentation).")
     return render(request, "form_page.html", {"form": form, "titre": "Établissement", "retour": "core:parametres",
                                               "intro": intro})
+
+
+@acces_requis(gerant)
+def modules_vue(request):
+    """Le gérant ouvre (ou referme) les modules ; le socle réservation et vente des chambres reste toujours ouvert."""
+    if request.method == "POST":
+        avant = modules.ouverts(request)
+        apres = set(modules.ouvrir(request.POST.getlist("ouverts")))
+        changes = [(m.nom, m.cle in apres) for m in modules.MODULES if (m.cle in avant) != (m.cle in apres)]
+        if changes:
+            detail = ", ".join(f"{nom} {'ouvert' if o else 'fermé'}" for nom, o in changes)
+            journaliser(request.user, "Modules modifiés", Etablissement.get(), detail)
+            messages.success(request, f"C'est enregistré : {detail}.")
+        else:
+            messages.info(request, "Rien n'a changé.")
+        return redirect("core:modules")
+    ouverts = modules.ouverts(request)
+    return render(request, "core/modules.html", {
+        "toujours_ouvert": modules.TOUJOURS_OUVERT,
+        "modules": [{"cle": m.cle, "nom": m.nom, "contenu": m.contenu, "ouvert": m.cle in ouverts}
+                    for m in modules.MODULES]})
 
 
 @require_POST

@@ -11,4 +11,5 @@ urlpatterns = [
     path("journal/", views.journal, name="journal"),
     path("parametres/", views.parametres, name="parametres"),
     path("parametres/etablissement/", views.etablissement, name="etablissement"),
+    path("parametres/modules/", views.modules_vue, name="modules"),
 ]

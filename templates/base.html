@@ -35,38 +35,38 @@
     <div class="groupe">Mon poste</div>
     {% if user.est_reception %}
       <a href="{% url 'postes:reception' %}" class="{% actif '/poste/reception' %}"><strong>Saisie réception</strong></a>
-      <a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Boutique</strong></a>
-      <a href="{% url 'hotel:extras' %}" class="{% actif '/hotel/extras' %}">Extras sur chambre</a>
+      <a {% href 'caisse:ventes' %} class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Boutique</strong></a>
+      <a {% href 'hotel:extras' %} class="{% actif '/hotel/extras' %}">Extras sur chambre</a>
       <a href="{% url 'hotel:sejours' %}" class="{% actif '/hotel/sejours' '/hotel/clients' '/hotel/chambres' %}">Réservations</a>
       <a href="{% url 'vitrine:demandes' %}" class="{% actif '/hotel/reservations-en-ligne' %}">Réservations en ligne{% if nb_demandes_reservation %}<span class="pastille">{{ nb_demandes_reservation }}</span>{% endif %}</a>
       <a href="{% url 'vitrine:comptes' %}" class="{% actif '/hotel/comptes-en-ligne' %}">Comptes clients en ligne{% if nb_comptes_a_relier %}<span class="pastille">{{ nb_comptes_a_relier }}</span>{% endif %}</a>
       <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/sessions' %}">Ma caisse</a>
       <a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches du jour</a>
-      <a href="{% url 'postes:maintenance' %}" class="{% actif '/poste/maintenance' %}">Signaler une panne</a>
-      <a href="{% url 'postes:securite' %}" class="{% actif '/poste/securite' %}">Main courante du gardien</a>
+      <a {% href 'postes:maintenance' %} class="{% actif '/poste/maintenance' %}">Signaler une panne</a>
+      <a {% href 'postes:securite' %} class="{% actif '/poste/securite' %}">Main courante du gardien</a>
     {% elif user.est_bar %}
-      <a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Restaurant · Bar</strong></a>
+      <a {% href 'caisse:ventes' %} class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Restaurant · Bar</strong></a>
       <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/sessions' %}">Ma caisse</a>
       <a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches du jour</a>
     {% elif user.departement == "MAINTENANCE" %}
-      <a href="{% url 'postes:maintenance' %}" class="{% actif '/poste/maintenance' %}"><strong>Saisie maintenance</strong></a>
+      <a {% href 'postes:maintenance' %} class="{% actif '/poste/maintenance' %}"><strong>Saisie maintenance</strong></a>
     {% elif user.departement == "SECURITE" %}
-      <a href="{% url 'postes:securite' %}" class="{% actif '/poste/securite' %}"><strong>Saisie sécurité</strong></a>
+      <a {% href 'postes:securite' %} class="{% actif '/poste/securite' %}"><strong>Saisie sécurité</strong></a>
     {% elif user.departement == "MENAGE" %}
       <a href="{% url 'hotel:menage' %}" class="{% actif '/hotel/menage' %}"><strong>Saisie ménage</strong></a>
     {% elif user.profil_employe %}
-      <a href="{% url 'personnel:mon_espace' %}" class="{% actif '/personnel' '/paie' '/projets' %}"><strong>Mon planning et pointage</strong></a>
+      <a {% href 'personnel:mon_espace' %} class="{% actif '/personnel' '/paie' '/projets' %}"><strong>Mon planning et pointage</strong></a>
     {% endif %}
     <div class="groupe">Moi</div>
     {% if user.profil_employe and not user.poste_sans_saisie %}
-      <a href="{% url 'personnel:mon_espace' %}" class="{% actif '/personnel' '/paie' '/projets' %}">Mon planning et mes congés</a>
+      <a {% href 'personnel:mon_espace' %} class="{% actif '/personnel' '/paie' '/projets' %}">Mon planning et mes congés</a>
     {% endif %}
     <a href="{% url 'accounts:mon_compte' %}" class="{% actif '/comptes/mon-compte' %}">Mon compte</a>
   {% else %}
     <div class="groupe">Pilotage</div>
     <a href="{% url 'core:accueil' %}" class="{% if request.path == '/' %}active{% endif %}">Tableau de bord</a>
     <a href="{% url 'postes:tous' %}" class="{% actif '/poste' %}">Saisies des départements</a>
-    {% if user.est_direction or user.est_gouvernante %}<a href="{% url 'rapports:rapport' %}" class="{% actif '/rapports' %}">Rapports (jour, semaine, mois, année)</a>{% endif %}
+    {% if user.est_direction or user.est_gouvernante %}<a {% href 'rapports:rapport' %} class="{% actif '/rapports' %}">Rapports (jour, semaine, mois, année)</a>{% endif %}
 
     {% if user.voit_reception %}
       <div class="groupe">Réception · chambres</div>
@@ -81,9 +81,9 @@
       <div class="groupe">Caisses</div>
       {% if user.tient_caisse %}
       <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/ouvrir' %}">Ma caisse</a>
-      <a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' '/caisse/avarie' %}">Point de vente (boutique, restaurant · bar)</a>
-      <a href="{% url 'hotel:extras' %}" class="{% actif '/hotel/extras' %}">Extras sur chambre</a>
-      <a href="{% url 'caisse:credits' %}" class="{% actif '/caisse/credits' %}">Crédits clients</a>
+      <a {% href 'caisse:ventes' %} class="{% actif '/caisse/ventes' '/caisse/avarie' %}">Point de vente (boutique, restaurant · bar)</a>
+      <a {% href 'hotel:extras' %} class="{% actif '/hotel/extras' %}">Extras sur chambre</a>
+      <a {% href 'caisse:credits' %} class="{% actif '/caisse/credits' %}">Crédits clients</a>
       {% endif %}
       <a href="{% url 'caisse:sessions' %}" class="{% actif '/caisse/sessions' %}">Sessions de caisse</a>
       {% if user.peut_valider_caisse %}
@@ -102,27 +102,27 @@
 
     <div class="groupe">Personnel</div>
     {% if user.profil_employe %}
-      <a href="{% url 'personnel:mon_espace' %}" class="{% actif '/personnel/mon-espace' %}">Mon planning et pointage</a>
+      <a {% href 'personnel:mon_espace' %} class="{% actif '/personnel/mon-espace' %}">Mon planning et pointage</a>
     {% endif %}
-    <a href="{% url 'personnel:conges' %}" class="{% actif '/personnel/conges' '/personnel/echanges' %}">Congés et échanges</a>
+    <a {% href 'personnel:conges' %} class="{% actif '/personnel/conges' '/personnel/echanges' %}">Congés et échanges</a>
     {% if user.est_encadrement %}
-      <a href="{% url 'personnel:planning' %}" class="{% actif '/personnel/planning' %}">Planning</a>
-      <a href="{% url 'personnel:pointages' %}" class="{% actif '/personnel/pointages' %}">Pointages</a>
-      <a href="{% url 'personnel:employes' %}" class="{% actif '/personnel/employes' %}">Employés</a>
+      <a {% href 'personnel:planning' %} class="{% actif '/personnel/planning' %}">Planning</a>
+      <a {% href 'personnel:pointages' %} class="{% actif '/personnel/pointages' %}">Pointages</a>
+      <a {% href 'personnel:employes' %} class="{% actif '/personnel/employes' %}">Employés</a>
     {% endif %}
     {% if user.est_gerant %}
-      <a href="{% url 'paie:fiches' %}" class="{% actif '/paie/fiches' %}">Paie</a>
-      <a href="{% url 'paie:acomptes' %}" class="{% actif '/paie/acomptes' %}">Acomptes</a>
+      <a {% href 'paie:fiches' %} class="{% actif '/paie/fiches' %}">Paie</a>
+      <a {% href 'paie:acomptes' %} class="{% actif '/paie/acomptes' %}">Acomptes</a>
     {% elif user.profil_employe %}
-      <a href="{% url 'paie:mes_bulletins' %}" class="{% actif '/paie/mes-bulletins' %}">Mes bulletins de paie</a>
+      <a {% href 'paie:mes_bulletins' %} class="{% actif '/paie/mes-bulletins' %}">Mes bulletins de paie</a>
     {% endif %}
 
     {% if user.voit_stock %}
       <div class="groupe">Stock</div>
-      <a href="{% url 'stock:articles' %}" class="{% actif '/stock/articles' '/stock/mouvements' '/stock/saisie' %}">Articles et mouvements</a>
-      <a href="{% url 'stock:ecarts' %}" class="{% actif '/stock/ecarts' %}">Écarts d'inventaire</a>
-      <a href="{% url 'stock:photos' %}" class="{% actif '/stock/photos' %}">Photos des articles</a>
-      <a href="{% url 'rapports:inventaire' %}" class="{% actif '/rapports/inventaire' %}">Inventaire et rentabilité</a>
+      <a {% href 'stock:articles' %} class="{% actif '/stock/articles' '/stock/mouvements' '/stock/saisie' %}">Articles et mouvements</a>
+      <a {% href 'stock:ecarts' %} class="{% actif '/stock/ecarts' %}">Écarts d'inventaire</a>
+      <a {% href 'stock:photos' %} class="{% actif '/stock/photos' %}">Photos des articles</a>
+      <a {% href 'rapports:inventaire' %} class="{% actif '/rapports/inventaire' %}">Inventaire et rentabilité</a>
     {% endif %}
 
     {% if user.est_direction %}
@@ -133,15 +133,15 @@
 
     {% if user.est_gerant %}
       <div class="groupe">Finances</div>
-      <a href="{% url 'finances:bilan' %}" class="{% actif '/finances/bilan' %}">Bilan du mois</a>
-      <a href="{% url 'finances:depenses' %}" class="{% actif '/finances/depenses' %}">Dépenses</a>
+      <a {% href 'finances:bilan' %} class="{% actif '/finances/bilan' %}">Bilan du mois</a>
+      <a {% href 'finances:depenses' %} class="{% actif '/finances/depenses' %}">Dépenses</a>
     {% endif %}
 
     <div class="groupe">Projets</div>
     {% if user.est_encadrement %}
-      <a href="{% url 'projets:liste' %}" class="{% actif '/projets/liste' '/projets/projet' %}">Projets internes</a>
+      <a {% href 'projets:liste' %} class="{% actif '/projets/liste' '/projets/projet' %}">Projets internes</a>
     {% endif %}
-    <a href="{% url 'projets:mes_taches' %}" class="{% actif '/projets/mes-taches' %}">Mes tâches</a>
+    <a {% href 'projets:mes_taches' %} class="{% actif '/projets/mes-taches' %}">Mes tâches</a>
 
     {% if user.est_gerant %}
       <div class="groupe">Administration</div>

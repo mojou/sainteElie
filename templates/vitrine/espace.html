@@ -19,12 +19,17 @@
     <div class="grille">
       {% for r in demandes %}
       <div class="carte">
-        <span class="badge {% if r.statut == 'CONFIRMEE' %}ok{% elif r.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ r.get_statut_display }}</span>
+        {% if r.sejour and r.sejour.statut == "ANNULE" or r.sejour and r.sejour.statut == "NO_SHOW" %}<span class="badge danger">Réservation annulée</span>
+        {% else %}<span class="badge {% if r.statut == 'CONFIRMEE' %}ok{% elif r.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ r.get_statut_display }}</span>{% endif %}
         <h3>Demande n°{{ r.pk }} · {{ r.libelle_type }}</h3>
         <p>Du {{ r.date_arrivee|date:"l d F" }} au {{ r.date_depart|date:"l d F Y" }} · {{ r.nb_nuits }} nuit{{ r.nb_nuits|pluralize }} · {{ r.total_prevu|fcfa }}</p>
         {% if r.statut == "NOUVELLE" %}<p class="discret">La réception vous appelle pour confirmer.</p>
           <form method="post" action="{% url 'vitrine:demande_annuler' r.pk %}">{% csrf_token %}<button class="btn secondaire petit" data-confirmer="Annuler votre demande n°{{ r.pk }} ?" data-oui="Oui, annuler">Annuler ma demande</button></form>
-        {% elif r.statut == "CONFIRMEE" and r.sejour %}<p>Confirmée : chambre {{ r.sejour.chambre.numero }}.</p>
+        {% elif r.statut == "CONFIRMEE" and r.sejour %}
+          {% if r.sejour.statut == "RESERVE" %}<p>Confirmée : chambre {{ r.sejour.chambre.numero }}, à {{ r.sejour.tarif_nuit|fcfa }} la nuit. Nous vous attendons le {{ r.sejour.date_arrivee|date:"l d F" }}.</p>
+          {% elif r.sejour.statut == "EN_COURS" %}<p>Vous êtes en chambre {{ r.sejour.chambre.numero }}. Bon séjour !</p>
+          {% elif r.sejour.statut == "TERMINE" %}<p>Séjour terminé. Merci de votre visite.</p>
+          {% else %}<p>Cette réservation a été annulée. Appelez la réception pour en savoir plus.</p>{% endif %}
         {% elif r.motif %}<p class="discret">{{ r.motif }}</p>{% endif %}
       </div>
       {% endfor %}
@@ -36,7 +41,7 @@
       <h2>Votre compte est presque prêt</h2>
       <p>Pour protéger vos informations, la réception doit vérifier que ce compte est bien le vôtre avant de vous montrer
         vos séjours et vos paiements. Présentez-vous à la réception{% if etablissement.telephone %} ou appelez le
-        <a href="tel:{{ etablissement.telephone|cut:' ' }}">{{ etablissement.telephone }}</a>{% endif %}.</p>
+        <a class="btn petit secondaire" href="tel:{{ etablissement.telephone|cut:' ' }}">{{ etablissement.telephone }}</a>{% endif %}.</p>
     </div>
     {% else %}
 

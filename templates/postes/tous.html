@@ -1,21 +1,21 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load gestion %}
 {% block titre %}Saisies des départements{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>Saisies des départements</h1><p>L'écran que chaque département garde ouvert sur son poste, et sa fiche du jour.</p></div></div>
 <div class="tuiles">
   {% if user.voit_reception %}
   <div class="tuile"><strong>Réception · chambres</strong><span>Arrivées, encaissements, départs</span>
-    <span><a href="{% url 'postes:reception' %}">Ouvrir la saisie</a> · <a href="{% url 'fiches:hebergement' %}">Fiche du jour</a></span></div>
+    <span class="actions"><a class="btn petit" href="{% url 'postes:reception' %}">Ouvrir la saisie</a> <a class="btn petit secondaire" href="{% url 'fiches:hebergement' %}">Fiche du jour</a></span></div>
   {% endif %}
   <div class="tuile"><strong>Boutique</strong><span>Ventes de la réception</span>
-    <span>{% if user.tient_caisse %}<a href="{% url 'caisse:ventes' %}">Ouvrir la saisie</a> · {% endif %}<a href="{% url 'fiches:stock' 'boutique' %}">Fiche du jour</a></span></div>
+    <span class="actions">{% if user.tient_caisse %}<a class="btn petit" {% href 'caisse:ventes' %}>Ouvrir la saisie</a> {% endif %}<a class="btn petit secondaire" {% href 'fiches:stock' 'boutique' %}>Fiche du jour</a></span></div>
   <div class="tuile"><strong>Restaurant · Bar</strong><span>Boissons et plats : payés sur place, ou à crédit sur la chambre (payés à la réception)</span>
-    <span><a href="{% url 'fiches:main_courante' 'bar' %}">Main courante bar</a> · <a href="{% url 'fiches:main_courante' 'cuisine' %}">Main courante cuisine</a> · <a href="{% url 'fiches:stock' 'bar' %}">Fiche de stock</a></span></div>
+    <span class="actions"><a class="btn petit secondaire" {% href 'fiches:main_courante' 'bar' %}>Main courante bar</a> <a class="btn petit secondaire" {% href 'fiches:main_courante' 'cuisine' %}>Main courante cuisine</a> <a class="btn petit secondaire" {% href 'fiches:stock' 'bar' %}>Fiche de stock</a></span></div>
   <div class="tuile"><strong>Chambres et blanchisserie</strong><span>Pas de compte : la réception note les chambres faites</span>
-    <span><a href="{% url 'hotel:menage' %}">Ouvrir la saisie</a></span></div>
+    <span class="actions"><a class="btn petit" href="{% url 'hotel:menage' %}">Ouvrir la saisie</a></span></div>
   <div class="tuile"><strong>Maintenance</strong><span>Pannes signalées et réparées</span>
-    <span><a href="{% url 'postes:maintenance' %}">Ouvrir la saisie</a></span></div>
+    <span class="actions"><a class="btn petit" {% href 'postes:maintenance' %}>Ouvrir la saisie</a></span></div>
   <div class="tuile"><strong>Gardiennage</strong><span>Pas de compte : la réception tient la main courante du gardien</span>
-    <span><a href="{% url 'postes:securite' %}">Ouvrir la saisie</a></span></div>
+    <span class="actions"><a class="btn petit" {% href 'postes:securite' %}>Ouvrir la saisie</a></span></div>
 </div>
 {% endblock %}

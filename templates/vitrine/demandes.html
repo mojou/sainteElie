@@ -10,7 +10,7 @@
     <span class="badge alerte">À confirmer</span>
   </div>
   <dl class="fiche">
-    <dt>Téléphone</dt><dd><a href="tel:{{ r.telephone }}">{{ r.telephone }}</a>{% if r.compte %} · <span class="badge {% if r.compte.statut == 'RELIE' %}ok{% else %}info{% endif %}">compte en ligne{% if r.compte.statut == 'RELIE' %} relié{% endif %}</span>{% endif %}</dd>
+    <dt>Téléphone</dt><dd>{{ r.telephone }} <a class="btn petit secondaire" href="tel:{{ r.telephone }}">Appeler</a>{% if r.compte %} · <span class="badge {% if r.compte.statut == 'RELIE' %}ok{% else %}info{% endif %}">compte en ligne{% if r.compte.statut == 'RELIE' %} relié{% endif %}</span>{% endif %}</dd>
     {% if r.email %}<dt>E-mail</dt><dd>{{ r.email }}</dd>{% endif %}
     <dt>Séjour</dt><dd>du {{ r.date_arrivee|date:"l d/m" }} au {{ r.date_depart|date:"l d/m/Y" }} · {{ r.nb_nuits }} nuit{{ r.nb_nuits|pluralize }} · {{ r.nb_personnes }} pers.</dd>
     <dt>Demandé</dt><dd>{{ r.libelle_type }} à {{ r.tarif_nuit|fcfa }} la nuit · {{ r.total_prevu|fcfa }}</dd>
@@ -21,13 +21,14 @@
   <form method="post" class="demande-confirmer">{% csrf_token %}<input type="hidden" name="demande" value="{{ r.pk }}"><input type="hidden" name="action" value="confirmer">
     <label for="chambre-{{ r.pk }}">Chambre</label>
     <select name="chambre" id="chambre-{{ r.pk }}" data-sans-recherche>
-      {% if r.memes %}<optgroup label="Le type demandé">{% for c in r.memes %}<option value="{{ c.pk }}"{% if c == r.chambre_proposee %} selected{% endif %}>Chambre {{ c.numero }} · {{ c.tarif_nuit|fcfa }}</option>{% endfor %}</optgroup>{% endif %}
-      {% if r.autres %}<optgroup label="Autres chambres libres">{% for c in r.autres %}<option value="{{ c.pk }}">Chambre {{ c.numero }} · {{ c.get_categorie_display }} · {{ c.tarif_nuit|fcfa }}</option>{% endfor %}</optgroup>{% endif %}
+      {% if r.memes %}<optgroup label="Le type demandé">{% for c in r.memes %}<option value="{{ c.pk }}"{% if c == r.chambre_proposee %} selected{% endif %}>Chambre {{ c.numero }} · {{ c.tarif_nuit|fcfa }} · {{ c.capacite }} pers.</option>{% endfor %}</optgroup>{% endif %}
+      {% if r.autres %}<optgroup label="Autres chambres libres">{% for c in r.autres %}<option value="{{ c.pk }}">Chambre {{ c.numero }} · {{ c.get_categorie_display }} · {{ c.tarif_nuit|fcfa }}{% if c.tarif_nuit != r.tarif_nuit %} (autre prix){% endif %} · {{ c.capacite }} pers.</option>{% endfor %}</optgroup>{% endif %}
     </select>
     <button class="btn ok grand">Confirmer la réservation</button>
+    {% if r.autres %}<p class="aide">Une chambre à un autre prix ? C'est le prix de cette chambre qui compte : dites-le au client en l'appelant.</p>{% endif %}
   </form>
   {% else %}<p class="message warning">Plus aucune chambre libre à ces dates : refusez la demande et prévenez le client.</p>{% endif %}
-  <details class="demande-refuser"><summary>Refuser</summary>
+  <details class="demande-refuser"><summary class="btn secondaire petit">Refuser la demande</summary>
     <form method="post">{% csrf_token %}<input type="hidden" name="demande" value="{{ r.pk }}"><input type="hidden" name="action" value="refuser">
       <label for="motif-{{ r.pk }}">Pourquoi ? (le client le verra)</label>
       <input type="text" name="motif" id="motif-{{ r.pk }}" maxlength="200" placeholder="Ex. : complet ce soir-là, client injoignable">
@@ -44,7 +45,7 @@
   {% for r in traitees %}<tr><td>{{ r.pk }}</td><td>{{ r.nom }}<br><small>{{ r.telephone }}</small></td>
     <td>{{ r.date_arrivee|date:"d/m" }} → {{ r.date_depart|date:"d/m/Y" }}</td>
     <td><span class="badge {% if r.statut == 'CONFIRMEE' %}ok{% else %}danger{% endif %}">{{ r.get_statut_display }}</span>
-      {% if r.sejour %}<a href="{% url 'hotel:sejour' r.sejour.pk %}">chambre {{ r.sejour.chambre.numero }}</a>{% elif r.motif %}<small>{{ r.motif }}</small>{% endif %}</td>
+      {% if r.sejour %}<a class="btn petit secondaire" href="{% url 'hotel:sejour' r.sejour.pk %}">Chambre {{ r.sejour.chambre.numero }}</a>{% elif r.motif %}<small>{{ r.motif }}</small>{% endif %}</td>
     <td>{{ r.traitee_par|default:"le client" }}<br><small>{{ r.traitee_le|date:"d/m H:i" }}</small></td></tr>
   {% empty %}<tr><td colspan="5" class="vide">Rien encore.</td></tr>{% endfor %}
 </table></div>

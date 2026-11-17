@@ -2,13 +2,13 @@
 {% block titre %}Stock{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>Stock</h1><p>Chaque article dit s'il faut le commander, combien de jours de vente il reste, ou s'il ne se vend pas.</p></div>
-  <div class="actions"><a class="btn" href="{% url 'stock:saisie_groupee' %}?type=ENTREE">Recevoir une livraison</a>
-    <a class="btn secondaire" href="{% url 'stock:saisie_groupee' %}">Faire l'inventaire</a>
-    <a class="btn secondaire" href="{% url 'stock:mouvements' %}">Mouvements</a>
-    <a class="btn secondaire" href="{% url 'stock:ecarts' %}">Écarts d'inventaire</a>
-    <a class="btn secondaire" href="{% url 'rapports:inventaire' %}">Rapport d'inventaire et rentabilité</a>
-    <a class="btn secondaire" href="{% url 'stock:photos' %}">Photos des articles</a>
-    <a class="btn secondaire" href="{% url 'stock:article_nouveau' %}">Nouvel article</a></div></div>
+  <div class="actions"><a class="btn" {% href 'stock:saisie_groupee' suite="?type=ENTREE" %}>Recevoir une livraison</a>
+    <a class="btn secondaire" {% href 'stock:saisie_groupee' %}>Faire l'inventaire</a>
+    <a class="btn secondaire" {% href 'stock:mouvements' %}>Mouvements</a>
+    <a class="btn secondaire" {% href 'stock:ecarts' %}>Écarts d'inventaire</a>
+    <a class="btn secondaire" {% href 'rapports:inventaire' %}>Rapport d'inventaire et rentabilité</a>
+    <a class="btn secondaire" {% href 'stock:photos' %}>Photos des articles</a>
+    <a class="btn secondaire" {% href 'stock:article_nouveau' %}>Nouvel article</a></div></div>
 
 <div class="tuiles-chiffres">
   <div class="tuile-chiffre"><div class="tuile-libelle">Valeur du stock (au coût)</div><div class="tuile-valeur">{{ valeur_totale|nombre }} <small>FCFA</small></div>
@@ -35,7 +35,7 @@
   <tr><th></th><th>Article</th><th>État</th><th class="nombre">En stock</th><th class="nombre">Vendu par jour</th><th class="nombre">Coût moyen</th><th class="nombre">Prix</th><th class="nombre">Marge</th><th class="nombre">Valeur</th></tr>
   {% for a in articles %}<tr>
     <td class="vignette"><img src="{{ a.image_url }}" alt="" loading="lazy"></td>
-    <td><a href="{% url 'stock:article' a.pk %}"><strong>{{ a.nom }}</strong>{% if a.code %} {{ a.code }}{% endif %}</a><br><small class="discret">{{ a.etat.phrase }}</small></td>
+    <td><a {% href 'stock:article' a.pk %}><strong>{{ a.nom }}</strong>{% if a.code %} {{ a.code }}{% endif %}</a><br><small class="discret">{{ a.etat.phrase }}</small></td>
     <td><span class="etat-stock {{ a.etat.code }}">{{ a.etat.titre }}</span>{% if a.etat.jours is not None and a.etat.code != "danger" %}<br><small class="discret">≈ {{ a.etat.jours }} j de vente</small>{% endif %}</td>
     <td class="nombre"><strong>{% if a.suivi_stock %}{{ a.quantite }}{% else %}–{% endif %}</strong>{% if a.suivi_stock and a.seuil_alerte %}<br><small class="discret">seuil {{ a.seuil_alerte }}</small>{% endif %}</td>
     <td class="nombre">{% if a.vitesse %}{{ a.vitesse|floatformat:"-1" }}{% else %}–{% endif %}</td>

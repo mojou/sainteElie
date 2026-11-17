@@ -21,6 +21,9 @@ class BaseTest(TestCase):
         shutil.rmtree(_DOSSIER, ignore_errors=True)
 
     def setUp(self):
+        from core import modules
+
+        modules.ouvrir_tout()  # chaque module est testé ouvert ; les modules fermés ont leurs propres tests
         self.gerant = self.utilisateur("gerant", Role.ADMIN)
         self.chef = self.utilisateur("chef", Role.CHEF_RECEPTION)
         self.aicha = self.utilisateur("aicha", Role.RECEPTIONNISTE)

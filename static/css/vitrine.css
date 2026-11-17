@@ -283,3 +283,4 @@
   .v-recherche-champs { grid-template-columns: minmax(0, 1fr); }
   .v-recherche-champs label:last-child { grid-column: auto; }
 }
+.v-recap > .btn { margin: .2rem 1.1rem .4rem; }

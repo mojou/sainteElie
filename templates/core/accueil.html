@@ -5,7 +5,18 @@
   <p>{{ jour|date:"l d F Y" }} · {{ user.get_role_display }}</p></div></div>
 
 {% if not user.a_un_pin and user.tient_caisse %}
-  <div class="message warning">Avant de commencer : choisissez votre code secret (4 chiffres) dans <a href="{% url 'accounts:mon_compte' %}">Mon compte</a>. Il sert à signer quand vous rendez la caisse.</div>
+  <div class="message warning">Avant de commencer : choisissez votre code secret (4 chiffres). Il sert à signer quand vous rendez la caisse.
+    <a class="btn petit" href="{% url 'accounts:mon_compte' %}">Choisir mon code</a></div>
+{% endif %}
+
+{% if user.voit_reception %}
+<nav class="raccourcis-accueil" aria-label="Réservations et chambres">
+  <a class="btn grand" href="{% url 'vitrine:demandes' %}">Réservations en ligne{% if nb_demandes_reservation %} <span class="pastille">{{ nb_demandes_reservation }}</span>{% endif %}</a>
+  <a class="btn grand secondaire" href="{% url 'postes:reception' %}">Plan des chambres</a>
+  <a class="btn grand secondaire" href="{% url 'hotel:sejour_nouveau' %}">Nouvelle réservation</a>
+  <a class="btn grand secondaire" href="{% url 'hotel:sejours' %}">Arrivées et départs du jour</a>
+  {% if user.tient_caisse %}<a class="btn grand secondaire" href="{% url 'caisse:ma_caisse' %}">Ma caisse</a>{% endif %}
+</nav>
 {% endif %}
 
 
@@ -20,7 +31,8 @@
   <div class="chiffre"><div class="valeur">{{ recette_jour|nombre }}</div><div class="libelle">Recette constatée du jour (FCFA)</div></div>
   {% endif %}
   {% if nb_a_valider is not None %}
-  <div class="chiffre {% if nb_ecarts %}danger{% elif nb_a_valider %}alerte{% endif %}"><div class="valeur">{{ nb_a_valider }}</div><div class="libelle"><a href="{% url 'caisse:sessions' %}">Remises à valider</a>{% if nb_ecarts %} · {{ nb_ecarts }} écart{{ nb_ecarts|pluralize }}{% endif %}</div></div>
+  <div class="chiffre {% if nb_ecarts %}danger{% elif nb_a_valider %}alerte{% endif %}"><div class="valeur">{{ nb_a_valider }}</div><div class="libelle">Remises à valider{% if nb_ecarts %} · {{ nb_ecarts }} écart{{ nb_ecarts|pluralize }}{% endif %}</div>
+    {% if nb_a_valider %}<a class="btn petit" href="{% url 'caisse:sessions' %}">Valider</a>{% endif %}</div>
   {% if nb_sorties_a_valider %}<div class="chiffre alerte"><div class="valeur">{{ nb_sorties_a_valider }}</div><div class="libelle">Dépenses à valider</div></div>{% endif %}
   {% endif %}
 </div>
@@ -29,41 +41,54 @@
 <div class="grille">
   {% if arrivees %}
   <div class="carte"><h3>Arrivées</h3>
-    {% for s in arrivees %}<div><a href="{% url 'hotel:sejour' s.pk %}">Ch. {{ s.chambre.numero }} · {{ s.client }}</a>{% if s.date_arrivee < jour %} <span class="badge danger">en retard</span>{% endif %}</div>{% endfor %}</div>
+    {% for s in arrivees %}<div class="ligne-action"><span>Ch. {{ s.chambre.numero }} · {{ s.client }}{% if s.date_arrivee < jour %} <span class="badge danger">en retard</span>{% endif %}</span>
+      <a class="btn petit" href="{% url 'hotel:sejour' s.pk %}">Ouvrir</a></div>{% endfor %}</div>
   {% endif %}
   {% if departs %}
   <div class="carte"><h3>Départs</h3>
-    {% for s in departs %}<div><a href="{% url 'hotel:sejour' s.pk %}">Ch. {{ s.chambre.numero }} · {{ s.client }}</a> · reste {{ s.reste_a_payer|fcfa }}</div>{% endfor %}</div>
+    {% for s in departs %}<div class="ligne-action"><span>Ch. {{ s.chambre.numero }} · {{ s.client }} · reste {{ s.reste_a_payer|fcfa }}</span>
+      <a class="btn petit" href="{% url 'hotel:sejour' s.pk %}">Ouvrir</a></div>{% endfor %}</div>
   {% endif %}
   {% if sessions_ouvertes %}
   <div class="carte"><h3>Caisses ouvertes</h3>
-    {% for s in sessions_ouvertes %}<div><a href="{% url 'caisse:session' s.pk %}">{{ s.receptionniste }}</a> · {{ s.get_shift_display }} depuis {{ s.ouverte_le|date:"d/m H:i" }}</div>{% endfor %}</div>
+    {% for s in sessions_ouvertes %}<div class="ligne-action"><span>{{ s.receptionniste }} · {{ s.get_shift_display }} depuis {{ s.ouverte_le|date:"d/m H:i" }}</span>
+      <a class="btn petit secondaire" href="{% url 'caisse:session' s.pk %}">Voir</a></div>{% endfor %}</div>
   {% endif %}
   {% if alertes %}
   <div class="carte"><h3>Alertes</h3>
     {% for a in alertes %}<div style="margin-bottom:.4rem"><span class="badge alerte">{{ a.get_type_display }}</span> {{ a.message }}</div>{% endfor %}
-    <a href="{% url 'core:alertes' %}">Toutes les alertes</a></div>
+    <a class="btn petit secondaire" href="{% url 'core:alertes' %}">Toutes les alertes</a></div>
   {% endif %}
   {% if stock_bas %}
   <div class="carte"><h3>Stock bas</h3>
-    {% for a in stock_bas %}<div><a href="{% url 'stock:article' a.pk %}">{{ a }}</a> : {{ a.quantite }} {{ a.unite }}</div>{% endfor %}</div>
+    {% for a in stock_bas %}<div class="ligne-action"><span>{{ a }} : {{ a.quantite }} {{ a.unite }}</span>
+      <a class="btn petit secondaire" {% href 'stock:article' a.pk %}>Voir</a></div>{% endfor %}</div>
   {% endif %}
   {% if equipe_du_jour is not None %}
   <div class="carte"><h3>Équipe du jour</h3>
     {% for a in equipe_du_jour %}<div>{{ a.creneau.nom }} · {{ a.employe }} {% if a.employe_id in pointes %}<span class="badge ok">pointé</span>{% else %}<span class="badge">pas pointé</span>{% endif %}</div>
     {% empty %}<p class="discret">Aucun planning saisi pour aujourd'hui.</p>{% endfor %}
-    {% if conges_en_attente %}<p><a href="{% url 'personnel:conges' %}">{{ conges_en_attente }} demande{{ conges_en_attente|pluralize }} de congé en attente</a></p>{% endif %}
+    {% if conges_en_attente %}<p><a class="btn petit" {% href 'personnel:conges' %}>{{ conges_en_attente }} demande{{ conges_en_attente|pluralize }} de congé en attente</a></p>{% endif %}
   </div>
   {% endif %}
   {% if mon_planning is not None %}
   <div class="carte"><h3>Mon planning (7 jours)</h3>
     {% for a in mon_planning %}<div>{{ a.date|date:"D d/m" }} · {{ a.creneau }}</div>{% empty %}<p class="discret">Aucun shift prévu.</p>{% endfor %}
-    <p><a class="btn petit" href="{% url 'personnel:mon_espace' %}">{% if pointage_ouvert %}Pointer mon départ{% else %}Pointer mon arrivée{% endif %}</a></p></div>
+    <p><a class="btn petit" {% href 'personnel:mon_espace' %}>{% if pointage_ouvert %}Pointer mon départ{% else %}Pointer mon arrivée{% endif %}</a></p></div>
   {% endif %}
   {% if mes_taches %}
   <div class="carte"><h3>Mes tâches</h3>
     {% for t in mes_taches %}<div>{{ t.titre }} <small>({{ t.projet }}{% if t.echeance %}, {{ t.echeance|date:"d/m" }}{% endif %})</small></div>{% endfor %}
-    <a href="{% url 'projets:mes_taches' %}">Toutes mes tâches</a></div>
+    <a class="btn petit secondaire" {% href 'projets:mes_taches' %}>Toutes mes tâches</a></div>
   {% endif %}
 </div>
+
+{% if modules_fermes %}
+<div class="carte">
+  <h3>Pas encore ouverts</h3>
+  <p class="discret">Pour l'instant, l'application sert à la réservation et à la vente des chambres.</p>
+  <div class="actions">{% for m in modules_fermes %}<a class="btn secondaire petit" aria-disabled="true" title="{{ m.contenu }}">{{ m.nom }}</a>{% endfor %}</div>
+  {% if user.est_gerant %}<p><a class="btn petit" href="{% url 'core:modules' %}">Ouvrir des modules</a></p>{% endif %}
+</div>
+{% endif %}
 {% endblock %}

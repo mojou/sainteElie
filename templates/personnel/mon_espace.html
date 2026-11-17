@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load gestion %}
 {% block titre %}Mon planning et pointage{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>{{ employe }}</h1><p>{{ employe.poste }} · {{ employe.get_departement_display }}</p></div>
-  <div class="actions"><a class="btn secondaire" href="{% url 'personnel:conge_nouveau' %}">Demander un congé</a>
-    <a class="btn secondaire" href="{% url 'personnel:echange_nouveau' %}">Échanger un shift</a>
-    <a class="btn secondaire" href="{% url 'personnel:conges' %}">Mes demandes</a>
-    {% if not user.est_gerant %}<a class="btn secondaire" href="{% url 'paie:mes_bulletins' %}">Mes bulletins de paie</a>{% endif %}
-    <a class="btn secondaire" href="{% url 'projets:mes_taches' %}">Mes tâches</a></div></div>
+  <div class="actions"><a class="btn secondaire" {% href 'personnel:conge_nouveau' %}>Demander un congé</a>
+    <a class="btn secondaire" {% href 'personnel:echange_nouveau' %}>Échanger un shift</a>
+    <a class="btn secondaire" {% href 'personnel:conges' %}>Mes demandes</a>
+    {% if not user.est_gerant %}<a class="btn secondaire" {% href 'paie:mes_bulletins' %}>Mes bulletins de paie</a>{% endif %}
+    <a class="btn secondaire" {% href 'projets:mes_taches' %}>Mes tâches</a></div></div>
 <div class="carte">
   <h2>Pointage</h2>
   <form method="post">{% csrf_token %}

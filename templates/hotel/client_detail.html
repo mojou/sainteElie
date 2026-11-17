@@ -9,7 +9,7 @@
 <div class="tableau"><table>
   <tr><th>Chambre</th><th>Arrivée</th><th>Départ</th><th>Statut</th><th class="nombre">Reste à payer</th></tr>
   {% for s in sejours %}
-  <tr><td><a href="{% url 'hotel:sejour' s.pk %}">{{ s.chambre.numero }}</a></td><td>{{ s.date_arrivee|date:"d/m/Y" }}</td><td>{{ s.date_depart|date:"d/m/Y" }}</td>
+  <tr><td><a class="btn petit secondaire" href="{% url 'hotel:sejour' s.pk %}">Chambre {{ s.chambre.numero }}</a></td><td>{{ s.date_arrivee|date:"d/m/Y" }}</td><td>{{ s.date_depart|date:"d/m/Y" }}</td>
     <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td class="nombre">{{ s.reste_a_payer|nombre }}</td></tr>
   {% empty %}<tr><td colspan="5" class="vide">Aucun séjour.</td></tr>{% endfor %}
 </table></div>

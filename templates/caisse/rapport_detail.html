@@ -12,7 +12,7 @@
   <tr><th>Titulaire</th><th>Caisse · shift</th>{% for m in moyens %}<th class="nombre">{{ m.libelle }}</th>{% endfor %}
     <th class="nombre">Total encaissé</th><th class="nombre">Sorties</th><th class="nombre">Espèces attendues</th><th class="nombre">Écart espèces</th><th class="nombre">Écart OM + MoMo</th><th>Statut</th></tr>
   {% for l in lignes %}{% with s=l.session %}
-  <tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s.receptionniste }}</a>{% if s.est_rectificative %} <span class="badge">rectification</span>{% endif %}</td>
+  <tr><td><a class="btn petit secondaire" href="{% url 'caisse:session' s.pk %}">{{ s.receptionniste }}</a>{% if s.est_rectificative %} <span class="badge">rectification</span>{% endif %}</td>
     <td>{{ s.tiroir }} · {{ s.get_shift_display }} {{ s.ouverte_le|date:"d/m" }}</td>
     {% for v in l.moyens %}<td class="nombre">{{ v|nombre }}</td>{% endfor %}
     <td class="nombre">{{ l.total|nombre }}</td><td class="nombre">{{ l.sorties|nombre }}</td><td class="nombre">{{ l.attendues|nombre }}</td>
@@ -47,7 +47,7 @@
 
 {% if ecarts %}<h2>Écarts et motifs</h2>
 <div class="tableau"><table><tr><th>Session</th><th class="nombre">Écart espèces</th><th>Statut</th><th>Motif</th></tr>
-  {% for s in ecarts %}<tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s }}</a></td><td class="nombre">{{ s.remise.ecart|nombre }}</td>
+  {% for s in ecarts %}<tr><td><a class="btn petit secondaire" href="{% url 'caisse:session' s.pk %}">{{ s }}</a></td><td class="nombre">{{ s.remise.ecart|nombre }}</td>
     <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td><td>{{ s.remise.motif }} {{ s.motif_contestation }}</td></tr>{% endfor %}
 </table></div>{% endif %}
 
@@ -59,7 +59,7 @@
 
 {% if impayes %}<h2>Séjours terminés non soldés</h2>
 <div class="tableau"><table><tr><th>Client</th><th>Chambre</th><th>Départ</th><th class="nombre">Reste à payer</th></tr>
-  {% for s in impayes %}<tr><td><a href="{% url 'hotel:sejour' s.pk %}">{{ s.client }}</a></td><td>{{ s.chambre.numero }}</td><td>{{ s.date_depart|date:"d/m/Y" }}</td>
+  {% for s in impayes %}<tr><td><a class="btn petit secondaire" href="{% url 'hotel:sejour' s.pk %}">{{ s.client }}</a></td><td>{{ s.chambre.numero }}</td><td>{{ s.date_depart|date:"d/m/Y" }}</td>
     <td class="nombre rouge">{{ s.reste_a_payer|nombre }}</td></tr>{% endfor %}
 </table></div>{% endif %}
 

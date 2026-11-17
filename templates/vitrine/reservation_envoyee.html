@@ -18,7 +18,7 @@
         <dt>Où en est-elle ?</dt><dd><span class="badge {% if demande.statut == 'CONFIRMEE' %}ok{% elif demande.statut == 'NOUVELLE' %}alerte{% else %}danger{% endif %}">{{ demande.get_statut_display }}</span>{% if demande.motif and demande.statut == 'REFUSEE' %} · {{ demande.motif }}{% endif %}</dd>
       </dl>
       <p>Rien à payer maintenant : vous réglez à l'hôtel, en espèces, Orange Money ou MTN MoMo.</p>
-      {% if etab.telephone %}<p>Une question ? Appelez la réception : <a href="tel:{{ etab.telephone|cut:' ' }}">{{ etab.telephone }}</a>.</p>{% endif %}
+      {% if etab.telephone %}<p>Une question ? <a class="btn secondaire" href="tel:{{ etab.telephone|cut:' ' }}">Appeler la réception : {{ etab.telephone }}</a></p>{% endif %}
       <div class="v-actions">
         {% if not user.is_authenticated %}<a class="btn grand" href="{% url 'vitrine:inscription' %}">Créer mon compte pour suivre mes séjours</a>{% endif %}
         <a class="btn secondaire grand" href="{% url 'vitrine:site' %}">Retour à l'accueil</a>

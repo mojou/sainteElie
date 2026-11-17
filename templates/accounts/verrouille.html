@@ -24,7 +24,7 @@
         <button class="btn grand ok bouton-plein" type="submit">{% if qui %}Prendre l'écran{% else %}Reprendre{% endif %}</button>
       </form>
       {% if qui %}
-        <p class="v-lien-bas"><a href="{% url 'accounts:verrouille' %}?suite={{ suite|urlencode }}">← Ce n'est pas moi</a></p>
+        <p class="v-lien-bas"><a class="btn secondaire" href="{% url 'accounts:verrouille' %}?suite={{ suite|urlencode }}">← Ce n'est pas moi</a></p>
       {% elif collegues %}
         <h2 class="releve-titre">Ce n'est pas {{ user.first_name|default:user.username }} ? Touchez votre prénom :</h2>
         <div class="releve">

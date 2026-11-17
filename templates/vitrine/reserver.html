@@ -34,7 +34,8 @@
     <div class="carte v-complet">
       <h2>Complet à ces dates</h2>
       <p>Toutes nos chambres{% if d.personnes > 2 %} pour {{ d.personnes }} personnes{% endif %} sont prises à ces dates. Essayez d'autres dates{% if d.personnes > 1 %}, ou moins de personnes par chambre{% endif %}.
-        {% if etab.telephone %}La réception peut aussi vous aider : <a href="tel:{{ etab.telephone|cut:' ' }}">{{ etab.telephone }}</a>.{% endif %}</p>
+        </p>
+      {% if etab.telephone %}<p><a class="btn secondaire" href="tel:{{ etab.telephone|cut:' ' }}">Appeler la réception : {{ etab.telephone }}</a></p>{% endif %}
     </div>
     {% endif %}
     {% endif %}

@@ -5,7 +5,7 @@
 
 {% if dernier_recu %}
 <div class="message success no-print">Dernier reçu : n°{{ dernier_recu.numero_recu }} · {{ dernier_recu.montant|fcfa }} ·
-  <a href="{% url 'caisse:recu_client' dernier_recu.pk %}">l'imprimer</a>
+  <a class="btn petit" href="{% url 'caisse:recu_client' dernier_recu.pk %}">Imprimer le reçu</a>
   <form method="post" action="{% url 'postes:oublier_recu' %}" class="en-ligne">{% csrf_token %}<button class="btn petit secondaire">OK</button></form></div>
 {% endif %}
 
@@ -18,11 +18,11 @@
 
 {% if nb_demandes_reservation %}
 <div class="message info no-print"><strong>{{ nb_demandes_reservation }} réservation{{ nb_demandes_reservation|pluralize }} en ligne à confirmer.</strong>
-  <a href="{% url 'vitrine:demandes' %}">Les voir</a></div>
+  <a class="btn petit" href="{% url 'vitrine:demandes' %}">Les confirmer</a></div>
 {% endif %}
 <div class="raccourcis-reception no-print">
   <a class="btn grand" href="{% url 'postes:arrivee' %}">Un client arrive</a>
-  {% if user.tient_caisse %}<a class="btn grand or" href="{% url 'caisse:ventes' %}">Boutique</a>{% endif %}
+  {% if user.tient_caisse %}<a class="btn grand or" {% href 'caisse:ventes' %}>Boutique</a>{% endif %}
 </div>
 
 {% if attendus %}
@@ -74,7 +74,7 @@
 </div>
 
 <div class="actions no-print" style="margin-top:1.2rem">
-  <a class="btn secondaire" href="{% url 'hotel:extras' %}">Ajouter un extra</a>
+  <a class="btn secondaire" {% href 'hotel:extras' %}>Ajouter un extra</a>
   <a class="btn secondaire" href="{% url 'hotel:sejours' %}?vue=reserves">Réservations à venir</a>
   <a class="btn secondaire" href="{% url 'fiches:chambres_a_faire' %}" target="_blank" rel="noopener">Imprimer la fiche du ménage</a>
   <a class="btn secondaire" href="{% url 'fiches:hebergement' %}">Fiche recette chambres</a>

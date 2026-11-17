@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load gestion %}
 {% block titre %}Congés et échanges{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>Congés et échanges de shift</h1></div>
-  {% if employe %}<div class="actions"><a class="btn" href="{% url 'personnel:conge_nouveau' %}">Demander un congé</a>
-    <a class="btn secondaire" href="{% url 'personnel:echange_nouveau' %}">Échanger un shift</a></div>{% endif %}</div>
+  {% if employe %}<div class="actions"><a class="btn" {% href 'personnel:conge_nouveau' %}>Demander un congé</a>
+    <a class="btn secondaire" {% href 'personnel:echange_nouveau' %}>Échanger un shift</a></div>{% endif %}</div>
 
 {% if a_traiter or echanges_a_traiter %}
 <h2>À traiter</h2>

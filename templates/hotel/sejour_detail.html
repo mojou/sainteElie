@@ -9,26 +9,26 @@
   </div>
   <div class="actions">
     {% if sejour.statut == "RESERVE" %}
-      <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-in' %}">{% csrf_token %}<button class="btn ok">Check-in</button></form>
+      <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-in' %}">{% csrf_token %}<button class="btn ok" data-confirmer="{{ sejour.client }} est arrivé ? La chambre {{ sejour.chambre.numero }} devient occupée." data-oui="Oui, il est arrivé" data-non="Non">Le client est arrivé</button></form>
     {% endif %}
     {% if sejour.statut == "EN_COURS" %}
       <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-out' %}">{% csrf_token %}
-        <button class="btn ok" data-confirmer="Confirmer le check-out ? Les nuits passées seront facturées.">Check-out</button></form>
-      <a class="btn secondaire" href="{% url 'hotel:extras' %}?sejour={{ sejour.pk }}">Ajouter un extra</a>
+        <button class="btn ok" data-oui="Oui, il part" data-non="Non" data-confirmer="{{ sejour.client }} quitte la chambre {{ sejour.chambre.numero }} ? Les nuits passées sont facturées.{% if sejour.reste_a_payer > 0 %} Attention : il doit encore {{ sejour.reste_a_payer|fcfa }}.{% endif %}">Le client part (départ)</button></form>
+      <a class="btn secondaire" {% href 'hotel:extras' sejour=sejour.pk %}>Ajouter un extra</a>
     {% endif %}
     {% if sejour.statut != "TERMINE" or sejour.reste_a_payer != 0 %}
-      <a class="btn" href="{% url 'hotel:encaisser' sejour.pk %}">Encaisser / rembourser</a>
+      <a class="btn" href="{% url 'hotel:encaisser' sejour.pk %}">{% if sejour.reste_a_payer > 0 %}Encaisser{% else %}Encaisser / rembourser{% endif %}</a>
     {% endif %}
     {% if sejour.statut == "RESERVE" or sejour.statut == "EN_COURS" %}
       <a class="btn secondaire" href="{% url 'hotel:sejour_modifier' sejour.pk %}">Modifier</a>
     {% endif %}
     {% if sejour.statut == "RESERVE" %}
-      <a class="btn secondaire" href="{% url 'hotel:sejour_annuler' sejour.pk %}">Annuler</a>
-      <a class="btn secondaire" href="{% url 'hotel:sejour_no_show' sejour.pk %}">No-show</a>
+      <a class="btn secondaire" href="{% url 'hotel:sejour_annuler' sejour.pk %}">Annuler la réservation</a>
+      <a class="btn secondaire" href="{% url 'hotel:sejour_no_show' sejour.pk %}">Pas venu (no-show)</a>
     {% endif %}
   </div>
 </div>
-{% if not session and sejour.statut != "ANNULE" and user.tient_caisse %}<div class="message info">Pour encaisser, ouvrez d'abord <a href="{% url 'caisse:ma_caisse' %}">votre session de caisse</a>.</div>{% endif %}
+{% if not session and sejour.statut != "ANNULE" and user.tient_caisse %}<div class="message info">Pour encaisser, ouvrez d'abord votre caisse. <a class="btn petit" href="{% url 'caisse:ma_caisse' %}?suite={{ request.path|urlencode }}">Ouvrir ma caisse</a></div>{% endif %}
 
 <div class="chiffres">
   <div class="chiffre"><div class="valeur">{{ sejour.total_facture|nombre }}</div><div class="libelle">Total {% if sejour.statut == "TERMINE" %}facturé{% else %}prévu{% endif %} (FCFA)</div></div>
@@ -65,7 +65,7 @@
   {% for e in extras %}
   <tr class="{% if e.statut == 'ANNULE' %}annule{% endif %}"><td>{{ e.date_conso|date:"d/m H:i" }}</td><td>{{ e.get_source_display }}</td><td>{{ e.description }}{% if e.motif_annulation %}<br><small>Annulé : {{ e.motif_annulation }}</small>{% endif %}</td>
     <td>{{ e.numero_bon }}</td><td>{{ e.saisi_par }}</td><td class="nombre">{{ e.montant|nombre }}</td>
-    <td>{% if e.statut == "ACTIF" %}<a href="{% url 'hotel:extra_annuler' e.pk %}">Annuler</a>{% endif %}</td></tr>
+    <td>{% if e.statut == "ACTIF" %}<a class="btn petit danger" {% href 'hotel:extra_annuler' e.pk %}>Annuler</a>{% endif %}</td></tr>
   {% empty %}<tr><td colspan="7" class="vide">Aucun extra.</td></tr>{% endfor %}
 </table></div>
 
@@ -74,11 +74,11 @@
   <tr><th>Reçu</th><th>Date</th><th>Nature</th><th>Mode</th><th>Référence</th><th>Par</th><th class="nombre">Montant</th><th></th></tr>
   {% for e in encaissements %}
   <tr class="{% if e.est_annule %}annule{% endif %}">
-    <td><a href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m H:i" }}</td>
+    <td><a class="btn petit secondaire" href="{% url 'caisse:recu_client' e.pk %}">Reçu n°{{ e.numero_recu }}</a></td><td>{{ e.date|date:"d/m H:i" }}</td>
     <td>{{ e.get_nature_display }}{% if e.annule %} du reçu n°{{ e.annule.numero_recu }}<br><small>{{ e.motif }}</small>{% endif %}</td>
     <td>{{ e.moyen_libelle }}</td><td>{{ e.reference }}</td><td>{{ e.utilisateur }}</td>
     <td class="nombre">{{ e.montant_signe|nombre }}</td>
-    <td>{% if e.nature != "ANNULATION" and not e.est_annule %}<a href="{% url 'caisse:annuler_encaissement' e.pk %}">Annuler</a>{% endif %}</td>
+    <td>{% if e.nature != "ANNULATION" and not e.est_annule %}<a class="btn petit danger" href="{% url 'caisse:annuler_encaissement' e.pk %}">Annuler</a>{% endif %}</td>
   </tr>
   {% empty %}<tr><td colspan="8" class="vide">Aucun encaissement.</td></tr>{% endfor %}
 </table></div>

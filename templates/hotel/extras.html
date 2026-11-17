@@ -16,7 +16,7 @@
 {% else %}
 <div class="entete"><div><h1>Chambre {{ sejour.chambre.numero }} · {{ sejour.client }}</h1>
   <p class="etape">Qu'est-ce que le client a pris ?</p></div>
-  <div class="actions"><a class="btn secondaire" href="{% url 'hotel:extras' %}">Changer de chambre</a></div></div>
+  <div class="actions"><a class="btn secondaire" {% href 'hotel:extras' %}>Changer de chambre</a></div></div>
 <form method="post" novalidate class="carte">{% csrf_token %}
   <input type="hidden" name="sejour" value="{{ sejour.pk }}">
   {% if form.non_field_errors %}<div class="message error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
@@ -45,7 +45,7 @@
   <tr class="{% if e.statut == 'ANNULE' %}annule{% endif %}"><td>{{ e.date_conso|date:"H:i" }}</td><td>{{ e.sejour.chambre.numero }}</td><td>{{ e.sejour.client }}</td>
     <td>{{ e.description }}{% if e.numero_bon %} <small>(bon {{ e.numero_bon }})</small>{% endif %}</td>
     <td>{{ e.saisi_par }} <small>({{ e.saisi_par.get_role_display }})</small></td><td class="nombre">{{ e.montant|nombre }}</td>
-    <td class="no-print">{% if e.statut == "ACTIF" %}<a href="{% url 'hotel:extra_annuler' e.pk %}">Annuler</a>{% endif %}</td></tr>
+    <td class="no-print">{% if e.statut == "ACTIF" %}<a {% href 'hotel:extra_annuler' e.pk %}>Annuler</a>{% endif %}</td></tr>
   {% empty %}<tr><td colspan="7" class="vide">Aucun extra aujourd'hui.</td></tr>{% endfor %}
 </table></div>
 {% endblock %}

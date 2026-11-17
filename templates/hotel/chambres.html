@@ -13,9 +13,9 @@
     <div class="numero">{{ c.numero }}</div>
     <div><span class="badge {{ c.statut }}">{{ c.get_statut_display }}</span></div>
     <small>{{ c.get_categorie_display }} · {{ c.tarif_nuit|nombre }} FCFA</small>
-    {% if c.occupant %}<div><a href="{% url 'hotel:sejour' c.occupant.pk %}">{{ c.occupant.client }}</a><br><small>départ {{ c.occupant.date_depart|date:"d/m" }}</small></div>{% endif %}
+    {% if c.occupant %}<div>{{ c.occupant.client }}<br><small>départ {{ c.occupant.date_depart|date:"d/m" }}</small><br><a class="btn petit secondaire" href="{% url 'hotel:sejour' c.occupant.pk %}">Séjour</a></div>{% endif %}
     {% if not c.active %}<div><span class="badge danger">Inactive</span></div>{% endif %}
-    {% if user.est_gerant %}<div><a href="{% url 'hotel:chambre_modifier' c.pk %}"><small>Modifier</small></a></div>{% endif %}
+    {% if user.est_gerant %}<div><a class="btn petit secondaire" href="{% url 'hotel:chambre_modifier' c.pk %}">Modifier</a></div>{% endif %}
   </div>
   {% empty %}<p class="vide">Aucune chambre. {% if user.est_gerant %}Créez les chambres de l'établissement.{% endif %}</p>
   {% endfor %}

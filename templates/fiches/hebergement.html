@@ -7,7 +7,7 @@
 <div class="tableau"><table>
   <tr><th>Ch</th><th>Nom client</th><th class="nombre">Recette jr</th><th class="nombre">Imp jr</th><th class="nombre">Extras jr</th><th class="nombre">Offre jr</th><th class="nombre">Compensation</th><th class="nombre">Avance</th><th>Observation</th></tr>
   {% for x in d.lignes %}
-  <tr><td>{{ x.chambre.numero }}</td><td>{% if x.sejour %}<a href="{% url 'hotel:sejour' x.sejour.pk %}">{{ x.sejour.client }}</a>{% endif %}</td>
+  <tr><td>{{ x.chambre.numero }}</td><td>{% if x.sejour %}{{ x.sejour.client }} <a class="btn petit secondaire no-print" href="{% url 'hotel:sejour' x.sejour.pk %}">Séjour</a>{% endif %}</td>
     <td class="nombre">{{ x.recette|nv }}</td><td class="nombre {% if x.impaye %}rouge{% endif %}">{{ x.impaye|nv }}</td><td class="nombre">{{ x.extras|nv }}</td>
     <td class="nombre">{{ x.offre|nv }}</td><td class="nombre">{{ x.compensation|nv }}</td><td class="nombre">{{ x.avance|nv }}</td>
     <td><small>{{ x.observation }}</small></td></tr>

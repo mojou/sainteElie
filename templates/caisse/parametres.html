@@ -19,7 +19,7 @@
   <h2>Tiroirs et fond de caisse</h2>
   <div class="tableau"><table><tr><th>Caisse</th><th>Poste</th><th class="nombre">Fond en vigueur</th><th>État</th><th></th></tr>
     {% for t in tiroirs %}<tr><td>{{ t }}</td><td>{{ t.get_poste_display }}</td><td class="nombre">{{ t.fond_en_vigueur|nombre }}</td><td>{% if t.actif %}<span class="badge ok">Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td>
-      <td><a href="{% url 'caisse:tiroir_modifier' t.pk %}">Modifier</a></td></tr>{% empty %}<tr><td colspan="4" class="vide">Aucun tiroir.</td></tr>{% endfor %}
+      <td><a class="btn petit secondaire" href="{% url 'caisse:tiroir_modifier' t.pk %}">Modifier</a></td></tr>{% empty %}<tr><td colspan="4" class="vide">Aucun tiroir.</td></tr>{% endfor %}
   </table></div>
   <div class="actions"><a class="btn secondaire" href="{% url 'caisse:tiroir_nouveau' %}">Nouveau tiroir</a><a class="btn" href="{% url 'caisse:fond_nouveau' %}">Changer un fond de caisse</a></div>
   <h3>Historique des fonds</h3>

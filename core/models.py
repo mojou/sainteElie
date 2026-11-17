@@ -13,6 +13,8 @@ class Etablissement(models.Model):
     telephone = models.CharField("téléphone", max_length=60, blank=True)
     email = models.EmailField(blank=True)
     niu = models.CharField("NIU / RCCM", max_length=80, blank=True)
+    # Vide : seule la réservation et la vente des chambres sont ouvertes, le reste est grisé (voir core/modules.py).
+    modules_ouverts = models.JSONField("modules ouverts", default=list, blank=True)
 
     class Meta:
         verbose_name = "établissement"

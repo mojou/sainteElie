@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titre %}Modules{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Modules</h1>
+  <p>Un module fermé reste visible mais grisé dans les menus, et personne ne peut l'utiliser. Ouvrez-les un à un, quand l'équipe est prête.</p></div></div>
+<div class="carte module-socle">
+  <h2>Toujours ouvert</h2>
+  <p>{{ toujours_ouvert }}</p>
+</div>
+<form method="post" class="carte">{% csrf_token %}
+  <h2>À ouvrir quand vous voulez</h2>
+  <div class="liste-modules">
+  {% for m in modules %}
+    <label class="module-choix{% if m.ouvert %} ouvert{% endif %}">
+      <input type="checkbox" name="ouverts" value="{{ m.cle }}"{% if m.ouvert %} checked{% endif %}>
+      <span class="module-texte"><strong>{{ m.nom }}</strong><small>{{ m.contenu }}</small></span>
+      <span class="module-etat" aria-hidden="true"></span>
+    </label>
+  {% endfor %}
+  </div>
+  <div class="actions">
+    <button class="btn grand" type="submit">Enregistrer</button>
+    <a class="btn secondaire grand" href="{% url 'core:parametres' %}">Retour aux paramètres</a>
+  </div>
+</form>
+{% endblock %}

@@ -4,7 +4,7 @@
 <div class="entete"><div><h1>Mouvements de stock</h1>
   <p>Du {{ du|date:"d/m/Y" }} au {{ au|date:"d/m/Y" }} : {{ total }} mouvement{{ total|pluralize }}, chacun raconté en clair.</p></div>
   <div class="actions"><a class="btn secondaire petit" href="?{{ request.GET.urlencode }}&format=csv">Télécharger (Excel)</a>
-    <a class="btn secondaire petit" href="{% url 'stock:articles' %}">← Stock</a></div></div>
+    <a class="btn secondaire petit" {% href 'stock:articles' %}>← Stock</a></div></div>
 <form class="filtres carte" method="get">
   <label>Du <input type="date" name="du" value="{{ du|date:'Y-m-d' }}"></label>
   <label>au <input type="date" name="au" value="{{ au|date:'Y-m-d' }}"></label>

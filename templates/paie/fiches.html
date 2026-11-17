@@ -11,10 +11,10 @@
     <td class="nombre">{{ f.primes|add:f.heures_sup|nombre }}</td><td class="nombre">{{ f.cotisations|nombre }}</td><td class="nombre">{{ f.retenues|nombre }}</td>
     <td class="nombre">{{ f.acomptes|nombre }}</td><td class="nombre"><strong>{{ f.net_a_payer|nombre }}</strong></td>
     <td><span class="badge {{ f.statut }}">{{ f.get_statut_display }}</span>{% if f.payee_le %}<br><small>{{ f.payee_le|date:"d/m" }} · {{ f.mode_paiement }}</small>{% endif %}</td>
-    <td>{% if f.statut == "BROUILLON" %}<a href="{% url 'paie:fiche_modifier' f.pk %}">Modifier</a>
+    <td>{% if f.statut == "BROUILLON" %}<a {% href 'paie:fiche_modifier' f.pk %}>Modifier</a>
         <form method="post" action="{% url 'paie:fiche_valider' f.pk %}" class="en-ligne">{% csrf_token %}<button class="btn ok petit" data-confirmer="Valider la fiche ? Elle ne sera plus modifiable.">Valider</button></form>
-      {% else %}<a href="{% url 'paie:fiche_pdf' f.pk %}">Bulletin PDF</a>
-        {% if f.statut == "VALIDEE" %} · <a href="{% url 'paie:fiche_payer' f.pk %}">Marquer payé</a>{% endif %}{% endif %}</td></tr>
+      {% else %}<a {% href 'paie:fiche_pdf' f.pk %}>Bulletin PDF</a>
+        {% if f.statut == "VALIDEE" %} · <a {% href 'paie:fiche_payer' f.pk %}>Marquer payé</a>{% endif %}{% endif %}</td></tr>
   {% empty %}<tr><td colspan="9" class="vide">Aucune fiche pour ce mois : cliquez sur « Générer les fiches du mois ».</td></tr>{% endfor %}
 </table></div>
 <p class="discret">Les cotisations sociales (CNPS) et l'impôt sur le salaire ne sont pas calculés automatiquement : saisissez les montants fixés avec le comptable.</p>

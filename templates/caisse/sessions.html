@@ -9,7 +9,7 @@
 <h2>À valider ({{ a_valider|length }})</h2>
 <div class="tableau"><table>
   <tr><th>Session</th><th>Remise le</th><th>Statut</th><th class="nombre">Écart espèces</th></tr>
-  {% for s in a_valider %}<tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s }}</a></td><td>{{ s.remise_le|date:"d/m H:i" }}</td>
+  {% for s in a_valider %}<tr><td><a class="btn petit" href="{% url 'caisse:session' s.pk %}">{{ s }}</a></td><td>{{ s.remise_le|date:"d/m H:i" }}</td>
     <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td>
     <td class="nombre {% if s.remise.ecart|hors_seuil:s.seuil_ecart %}rouge{% endif %}">{{ s.remise.ecart|nombre }}</td></tr>{% endfor %}
 </table></div>
@@ -22,7 +22,7 @@
 <div class="tableau"><table>
   <tr><th>N°</th><th>Réceptionniste</th><th>Shift</th><th>Ouverte</th><th>Remise</th><th class="nombre">Total encaissé</th><th class="nombre">Écart espèces</th><th>Statut</th></tr>
   {% for s in sessions %}
-  <tr><td><a href="{% url 'caisse:session' s.pk %}">{{ s.pk }}</a></td><td>{{ s.receptionniste }}{% if s.est_rectificative %} <span class="badge">rectification</span>{% endif %}</td>
+  <tr><td><a class="btn petit secondaire" href="{% url 'caisse:session' s.pk %}">N°{{ s.pk }}</a></td><td>{{ s.receptionniste }}{% if s.est_rectificative %} <span class="badge">rectification</span>{% endif %}</td>
     <td>{{ s.get_shift_display }}</td><td>{{ s.ouverte_le|date:"d/m H:i" }}</td><td>{{ s.remise_le|date:"d/m H:i"|default:"-" }}</td>
     <td class="nombre">{{ s.total_encaisse|nombre }}</td>
     <td class="nombre {% if s.remise.ecart|hors_seuil:s.seuil_ecart %}rouge{% endif %}">{% if s.remise.finalisee %}{{ s.remise.ecart|nombre }}{% else %}-{% endif %}</td>

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load gestion %}
 {% block titre %}Alertes{% endblock %}
 {% block contenu %}
 <div class="entete"><div><h1>Alertes</h1><p>Écarts, annulations, validations en retard, stock bas, ménage sans séjour.</p></div></div>
@@ -8,7 +8,7 @@
   {% for a in non_lues %}
   <tr><td><input type="checkbox" name="alerte" value="{{ a.pk }}"></td><td>{{ a.creee_le|date:"d/m H:i" }}</td>
     <td><span class="badge alerte">{{ a.get_type_display }}</span></td>
-    <td>{% if a.lien %}<a href="{{ a.lien }}">{{ a.message }}</a>{% else %}{{ a.message }}{% endif %}</td></tr>
+    <td>{{ a.message }}{% if a.lien %}{% chemin_ouvert a.lien as lien_ouvert %} <a class="btn petit secondaire" {% if lien_ouvert %}href="{{ a.lien }}"{% else %}aria-disabled="true"{% endif %}>Ouvrir</a>{% endif %}</td></tr>
   {% empty %}<tr><td colspan="4" class="vide">Aucune alerte non lue.</td></tr>{% endfor %}
 </table></div>
 {% if non_lues %}<button class="btn secondaire">Marquer la sélection comme lue</button>{% endif %}

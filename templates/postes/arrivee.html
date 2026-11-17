@@ -2,7 +2,7 @@
 {% block titre %}Un client arrive{% endblock %}
 {% block contenu %}
 {% entete_poste "Réception · chambres" avec_caisse=True %}
-<p class="no-print"><a class="retour" href="{% if chambre_fixe %}{% url 'postes:chambre' chambre_fixe.pk %}{% else %}{% url 'postes:reception' %}{% endif %}">← Retour</a></p>
+<p class="no-print"><a class="btn secondaire retour" href="{% if chambre_fixe %}{% url 'postes:chambre' chambre_fixe.pk %}{% else %}{% url 'postes:reception' %}{% endif %}">← Retour</a></p>
 {{ tarifs|json_script:"tarifs-chambres" }}
 <form method="post" novalidate class="carte assistant" id="assistant" data-aujourdhui="{{ jour|date:'Y-m-d' }}">{% csrf_token %}
   <h1>Un client arrive{% if chambre_fixe %} · chambre {{ chambre_fixe.numero }}{% endif %}</h1>
@@ -41,7 +41,7 @@
   <fieldset class="pas" data-pas="2">
     <legend>3. Combien le client paie maintenant ?</legend>
     {% if not session %}<div class="message warning">{% if user.tient_caisse %}Votre caisse est fermée : vous pouvez installer le client sans paiement, ou
-      <a href="{% url 'caisse:ma_caisse' %}?suite={{ request.get_full_path|urlencode }}">ouvrir votre caisse</a> d'abord.{% else %}Vous n'avez pas de caisse : installez le client sans paiement, la réception encaissera.{% endif %}</div>{% endif %}
+      ouvrir votre caisse d'abord. <a class="btn petit" href="{% url 'caisse:ma_caisse' %}?suite={{ request.get_full_path|urlencode }}">Ouvrir ma caisse</a>{% else %}Vous n'avez pas de caisse : installez le client sans paiement, la réception encaissera.{% endif %}</div>{% endif %}
     <div class="choix-montant">
       <button type="button" class="btn secondaire" data-montant-rapide="total">Tout <span></span></button>
       <button type="button" class="btn secondaire" data-montant-rapide="nuit">Une nuit <span></span></button>

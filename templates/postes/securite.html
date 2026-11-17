@@ -6,7 +6,7 @@
   <h2>Noter ce que le gardien signale {% aide "main_courante" %}</h2>
   <p class="discret">Rondes, visiteurs, livraisons, incidents : le gardien prévient la réception, qui le note ici.
     Pour la nuit, imprimez-lui une feuille vierge : il la remplit et vous la rapporte le matin.</p>
-  <p><a class="btn secondaire" href="{% url 'fiches:main_courante_gardien' %}" target="_blank" rel="noopener">Imprimer la feuille du gardien</a></p>
+  <p><a class="btn secondaire" {% href 'fiches:main_courante_gardien' %} target="_blank" rel="noopener">Imprimer la feuille du gardien</a></p>
   <form method="post" novalidate>{% csrf_token %}
     <div class="ligne-champs">{% include "partials/champs.html" %}</div>
     <button class="btn grand" type="submit">Noter</button>

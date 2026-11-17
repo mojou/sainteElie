@@ -16,7 +16,7 @@ from caisse.models import Encaissement
 from core.permissions import acces_requis, encadrement, reception
 from core.utils import aujourd_hui, journaliser
 from hotel import services as hotel
-from hotel.models import Chambre, Client, Sejour
+from hotel.models import Chambre, Sejour
 from personnel.models import Departement
 
 from . import services
@@ -55,6 +55,10 @@ def poste(request):
     if u.est_reception:
         return redirect("postes:reception")
     if u.est_bar:
+        from core import modules
+
+        if not modules.est_ouvert("caisse:ventes", request):
+            return render(request, "module_ferme.html", {"module": modules.PAR_CLE["ventes"], "sans_retour": True})
         return redirect("caisse:ventes")
     if u.departement == Departement.MAINTENANCE:
         return redirect("postes:maintenance")
@@ -174,8 +178,7 @@ def _enregistrer_arrivee(request, session, d):
         raise ValidationError("Ouvrez d'abord votre caisse (bouton en haut) pour encaisser ce paiement.")
     jour = aujourd_hui()
     with transaction.atomic():
-        client = Client.objects.filter(telephone=d["telephone"].strip()).first() or Client.objects.create(
-            nom=d["nom"].strip(), telephone=d["telephone"].strip())
+        client = hotel.client_au_numero(d["nom"], d["telephone"])
         chambre = d["chambre"]
         sejour = Sejour.objects.create(client=client, chambre=chambre, date_arrivee=jour,
                                        date_depart=jour + timedelta(days=d["nuits"]), tarif_grille=chambre.tarif_nuit,

@@ -15,7 +15,7 @@ from django.urls import reverse
 
 from core.models import Alerte
 from core.utils import alerter, aujourd_hui, format_fcfa, journaliser, maintenant, normaliser_telephone
-from hotel.models import Chambre, Client, Sejour
+from hotel.models import Chambre, Sejour
 from hotel.services import verifier_disponibilite
 
 from .models import DemandeReservation
@@ -23,6 +23,7 @@ from .models import DemandeReservation
 NUITS_MAX = 30          # au-delà, on appelle la réception
 JOURS_AVANCE_MAX = 365  # on réserve au plus un an à l'avance
 PERSONNES_MAX = 6
+DEMANDES_PAR_HEURE_MAX = 40  # toutes adresses confondues : au-delà, c'est un robot, pas des clients
 LIBELLES = {"SIMPLE": "Chambre simple", "DOUBLE": "Chambre double", "SUITE": "Suite", "AUTRE": "Chambre"}
 JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre",
@@ -81,6 +82,12 @@ def trouver_type(arrivee, depart, personnes, cle):
     return next((t for t in types_libres(arrivee, depart, personnes) if t["cle"] == cle), None)
 
 
+def trop_de_demandes():
+    """Plus de demandes en une heure qu'un hôtel de cette taille n'en reçoit jamais : on suspend le formulaire."""
+    depuis = maintenant() - timedelta(hours=1)
+    return DemandeReservation.objects.filter(cree_le__gte=depuis).count() >= DEMANDES_PAR_HEURE_MAX
+
+
 def _cle_alerte(demande):
     return f"demande-reservation-{demande.pk}"
 
@@ -108,11 +115,9 @@ def _fiche_client(demande):
     """La fiche du client : celle de son compte en ligne relié, sinon celle à son numéro, sinon une nouvelle."""
     if demande.compte_id and demande.compte.client_id:
         return demande.compte.client
-    numero = demande.telephone
-    # Comparé chiffre à chiffre : « +237 677 12 34 56 » et « 677123456 » sont le même client.
-    meme = [c for c in Client.objects.exclude(telephone="").only("pk", "telephone", "nom")
-            if normaliser_telephone(c.telephone) == numero]
-    return meme[0] if meme else Client.objects.create(nom=demande.nom, telephone=numero, email=demande.email)
+    from hotel.services import client_au_numero
+
+    return client_au_numero(demande.nom, demande.telephone, demande.email)
 
 
 def _clore(demande, user, statut, motif=""):
@@ -125,12 +130,25 @@ def _clore(demande, user, statut, motif=""):
     A.objects.filter(cle=_cle_alerte(demande), lue_le__isnull=True).update(lue_le=maintenant())
 
 
+def _prendre(demande, statut):
+    """Passe la demande de « À confirmer » à son nouveau statut en une seule écriture : si une collègue l'a traitée
+    entre-temps (double appui, deux postes), rien n'est fait deux fois."""
+    pris = DemandeReservation.objects.filter(pk=demande.pk, statut=DemandeReservation.Statut.NOUVELLE).update(
+        statut=statut)
+    if not pris:
+        raise ValidationError("Cette demande a déjà été traitée.")
+
+
 def confirmer(demande, user, chambre):
     """La réception confirme : la disponibilité est revérifiée et le séjour « Réservé » est créé."""
     if demande.statut != DemandeReservation.Statut.NOUVELLE:
         raise ValidationError("Cette demande a déjà été traitée.")
     with transaction.atomic():
+        _prendre(demande, DemandeReservation.Statut.CONFIRMEE)
         verifier_disponibilite(chambre, demande.date_arrivee, demande.date_depart)
+        if chambre.capacite < demande.nb_personnes:
+            raise ValidationError(f"La chambre {chambre.numero} est prévue pour {chambre.capacite} personne(s) ; "
+                                  f"la demande est pour {demande.nb_personnes}.")
         client = _fiche_client(demande)
         notes = f"Réservation en ligne n°{demande.pk}." + (f" Message du client : {demande.message}" if demande.message else "")
         sejour = Sejour.objects.create(
@@ -150,8 +168,10 @@ def refuser(demande, user, motif):
     motif = (motif or "").strip()
     if not motif:
         raise ValidationError("Dites pourquoi (complet, client injoignable…) : le client le verra.")
-    _clore(demande, user, DemandeReservation.Statut.REFUSEE, motif[:200])
-    demande.save()
+    with transaction.atomic():
+        _prendre(demande, DemandeReservation.Statut.REFUSEE)
+        _clore(demande, user, DemandeReservation.Statut.REFUSEE, motif[:200])
+        demande.save()
     journaliser(user, "Réservation en ligne refusée", demande, motif)
 
 
@@ -160,5 +180,7 @@ def annuler_par_le_client(demande, compte):
         raise ValidationError("Cette demande n'est pas la vôtre.")
     if demande.statut != DemandeReservation.Statut.NOUVELLE:
         raise ValidationError("Cette demande est déjà traitée : appelez la réception pour la changer.")
-    _clore(demande, None, DemandeReservation.Statut.ANNULEE, "Annulée par le client")
-    demande.save()
+    with transaction.atomic():
+        _prendre(demande, DemandeReservation.Statut.ANNULEE)
+        _clore(demande, None, DemandeReservation.Statut.ANNULEE, "Annulée par le client")
+        demande.save()

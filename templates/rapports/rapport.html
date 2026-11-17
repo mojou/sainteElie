@@ -144,7 +144,7 @@
     {% else %}<p class="vide">Aucune dépense sur cette période.</p>{% endif %}
     <p>Total : <strong>{{ d.depenses.total|fcfa }}</strong>. Recette moins dépenses (sans les salaires) :
       <strong class="{% if d.total < d.depenses.total %}rouge{% endif %}">{{ d.total|add:0|fcfa }}</strong>
-      <span class="discret">− {{ d.depenses.total|fcfa }}</span>. Le résultat avec les salaires est dans le <a href="{% url 'finances:bilan' %}">bilan du mois</a>.</p>
+      <span class="discret">− {{ d.depenses.total|fcfa }}</span>. Le résultat avec les salaires est dans le <a {% href 'finances:bilan' %}>bilan du mois</a>.</p>
   </section>
   {% endif %}
 </div>

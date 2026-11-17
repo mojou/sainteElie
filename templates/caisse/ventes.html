@@ -13,8 +13,8 @@
     <nav class="pdv-liens no-print" aria-label="Autres actions">
       {% if est_boutique %}<a class="pdv-lien" href="{% url 'postes:reception' %}">Chambres</a>{% endif %}
       <button type="button" class="pdv-lien" data-ouvrir="pdv-ventes">Mes ventes ({{ nb_ventes }})</button>
-      <a class="pdv-lien" href="{% url 'caisse:avarie' %}">Casse ou périmé</a>
-      <a class="pdv-lien" href="{% url 'caisse:credits' %}">Crédits</a>
+      <a class="pdv-lien" {% href 'caisse:avarie' %}>Casse ou périmé</a>
+      <a class="pdv-lien" {% href 'caisse:credits' %}>Crédits</a>
       <a class="pdv-lien pdv-fermer" href="{% url 'caisse:remise_comptage' %}">Fermer ma caisse</a>
     </nav>
   </header>
@@ -161,7 +161,7 @@
     <tr class="{% if v.annulee %}annule{% endif %}"><td>{{ v.date|date:"H:i" }}</td><td>{{ v.article }}{% if v.observation %}<br><small>{{ v.observation }}</small>{% endif %}</td>
       <td class="nombre">{{ v.quantite }}</td><td class="nombre">{{ v.montant|nombre }}</td>
       <td>{% if v.encaissement %}{{ v.encaissement.get_mode_display }} · reçu n°{{ v.encaissement.numero_recu }}{% else %}{{ v.get_reglement_display }}{% endif %}{% if v.beneficiaire %}<br><small>{{ v.beneficiaire }}</small>{% endif %}{% if v.annulee %}<br><small>annulée : {{ v.motif_annulation }}</small>{% endif %}</td>
-      <td>{% if not v.annulee %}<a href="{% url 'caisse:vente_annuler' v.pk %}">Annuler</a>{% endif %}</td></tr>
+      <td>{% if not v.annulee %}<a {% href 'caisse:vente_annuler' v.pk %}>Annuler</a>{% endif %}</td></tr>
     {% empty %}<tr><td colspan="6" class="vide">Aucune vente pour l'instant.</td></tr>{% endfor %}
   </table></div>
 </dialog>

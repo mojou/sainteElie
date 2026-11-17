@@ -100,7 +100,10 @@ class DemandeReservationForm(Formulaire):
                              widget=forms.EmailInput(attrs={"autocomplete": "email"}))
     message = forms.CharField(label="Un mot pour la réception (facultatif)", required=False, max_length=500,
                               widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Heure d'arrivée, lit bébé, facture au nom d'une entreprise…"}))
-    site_web = forms.CharField(required=False, widget=forms.HiddenInput)  # piège à robots : un humain le laisse vide
+    # Piège à robots : un champ texte invisible pour un humain (caché par le style) ; un robot le remplit.
+    site_web = forms.CharField(label="Site web (ne pas remplir)", required=False, max_length=200,
+                               widget=forms.TextInput(attrs={"tabindex": "-1", "autocomplete": "off",
+                                                             "class": "piege"}))
 
     def clean_telephone(self):
         numero = normaliser_telephone(self.cleaned_data["telephone"])

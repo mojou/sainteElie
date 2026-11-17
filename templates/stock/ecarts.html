@@ -14,7 +14,7 @@
 <div class="tableau"><table>
   <tr><th>Journée</th><th>Article</th><th class="nombre">Écart</th><th class="nombre">Au coût</th><th class="nombre">Au prix de vente</th><th>Compté par</th><th>Motif</th></tr>
   {% for x in d.lignes %}
-  <tr><td>{{ x.mouvement.journee|date:"d/m/Y" }}</td><td><a href="{% url 'stock:article' x.article.pk %}">{{ x.article }}</a></td>
+  <tr><td>{{ x.mouvement.journee|date:"d/m/Y" }}</td><td><a {% href 'stock:article' x.article.pk %}>{{ x.article }}</a></td>
     <td class="nombre {% if x.ecart < 0 %}rouge{% endif %}">{{ x.ecart|stringformat:"+d" }}</td>
     <td class="nombre">{{ x.cout|nombre }}</td><td class="nombre">{{ x.ventes|nombre }}</td>
     <td>{{ x.mouvement.saisi_par }}</td><td>{{ x.mouvement.motif }}</td></tr>

@@ -83,6 +83,7 @@ MIDDLEWARE = [
     "vitrine.middleware.EspaceClientMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "core.envois.EnvoiUniqueMiddleware",
+    "core.modules.ModulesMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -166,6 +167,10 @@ SESSION_COOKIE_AGE = 60 * 60 * 12  # une journée de travail
 # Écran verrouillé après ce nombre de minutes sans toucher l'écran ni le clavier (0 = jamais) ; on reprend
 # avec son code PIN, ou une collègue prend la place avec le sien (ordinateur partagé de la réception, tablette du bar).
 VERROUILLAGE_MINUTES = int(env("VERROUILLAGE_MINUTES", "10"))
+# En-tête où l'hébergeur met l'adresse IP du visiteur (PythonAnywhere : HTTP_X_REAL_IP). Vide : REMOTE_ADDR.
+# Sert aux limites anti-abus (demandes de réservation, créations de compte) : sans lui, derrière l'hébergeur, tous
+# les visiteurs auraient la même adresse et seraient bloqués ensemble.
+ENTETE_IP_CLIENT = env("ENTETE_IP_CLIENT", "")
 # Au-delà de ce montant (FCFA), l'application demande « C'est bien ça ? » avant d'enregistrer de l'argent reçu.
 MONTANT_A_CONFIRMER = int(env("MONTANT_A_CONFIRMER", "100000"))
 if not DEBUG:

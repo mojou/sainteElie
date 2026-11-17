@@ -62,6 +62,26 @@ Les gestionnaires de chambre / blanchisserie (Carine, Benedite, Blondelle) et le
 qu'une chambre est prête (écran Réception, « Chambres à nettoyer ») et tient la **main courante du gardien**. Pas de
 compte maintenance non plus : la réception signale les pannes, la direction les suit et note qu'elles sont réparées.
 
+## Modules ouverts (lancement par la réservation des chambres)
+
+Au départ, seule **la réservation et la vente des chambres** est ouverte : réservations en ligne, séjours et clients,
+plan des chambres, arrivées et départs, paiements et reçus, caisse de la réception (ouvrir, fermer, valider), ménage
+des chambres, fiche recette chambres, comptes clients en ligne, utilisateurs et paramètres. Le reste (boutique,
+restaurant · bar et extras ; stock ; rapports d'activité ; personnel ; paie ; dépenses ; pannes et gardien ; projets)
+est **visible mais grisé** (« bientôt ») et bloqué côté serveur : une adresse tapée à la main affiche « pas encore
+ouvert ». Le gérant ouvre chaque module quand l'équipe est prête : **Paramètres → Modules** (une case par module).
+Règles dans `core/modules.py` ; dans les gabarits, `{% href 'espace:nom' %}` écrit le lien, ou le grise si sa page
+est dans un module fermé.
+
+**Parcours vérifié de bout en bout** (`tests/test_parcours_chambre.py`, en passant par les écrans) : demande sur le
+site → la réception la voit et la confirme (une seule réservation même si deux postes confirment en même temps) →
+arrivée → paiement Orange Money avec reçu n°1 → départ (nuits constatées) → chambre faite → caisse fermée puis
+validée → fiche recette. Protections testées : piège à robots, 5 demandes par heure et par appareil (vraie adresse
+derrière l'hébergeur, `ENTETE_IP_CLIENT`), 40 demandes par heure au total, page de demande visible seulement par qui
+l'a envoyée, jeton anti-falsification, demandes traitées par la réception seulement, chambre trop petite refusée,
+arrivée sans réservation qui ne prend pas une chambre réservée les jours suivants, client retrouvé par son numéro
+écrit autrement. Toutes les actions des pages ouvertes sont des boutons.
+
 ## Modules
 
 | Module | Contenu |
@@ -397,6 +417,7 @@ DJANGO_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))
 DJANGO_ALLOWED_HOSTS=${USER,,}.pythonanywhere.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://${USER,,}.pythonanywhere.com
 SECURE_SSL_REDIRECT=false
+ENTETE_IP_CLIENT=HTTP_X_REAL_IP
 ETABLISSEMENT_NOM=Complexe St Élie Palace
 EOF
 python manage.py migrate && python manage.py createcachetable && python manage.py collectstatic --noinput
@@ -405,6 +426,13 @@ python manage.py check --deploy                   # seuls W005, W008, W021 reste
 
 Le bloc `cat > .env` se colle tel quel : il prend le nom d'utilisateur de la console et tire une clé secrète au hasard.
 `SECURE_SSL_REDIRECT=false` parce que c'est PythonAnywhere qui force le HTTPS (étape 3).
+`ENTETE_IP_CLIENT=HTTP_X_REAL_IP` : derrière PythonAnywhere, tous les visiteurs arrivent avec la même adresse ; sans
+cette ligne, la limite anti-abus (5 demandes de réservation par heure et par appareil) bloquerait tout le monde ensemble.
+
+Code venu de GitHub plutôt que d'un zip : `git clone <adresse du dépôt> gestion_st_elie` à la place de `unzip` ; la
+base n'est pas dans le dépôt, donc après `migrate` : `python manage.py charger_saint_elie` (chambres, prix, carte) et
+`python manage.py creer_equipe --mot-de-passe "<un mot de passe provisoire>"` (comptes du personnel, à changer à la
+première connexion). Au départ, seule la réservation et la vente des chambres sont ouvertes (voir « Modules ouverts »).
 
 **3. Onglet *Web*** → *Add a new web app* → *Manual configuration* → *Python 3.12*, puis :
 - *Virtualenv* : `/home/<nom-d-utilisateur>/.virtualenvs/st-elie`
@@ -445,9 +473,9 @@ articles).
 - Compte gratuit : cliquer *Run until 3 months from today* (onglet *Web*) au moins tous les 3 mois, sinon le site
   s'arrête.
 - Sauvegarde : télécharger régulièrement `db.sqlite3` et le dossier `private_media/` (onglet *Files*).
-- Mise à jour du programme : renvoyer **seulement le code** — jamais `db.sqlite3`, `private_media/` ni `.env`, qui
-  écraseraient les données réelles — puis `workon st-elie && cd ~/gestion_st_elie && python manage.py migrate &&
-  python manage.py collectstatic --noinput`, et *Reload*.
+- Mise à jour du programme : renvoyer **seulement le code** (ou `git pull`) — jamais `db.sqlite3`, `private_media/`
+  ni `.env`, qui écraseraient les données réelles — puis `workon st-elie && cd ~/gestion_st_elie && python manage.py
+  migrate && python manage.py collectstatic --noinput`, et *Reload*.
 
 ## À vérifier dans les données chargées
 

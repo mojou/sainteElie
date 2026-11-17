@@ -4,7 +4,7 @@
 <div class="entete"><div><h1>Mes bulletins de paie</h1></div></div>
 <div class="tableau"><table><tr><th>Mois</th><th class="nombre">Net</th><th>Statut</th><th></th></tr>
   {% for f in fiches %}<tr><td>{{ f.mois|date:"F Y" }}</td><td class="nombre">{{ f.net_a_payer|nombre }}</td><td><span class="badge {{ f.statut }}">{{ f.get_statut_display }}</span></td>
-    <td><a href="{% url 'paie:fiche_pdf' f.pk %}">Bulletin PDF</a></td></tr>
+    <td><a {% href 'paie:fiche_pdf' f.pk %}>Bulletin PDF</a></td></tr>
   {% empty %}<tr><td colspan="4" class="vide">Aucun bulletin validé.</td></tr>{% endfor %}
 </table></div>
 <h2>Mes acomptes</h2>

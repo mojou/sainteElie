@@ -44,6 +44,52 @@ def actif(context, *prefixes):
     return "active" if any(chemin.startswith(p) for p in prefixes) else ""
 
 
+@register.simple_tag(takes_context=True)
+def href(context, nom_url, *args, suite="", ancre="", **parametres):
+    """`href="…"` vers une page, ou un lien grisé (sans adresse) si la page est dans un module pas encore ouvert.
+
+        <a class="btn" {% href 'stock:articles' %}>Stock</a>
+        <a class="btn" {% href 'postes:maintenance' chambre=chambre.pk %}>Signaler une panne</a>   → ?chambre=12
+    """
+    from urllib.parse import urlencode
+
+    from django.urls import reverse
+    from django.utils.html import format_html
+
+    from core import modules
+
+    if not modules.est_ouvert(nom_url, context.get("request")):
+        return format_html('aria-disabled="true" title="{}"', modules.TITRE_FERME)
+    url = reverse(nom_url, args=args) + suite
+    if parametres:
+        url += ("&" if "?" in url else "?") + urlencode(parametres)
+    if ancre:
+        url += f"#{ancre}"
+    return format_html('href="{}"', url)
+
+
+@register.simple_tag(takes_context=True)
+def chemin_ouvert(context, chemin):
+    """Une adresse enregistrée telle quelle (lien d'une alerte…) mène-t-elle à une page ouverte ?"""
+    from django.urls import Resolver404, resolve
+
+    from core import modules
+
+    try:
+        match = resolve((chemin or "").split("?")[0].split("#")[0])
+    except Resolver404:
+        return False
+    return modules.est_ouvert(f"{match.namespace}:{match.url_name}", context.get("request"))
+
+
+@register.simple_tag(takes_context=True)
+def ouvert(context, cle):
+    """Le module est-il ouvert ? {% ouvert 'stock' as stock_ouvert %}"""
+    from core import modules
+
+    return cle in modules.ouverts(context.get("request"))
+
+
 @register.filter
 def en_lettres(valeur):
     """250000 → « Deux cent cinquante mille francs CFA »."""

@@ -1,13 +1,13 @@
 {% extends "base.html" %}{% load static gestion l10n %}
 {% block titre %}{{ article }}{% endblock %}
 {% block contenu %}
-<p class="no-print"><a class="retour" href="{% url 'stock:articles' %}">← Tout le stock</a></p>
+<p class="no-print"><a class="retour" {% href 'stock:articles' %}>← Tout le stock</a></p>
 <div class="fiche-article-tete">
   <img class="photo-article" src="{{ article.image_url }}" alt="{{ article }}">
   <div>
     <h1>{{ article }}</h1>
     <p class="discret">{{ article.get_categorie_display }}{% if article.seuil_alerte %} · seuil d'alerte {{ article.seuil_alerte }}{% endif %}
-      · <a href="{% url 'stock:article_modifier' article.pk %}">Modifier</a>{% if not article.photo %} · <a href="{% url 'stock:photos' %}#article-{{ article.pk }}">Prendre la vraie photo</a>{% endif %}</p>
+      · <a {% href 'stock:article_modifier' article.pk %}>Modifier</a>{% if not article.photo %} · <a href="{% url 'stock:photos' %}#article-{{ article.pk }}">Prendre la vraie photo</a>{% endif %}</p>
     <p class="etat-phrase"><span class="etat-stock {{ etat.code }}">{{ etat.titre }}</span> {{ etat.phrase }}</p>
   </div>
 </div>
