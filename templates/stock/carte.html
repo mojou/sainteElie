@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}La carte{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>La carte des plats</h1>
+  <p>{{ nb_en_vente }} plat{{ nb_en_vente|pluralize }} en vente{% if nb_retires %}, {{ nb_retires }} retiré{{ nb_retires|pluralize }} de la vente{% endif %}.
+    Ce que vous changez ici se voit tout de suite sur le site et à la caisse de la cuisine.</p></div>
+  <div class="actions">
+    <a class="btn grand" href="{% url 'stock:plat_nouveau' %}">Ajouter un plat</a>
+    <a class="btn secondaire" href="{% url 'stock:photos' %}?categorie=RESTAURANT">Photos des plats</a>
+  </div>
+</div>
+
+{% for r in rubriques %}
+<h2>{{ r.titre }}</h2>
+<div class="carte-plats">
+  {% for p in r.plats %}
+  <article class="carte plat-ligne{% if not p.actif %} retire{% endif %}" id="plat-{{ p.pk }}">
+    <img src="{{ p.image_url }}" alt="{{ p.nom }}" loading="lazy" width="96" height="72">
+    <div class="plat-ligne-texte">
+      <strong>{{ p.nom }}</strong>
+      {% if p.description %}<small>{{ p.description }}</small>{% else %}<small class="rouge">Pas encore de composition</small>{% endif %}
+      <span><strong>{{ p.prix_vente|fcfa }}</strong>{% if not p.actif %} · <span class="badge danger">Retiré de la vente</span>{% endif %}{% if p.photo_d_illustration %} · <span class="badge">photo d'illustration</span>{% elif not p.photo %} · <span class="badge">dessin</span>{% endif %}</span>
+    </div>
+    <div class="plat-ligne-actions">
+      <a class="btn petit" href="{% url 'stock:plat_modifier' p.pk %}">Modifier</a>
+      <form method="post" action="{% url 'stock:plat_supprimer' p.pk %}">{% csrf_token %}
+        <button class="btn petit danger" type="submit" data-confirmer="Supprimer « {{ p.nom }} » de la carte ? C'est définitif." data-oui="Oui, supprimer" data-non="Non">Supprimer</button></form>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% empty %}
+<div class="carte"><p class="vide">La carte est vide.</p><a class="btn" href="{% url 'stock:plat_nouveau' %}">Ajouter le premier plat</a></div>
+{% endfor %}
+{% endblock %}

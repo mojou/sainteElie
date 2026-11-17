@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db.models import F, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from core.forms import Formulaire, FormulaireModele
 from core.permissions import acces_requis, stock
@@ -12,6 +14,34 @@ from core.utils import aujourd_hui, journaliser
 
 from . import recit, services
 from .models import Article, MouvementStock
+
+
+class PlatForm(FormulaireModele):
+    """Un plat de la carte : ce que le client voit sur le site et ce que la cuisine encaisse."""
+
+    class Meta:
+        model = Article
+        fields = ["nom", "rubrique", "description", "prix_vente", "ordre", "photo", "actif"]
+        labels = {"nom": "Nom du plat", "rubrique": "Rubrique de la carte", "description": "Composition",
+                  "prix_vente": "Prix (FCFA)", "ordre": "Place dans la carte", "actif": "En vente (sur le site et à la caisse)"}
+        help_texts = {"rubrique": "Plats chauds, Garnitures, Desserts, Petit-déjeuner, Salades, Boissons chaudes…",
+                      "description": "Ce qu'il y a dans l'assiette, en une phrase : le client le lit avant de commander.",
+                      "ordre": "Les plats d'une rubrique s'affichent du plus petit nombre au plus grand.",
+                      "photo": "Facultatif : la vraie photo du plat remplace la photo d'illustration."}
+
+    def clean_prix_vente(self):
+        prix = self.cleaned_data.get("prix_vente") or 0
+        if prix <= 0:
+            raise ValidationError("Donnez le prix du plat.")
+        return prix
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get("photo")
+        if photo and hasattr(photo, "content_type"):  # nouvelle photo envoyée
+            from core.images import photo_allegee
+
+            return photo_allegee(photo, nom="plat", taille=900)
+        return photo
 
 
 class ArticleForm(FormulaireModele):
@@ -94,8 +124,76 @@ def article_form(request, pk=None):
         journaliser(request.user, "Article modifié" if article else "Article créé", obj)
         messages.success(request, f"{obj} enregistré.")
         return redirect("stock:article", pk=obj.pk)
-    return render(request, "form_page.html", {"form": form, "titre": f"Modifier {article}" if article else "Nouvel article",
-                                              "retour": "stock:articles"})
+    from core import suppression
+
+    return render(request, "form_page.html", {
+        "form": form, "titre": f"Modifier {article}" if article else "Nouvel article", "retour": "stock:articles",
+        "suppression": suppression.bloc(reverse("stock:article_supprimer", args=[article.pk]), "cet article",
+                                        "Seul un article jamais vendu ni compté se supprime ; sinon, décochez "
+                                        "« Actif ».") if article else None})
+
+
+@require_POST
+@acces_requis(stock)
+def article_supprimer(request, pk):
+    from core import suppression
+
+    article = get_object_or_404(Article, pk=pk)
+    if suppression.supprimer(request, article, "cet article",
+                             "Pour ne plus le vendre, décochez « Actif » dans sa fiche : il disparaît de la caisse."):
+        return redirect("stock:articles")
+    return redirect("stock:article_modifier", pk=article.pk)
+
+
+# --- La carte des plats (ouverte même quand le module Stock est fermé) ----------------------------------------------
+@acces_requis(stock)
+def carte(request):
+    """Les plats de la carte, rubrique par rubrique : modifier, retirer de la vente, supprimer, ajouter."""
+    plats = list(Article.objects.filter(categorie=Article.Categorie.RESTAURANT).order_by("ordre", "nom"))
+    rubriques = {}
+    for p in plats:
+        rubriques.setdefault(p.rubrique or "Sans rubrique", []).append(p)
+    return render(request, "stock/carte.html", {
+        "rubriques": [{"titre": t, "plats": liste} for t, liste in rubriques.items()],
+        "nb_en_vente": sum(1 for p in plats if p.actif), "nb_retires": sum(1 for p in plats if not p.actif)})
+
+
+@acces_requis(stock)
+def plat_form(request, pk=None):
+    from core import suppression
+
+    plat = get_object_or_404(Article, pk=pk, categorie=Article.Categorie.RESTAURANT) if pk else None
+    form = PlatForm(request.POST or None, request.FILES or None, instance=plat)
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.categorie, obj.suivi_stock = Article.Categorie.RESTAURANT, False
+        obj.unite = obj.unite or "plat"
+        if "photo" in form.changed_data:
+            obj.oublier_credit()
+        obj.save()
+        journaliser(request.user, "Plat modifié" if plat else "Plat ajouté", obj, f"{obj.prix_vente} FCFA")
+        messages.success(request, f"{obj.nom} : c'est enregistré.")
+        return redirect(f"{reverse('stock:carte')}#plat-{obj.pk}")
+    return render(request, "form_page.html", {
+        "form": form, "titre": f"Modifier : {plat.nom}" if plat else "Ajouter un plat à la carte",
+        "retour_url": reverse("stock:carte"),
+        "intro": "Ce que vous changez ici se voit tout de suite sur le site (page d'accueil et commande en ligne). "
+                 "Décochez « En vente » pour retirer un plat sans le supprimer.",
+        "suppression": suppression.bloc(reverse("stock:plat_supprimer", args=[plat.pk]), "ce plat",
+                                        "Seul un plat jamais vendu ni commandé se supprime ; sinon, décochez "
+                                        "« En vente ».") if plat else None})
+
+
+@require_POST
+@acces_requis(stock)
+def plat_supprimer(request, pk):
+    from core import suppression
+
+    plat = get_object_or_404(Article, pk=pk, categorie=Article.Categorie.RESTAURANT)
+    if suppression.supprimer(request, plat, "ce plat",
+                             "Pour ne plus le proposer, décochez « En vente » : il disparaît du site et de la caisse."):
+        return redirect("stock:carte")
+    return redirect("stock:plat_modifier", pk=plat.pk)
 
 
 @acces_requis(stock)

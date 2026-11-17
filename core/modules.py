@@ -57,7 +57,8 @@ TOUJOURS_OUVERT = ("Réservations et vente des chambres, et plats commandés en 
 
 
 # Pages d'un module fermable qui servent aussi au socle : les photos des plats (commandés en ligne).
-TOUJOURS_OUVERTES = {"stock:photos"}
+TOUJOURS_OUVERTES = {"stock:photos", "stock:carte", "stock:plat_nouveau", "stock:plat_modifier",
+                     "stock:plat_supprimer"}
 
 
 def module_de(nom_url):

@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 from caisse import services as caisse_services
 from caisse.models import Encaissement
 from core.forms import MotifForm
-from core.permissions import acces_requis, extras, gerant, menage, reception
+from core.permissions import acces_requis, direction, extras, gerant, menage, reception
 from core.utils import aujourd_hui, format_fcfa, journaliser
 
 from . import services
@@ -184,8 +184,25 @@ def chambre_form(request, pk=None):
         journaliser(request.user, "Chambre modifiée" if chambre else "Chambre créée", obj, f"tarif {obj.tarif_nuit}")
         messages.success(request, f"{obj} enregistrée.")
         return redirect("hotel:chambres")
-    return render(request, "form_page.html", {"form": form, "titre": f"Modifier la {chambre}" if chambre else
-                                              "Nouvelle chambre", "retour": "hotel:chambres"})
+    from core import suppression
+
+    return render(request, "form_page.html", {
+        "form": form, "titre": f"Modifier la {chambre}" if chambre else "Nouvelle chambre", "retour": "hotel:chambres",
+        "suppression": suppression.bloc(reverse("hotel:chambre_supprimer", args=[chambre.pk]), "cette chambre",
+                                        "Seule une chambre jamais réservée se supprime (une erreur de saisie) ; sinon, "
+                                        "décochez « Active » : elle n'est plus proposée.") if chambre else None})
+
+
+@require_POST
+@acces_requis(gerant)
+def chambre_supprimer(request, pk):
+    from core import suppression
+
+    chambre = get_object_or_404(Chambre, pk=pk)
+    if suppression.supprimer(request, chambre, "cette chambre",
+                             "Pour ne plus la louer, décochez « Active » dans sa fiche."):
+        return redirect("hotel:chambres")
+    return redirect("hotel:chambre_modifier", pk=chambre.pk)
 
 
 def photographe(u):
@@ -286,8 +303,26 @@ def client_form(request, pk=None):
         obj = form.save()
         messages.success(request, f"Client {obj} enregistré.")
         return redirect("hotel:clients")
-    return render(request, "form_page.html", {"form": form, "titre": f"Modifier {client}" if client else "Nouveau client",
-                                              "retour": "hotel:clients"})
+    from core import suppression
+
+    return render(request, "form_page.html", {
+        "form": form, "titre": f"Modifier {client}" if client else "Nouveau client", "retour": "hotel:clients",
+        "suppression": suppression.bloc(reverse("hotel:client_supprimer", args=[client.pk]), "ce client",
+                                        "Seule une fiche jamais utilisée (un doublon, une erreur) se supprime ; un client "
+                                        "qui a séjourné ou payé reste dans l'historique.")
+        if client and request.user.est_direction else None})
+
+
+@require_POST
+@acces_requis(direction)
+def client_supprimer(request, pk):
+    from core import suppression
+
+    client = get_object_or_404(Client, pk=pk)
+    if suppression.supprimer(request, client, "ce client",
+                             "Corrigez plutôt son nom ou son téléphone dans sa fiche."):
+        return redirect("hotel:clients")
+    return redirect("hotel:client_modifier", pk=client.pk)
 
 
 @acces_requis(reception)

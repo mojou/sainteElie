@@ -14,4 +14,13 @@
     </div>
   </form>
 </div>
+{% if suppression %}
+<div class="carte zone-suppression">
+  <h2>Supprimer</h2>
+  <p class="discret">{{ suppression.explication }}</p>
+  <form method="post" action="{{ suppression.url }}">{% csrf_token %}
+    <button class="btn danger" type="submit" data-confirmer="{{ suppression.question }}" data-oui="Oui, supprimer" data-non="Non">{{ suppression.texte }}</button>
+  </form>
+</div>
+{% endif %}
 {% endblock %}

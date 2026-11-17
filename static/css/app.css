@@ -1019,3 +1019,18 @@ a.btn.retour { padding: .5rem 1rem; }
 .plats-liste { margin: .3rem 0 .6rem; padding-left: 1.1rem; font-size: 1.05rem; }
 .servir-plats .paiements { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 600px) { .servir-plats .paiements { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* La carte des plats et les suppressions */
+.carte-plats { display: grid; gap: .6rem; }
+.plat-ligne { display: grid; grid-template-columns: 96px 1fr auto; gap: .8rem; align-items: center; padding: .6rem .8rem; margin: 0; }
+.plat-ligne img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; background: #f3efe6; }
+.plat-ligne-texte { display: grid; gap: .15rem; }
+.plat-ligne.retire { opacity: .6; }
+.plat-ligne-actions { display: flex; gap: .4rem; align-items: center; }
+.plat-ligne-actions form { margin: 0; }
+.zone-suppression { border-left: 4px solid var(--danger); }
+.zone-suppression h2 { margin-top: 0; }
+@media (max-width: 600px) {
+  .plat-ligne { grid-template-columns: 72px 1fr; }
+  .plat-ligne img { width: 72px; height: 56px; }
+  .plat-ligne-actions { grid-column: 1 / -1; }
+}

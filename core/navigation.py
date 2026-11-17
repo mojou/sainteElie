@@ -31,6 +31,7 @@ def groupes(user, request=None):
             ("vitrine:comptes", "Comptes clients en ligne", u.voit_reception),
             ("hotel:chambres", "Chambres et tarifs", u.voit_reception),
             ("hotel:photos_chambres", "Photos des chambres", _photographe(u)),
+            ("stock:carte", "La carte : ajouter, modifier, supprimer un plat", u.voit_stock),
             ("stock:photos", "Photos des plats", u.voit_stock),
             ("hotel:menage", "Ménage des chambres", permissions.menage(u)),
         ]),
