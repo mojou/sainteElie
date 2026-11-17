@@ -168,7 +168,7 @@ def encaisser(request, pk):
 # --- Chambres et clients -----------------------------------------------------------------
 @acces_requis(reception)
 def chambres(request):
-    liste = Chambre.objects.all()
+    liste = Chambre.objects.prefetch_related("photos")
     occupants = {s.chambre_id: s for s in Sejour.objects.filter(statut=Sejour.Statut.EN_COURS).select_related("client")}
     for c in liste:
         c.occupant = occupants.get(c.pk)
@@ -186,6 +186,87 @@ def chambre_form(request, pk=None):
         return redirect("hotel:chambres")
     return render(request, "form_page.html", {"form": form, "titre": f"Modifier la {chambre}" if chambre else
                                               "Nouvelle chambre", "retour": "hotel:chambres"})
+
+
+def photographe(u):
+    """Qui ajoute les photos des chambres : la direction et la gouvernante (elle suit les chambres)."""
+    return u.est_direction or u.est_gouvernante
+
+
+PHOTOS_PAR_ENVOI = 10
+
+
+@acces_requis(photographe)
+def photos_chambres(request):
+    """Ajouter des photos à une chambre (plusieurs d'un coup, prises au téléphone), en retirer, choisir la première.
+
+    Sur le site, les clients voient les photos par type de chambre (même catégorie et même prix) : photographier une
+    chambre de chaque type suffit.
+    """
+    from core.images import photo_allegee
+
+    from .models import PhotoChambre
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action in ("retirer", "premiere"):
+            photo = get_object_or_404(PhotoChambre, pk=request.POST.get("photo"))
+            chambre = photo.chambre
+            if action == "retirer":
+                photo.image.delete(save=False)
+                photo.delete()
+                journaliser(request.user, "Photo de chambre retirée", chambre)
+                messages.success(request, f"Photo retirée de la chambre {chambre.numero}.")
+            else:
+                premiere = chambre.photos.order_by("ordre", "pk").first()
+                photo.ordre = (premiere.ordre - 1) if premiere and premiere.pk != photo.pk else photo.ordre
+                photo.save(update_fields=["ordre"])
+                messages.success(request, f"Cette photo est maintenant la première de la chambre {chambre.numero}.")
+        else:
+            chambre = get_object_or_404(Chambre, pk=request.POST.get("chambre"))
+            fichiers = request.FILES.getlist("photos")
+            place = PhotoChambre.MAX_PAR_CHAMBRE - chambre.photos.count()
+            if not fichiers:
+                messages.error(request, "Choisissez au moins une photo.")
+            elif len(fichiers) > PHOTOS_PAR_ENVOI:
+                messages.error(request, f"{PHOTOS_PAR_ENVOI} photos au plus à la fois : recommencez avec moins de photos.")
+            elif len(fichiers) > place:
+                messages.error(request, f"La chambre {chambre.numero} a déjà {chambre.photos.count()} photos "
+                                        f"({PhotoChambre.MAX_PAR_CHAMBRE} au plus) : retirez-en avant d'en ajouter.")
+            else:
+                dernier = max(chambre.photos.values_list("ordre", flat=True), default=0)
+                ajoutees, refusees = 0, []
+                for fichier in fichiers:
+                    try:
+                        image = photo_allegee(fichier, nom=f"chambre-{chambre.numero.replace('/', '-')}", taille=1600)
+                    except ValidationError:
+                        refusees.append(fichier.name)
+                        continue
+                    ajoutees += 1
+                    PhotoChambre.objects.create(chambre=chambre, image=image, ordre=dernier + ajoutees,
+                                                ajoutee_par=request.user)
+                if ajoutees:
+                    journaliser(request.user, "Photos de chambre ajoutées", chambre, f"{ajoutees} photo(s)")
+                    messages.success(request, f"{ajoutees} photo{'s' if ajoutees > 1 else ''} ajoutée"
+                                              f"{'s' if ajoutees > 1 else ''} à la chambre {chambre.numero}.")
+                if refusees:
+                    messages.error(request, "Pas des photos lisibles (JPEG, PNG ou WebP, 10 Mo au plus) : "
+                                            + ", ".join(refusees[:5]))
+        return redirect(f"{reverse('hotel:photos_chambres')}?vue={request.POST.get('vue', '')}#chambre-{chambre.pk}")
+    vue = request.GET.get("vue", "")
+    chambres = list(Chambre.objects.filter(active=True).prefetch_related("photos").order_by("numero"))
+    sans_photo = [c for c in chambres if not c.photos.all()]
+    types_sans_photo = sorted({(c.get_categorie_display(), c.tarif_nuit) for c in chambres}
+                              - {(c.get_categorie_display(), c.tarif_nuit) for c in chambres if c.photos.all()},
+                              key=lambda t: t[1])
+    groupes = {}
+    for c in (sans_photo if vue == "sans" else chambres):
+        groupes.setdefault(c.numero[:1], []).append(c)
+    return render(request, "hotel/photos_chambres.html", {
+        "groupes": [{"titre": f"Chambres {liste[0].numero} à {liste[-1].numero}" if len(liste) > 1
+                     else f"Chambre {liste[0].numero}", "chambres": liste} for liste in groupes.values()],
+        "vue": vue, "nb_sans_photo": len(sans_photo), "types_sans_photo": types_sans_photo,
+        "max_par_chambre": PhotoChambre.MAX_PAR_CHAMBRE, "par_envoi": PHOTOS_PAR_ENVOI})
 
 
 @acces_requis(reception)

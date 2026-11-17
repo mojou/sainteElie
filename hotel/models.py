@@ -26,8 +26,6 @@ class Chambre(models.Model):
     statut = models.CharField(max_length=15, choices=Statut.choices, default=Statut.LIBRE)
     description = models.CharField(max_length=200, blank=True)
     active = models.BooleanField(default=True)
-    photo = models.ImageField(storage=stockage_prive, upload_to="chambres/", blank=True,
-                              help_text="Facultatif : montrée sur la page d'accueil, dans la carte de sa catégorie.")
 
     class Meta:
         ordering = ["numero"]
@@ -36,8 +34,40 @@ class Chambre(models.Model):
         return f"Chambre {self.numero}"
 
     @property
+    def photo_principale(self):
+        """La première photo (celle que le gérant a mise en premier), ou None."""
+        photos = list(self.photos.all())  # profite de prefetch_related("photos") quand la vue l'a demandé
+        return photos[0] if photos else None
+
+    @property
     def photo_url(self):
-        return reverse("vitrine:image_chambre", args=[self.pk]) if self.photo else ""
+        photo = self.photo_principale
+        return photo.url if photo else ""
+
+
+class PhotoChambre(models.Model):
+    """Photos d'une chambre (plusieurs) : la première sert de vignette ; toutes défilent sur la réservation en ligne."""
+
+    MAX_PAR_CHAMBRE = 12
+
+    chambre = models.ForeignKey(Chambre, on_delete=models.CASCADE, related_name="photos")
+    image = models.ImageField(storage=stockage_prive, upload_to="chambres/")
+    ordre = models.IntegerField(default=0)
+    ajoutee_par = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name="+")
+    ajoutee_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["ordre", "pk"]
+        verbose_name = "photo de chambre"
+        verbose_name_plural = "photos des chambres"
+
+    def __str__(self):
+        return f"Photo de la {self.chambre}"
+
+    @property
+    def url(self):
+        return reverse("vitrine:photo_chambre", args=[self.pk])
 
 
 class Client(models.Model):

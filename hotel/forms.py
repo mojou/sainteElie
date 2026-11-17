@@ -13,15 +13,9 @@ from .models import Chambre, Client, Sejour
 class ChambreForm(FormulaireModele):
     class Meta:
         model = Chambre
-        fields = ["numero", "categorie", "tarif_nuit", "capacite", "statut", "description", "photo", "active"]
-
-    def clean_photo(self):
-        photo = self.cleaned_data.get("photo")
-        if photo and hasattr(photo, "content_type"):  # nouvelle photo envoyée
-            from core.images import photo_allegee
-
-            return photo_allegee(photo, nom="chambre", taille=1400)
-        return photo
+        fields = ["numero", "categorie", "tarif_nuit", "capacite", "statut", "description", "active"]
+        help_texts = {"description": "Ce que le client lit sur la réservation en ligne (lit, climatisation, vue…). "
+                                     "Les photos s'ajoutent dans Chambres → Photos des chambres."}
 
 
 class ClientForm(FormulaireModele):

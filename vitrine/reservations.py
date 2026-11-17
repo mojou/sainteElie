@@ -23,6 +23,7 @@ from .models import DemandeReservation
 NUITS_MAX = 30          # au-delà, on appelle la réception
 JOURS_AVANCE_MAX = 365  # on réserve au plus un an à l'avance
 PERSONNES_MAX = 6
+PHOTOS_PAR_TYPE = 8  # photos qui défilent sur la carte d'un type de chambre
 DEMANDES_PAR_HEURE_MAX = 40  # toutes adresses confondues : au-delà, c'est un robot, pas des clients
 LIBELLES = {"SIMPLE": "Chambre simple", "DOUBLE": "Chambre double", "SUITE": "Suite", "AUTRE": "Chambre"}
 JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
@@ -54,7 +55,8 @@ def chambres_libres(arrivee, depart, personnes=1):
     prises = Sejour.objects.filter(statut__in=Sejour.ACTIFS, date_arrivee__lt=depart,
                                    date_depart__gt=arrivee).values("chambre")
     return (Chambre.objects.filter(active=True, tarif_nuit__gt=0, capacite__gte=personnes)
-            .exclude(statut=Chambre.Statut.HORS_SERVICE).exclude(pk__in=prises).order_by("tarif_nuit", "numero"))
+            .exclude(statut=Chambre.Statut.HORS_SERVICE).exclude(pk__in=prises).order_by("tarif_nuit", "numero")
+            .prefetch_related("photos"))
 
 
 def types_libres(arrivee, depart, personnes=1):
@@ -65,16 +67,16 @@ def types_libres(arrivee, depart, personnes=1):
         cle = f"{c.categorie}-{c.tarif_nuit}"
         g = groupes.setdefault(cle, {"cle": cle, "categorie": c.categorie, "libelle": LIBELLES.get(c.categorie, "Chambre"),
                                      "tarif": c.tarif_nuit, "nuits": nuits, "total": c.tarif_nuit * nuits,
-                                     "chambres": [], "capacite": c.capacite, "photo": "", "description": ""})
+                                     "chambres": [], "capacite": c.capacite, "photos": [], "description": ""})
         g["chambres"].append(c)
         g["capacite"] = max(g["capacite"], c.capacite)
-        if not g["photo"] and c.photo:
-            g["photo"] = c.photo_url
+        g["photos"] += [p.url for p in c.photos.all()]
         if not g["description"] and c.description:
             g["description"] = c.description
     for g in groupes.values():
         g["libres"] = len(g["chambres"])
-        g["photo"] = g["photo"] or static("img/vitrine/chambres.svg")
+        g["photos"] = g["photos"][:PHOTOS_PAR_TYPE]
+        g["photo"] = g["photos"][0] if g["photos"] else static("img/vitrine/chambres.svg")
     return list(groupes.values())
 
 

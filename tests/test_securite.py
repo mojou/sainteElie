@@ -146,10 +146,7 @@ class PhotosTests(BaseTest):
         from stock.models import Article
 
         self.client.force_login(self.gerant)
-        self.client.post(reverse("hotel:chambre_modifier", args=[self.chambre.pk]), {
-            "numero": "101", "categorie": "SIMPLE", "tarif_nuit": 15000, "capacite": 2, "statut": "LIBRE",
-            "description": "", "active": "on", "photo": photo_png()})
-        self.chambre.refresh_from_db()
+        self.client.post(reverse("hotel:photos_chambres"), {"chambre": self.chambre.pk, "photos": [photo_png()]})
         plat = Article.objects.create(nom="Poulet DG", categorie="RESTAURANT", prix_vente=6500)
         plat.photo.save("plat.jpg", photo_png(), save=True)
         self.client.post(reverse("accounts:deconnexion"))

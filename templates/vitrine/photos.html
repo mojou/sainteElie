@@ -3,7 +3,8 @@
 {% block contenu %}
 <div class="entete"><div><h1>Photos du site</h1>
   <p>Les photos de la page d'accueil publique. Tant qu'une rubrique n'a pas de photo, la page montre une illustration dessinée.</p></div>
-  <div class="actions"><a class="btn secondaire" href="{% url 'vitrine:site' %}" target="_blank" rel="noopener">Voir la page d'accueil</a></div></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'hotel:photos_chambres' %}">Photos de chaque chambre</a>
+    <a class="btn secondaire" href="{% url 'vitrine:site' %}" target="_blank" rel="noopener">Voir la page d'accueil</a></div></div>
 
 <div class="carte">
   <h2>Ajouter des photos</h2>

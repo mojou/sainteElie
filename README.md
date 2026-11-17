@@ -267,6 +267,13 @@ onglets le disent et demandent de recharger.
 - Une fois relié, le client voit son séjour en cours (total, déjà payé, reste à payer, détail des nuits et des
   extras), ses réservations à venir, ses paiements et ses séjours passés. Il ne voit jamais les écrans du personnel.
 - Démonstration : client `699112233` / `Demo1234!` (relié à M. Kamga) ; un second compte attend la réception.
+- **Photos des chambres** : Réception · chambres → Photos des chambres (direction et gouvernante ; aussi dans
+  Paramètres et sur la liste des chambres). Sous chaque chambre, « Ajouter des photos » ouvre l'appareil photo ou la
+  galerie du téléphone : 10 photos d'un coup, 12 par chambre, réenregistrées en JPEG allégé (un fichier qui n'est pas
+  une vraie photo est refusé). La première sert de vignette (« Mettre en premier ») ; « Retirer » efface aussi le
+  fichier. Sur la réservation en ligne, les photos de toutes les chambres d'un même type (catégorie et prix)
+  défilent au doigt sur sa carte : une chambre photographiée par type suffit. La page signale les types encore sans
+  photo (le site montre alors un dessin). Photos publiques seulement pour les chambres en service.
 - **Photos** : menu « Site public » → Photos du site (gérant et adjoints), plusieurs photos d'un coup. Cinq rubriques : l'hôtel, les chambres, la réception, nos plats,
   le parking. Chaque photo est tournée dans le bon sens et réduite à 1 600 pixels (page légère sur une connexion lente) ;
   elles défilent en fondu dans le bandeau du haut (celles de « L'hôtel » d'abord). La page est animée : blocs qui
@@ -466,8 +473,8 @@ sien ; vérifier l'adresse et le téléphone (Paramètres → Établissement : �
 démonstration), le fond de chaque caisse (20 000 F réception, 10 000 F cuisine / bar : valeurs de la démonstration),
 les vrais salaires (Personnel → Employés) ; puis **l'inventaire de départ** (Stock → Faire l'inventaire) : tant
 qu'il n'est pas fait, le stock est à 0 et le bar ne peut rien vendre (« Stock insuffisant »). Noter les prix
-d'achat (marges du rapport d'inventaire), ajouter les vraies photos (Paramètres → Photos du site, Stock → Photos des
-articles).
+d'achat (marges du rapport d'inventaire), ajouter les vraies photos (Paramètres → Photos du site, Réception · chambres → Photos des chambres,
+Stock → Photos des articles).
 
 **Ensuite**
 - Compte gratuit : cliquer *Run until 3 months from today* (onglet *Web*) au moins tous les 3 mois, sinon le site

@@ -4,18 +4,20 @@
 <div class="entete">
   <div><h1>Chambres</h1><p>État en temps réel. Le tarif de la fiche est celui appliqué par défaut aux réservations.</p></div>
   <div class="actions"><a class="btn secondaire" href="{% url 'hotel:menage' %}">Ménage des chambres</a>
+    {% if user.est_direction or user.est_gouvernante %}<a class="btn secondaire" href="{% url 'hotel:photos_chambres' %}">Photos des chambres</a>{% endif %}
     {% if user.est_gerant %}<a class="btn" href="{% url 'hotel:chambre_nouvelle' %}">Nouvelle chambre</a>{% endif %}</div>
 </div>
 <div class="plan-chambres">
   {% for c in chambres %}
   <div class="chambre {{ c.statut }}">
-    {% if c.photo %}<img class="vignette-chambre" src="{{ c.photo_url }}" alt="Chambre {{ c.numero }}" loading="lazy">{% endif %}
+    {% with url=c.photo_url %}{% if url %}<img class="vignette-chambre" src="{{ url }}" alt="Chambre {{ c.numero }}" loading="lazy">{% endif %}{% endwith %}
     <div class="numero">{{ c.numero }}</div>
     <div><span class="badge {{ c.statut }}">{{ c.get_statut_display }}</span></div>
     <small>{{ c.get_categorie_display }} · {{ c.tarif_nuit|nombre }} FCFA</small>
     {% if c.occupant %}<div>{{ c.occupant.client }}<br><small>départ {{ c.occupant.date_depart|date:"d/m" }}</small><br><a class="btn petit secondaire" href="{% url 'hotel:sejour' c.occupant.pk %}">Séjour</a></div>{% endif %}
     {% if not c.active %}<div><span class="badge danger">Inactive</span></div>{% endif %}
-    {% if user.est_gerant %}<div><a class="btn petit secondaire" href="{% url 'hotel:chambre_modifier' c.pk %}">Modifier</a></div>{% endif %}
+    <div class="actions">{% if user.est_gerant %}<a class="btn petit secondaire" href="{% url 'hotel:chambre_modifier' c.pk %}">Modifier</a>{% endif %}
+      {% if user.est_direction or user.est_gouvernante %}<a class="btn petit secondaire" href="{% url 'hotel:photos_chambres' %}#chambre-{{ c.pk }}">Photos</a>{% endif %}</div>
   </div>
   {% empty %}<p class="vide">Aucune chambre. {% if user.est_gerant %}Créez les chambres de l'établissement.{% endif %}</p>
   {% endfor %}

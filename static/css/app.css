@@ -979,3 +979,15 @@ nav.menu a[aria-disabled="true"]:hover { background: transparent; }
 .champ:has(input[name="site_web"]), input[name="site_web"] { position: absolute !important; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 nav.menu a[aria-disabled="true"] strong { color: inherit; font-weight: 600; }
 a.btn.retour { padding: .5rem 1rem; }
+/* Photos des chambres */
+.photos-chambre { margin-bottom: .9rem; }
+.photos-chambre-tete { display: flex; justify-content: space-between; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.photos-chambre-tete h3 { margin: 0; }
+.photos-chambre-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .6rem; margin: .8rem 0; }
+.photo-chambre { margin: 0; border: 1px solid var(--bord); border-radius: 8px; overflow: hidden; background: #fff; }
+.photo-chambre img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #eef0f2; }
+.photo-chambre figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .35rem; padding: .45rem; }
+.photo-chambre form { margin: 0; }
+.ajout-photos { margin-top: .6rem; }
+.ajout-photos .prendre-photo { display: inline-flex; min-width: 220px; }
+@media (max-width: 600px) { .ajout-photos .prendre-photo { width: 100%; } }

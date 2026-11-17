@@ -17,7 +17,14 @@
     <div class="v-types">
       {% for t in types %}
       <article class="v-type">
-        <img src="{{ t.photo }}" alt="{{ t.libelle }}" loading="lazy">
+        {% if t.photos|length > 1 %}
+        <div class="v-type-galerie">
+          <div class="v-type-photos" tabindex="0" aria-label="Photos : {{ t.libelle }} (faites glisser)">
+            {% for url in t.photos %}<img src="{{ url }}" alt="{{ t.libelle }}, photo {{ forloop.counter }} sur {{ t.photos|length }}" loading="lazy">{% endfor %}
+          </div>
+          <span class="v-type-nombre" aria-hidden="true">{{ t.photos|length }} photos · faites glisser ⟷</span>
+        </div>
+        {% else %}<img src="{{ t.photo }}" alt="{{ t.libelle }}" loading="lazy">{% endif %}
         <div class="v-type-corps">
           <h3>{{ t.libelle }}</h3>
           <p class="v-type-infos">Jusqu'à {{ t.capacite }} personne{{ t.capacite|pluralize }}{% if t.description %} · {{ t.description }}{% endif %}</p>

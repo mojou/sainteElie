@@ -15,6 +15,7 @@ urlpatterns = [
     path("sejours/<int:pk>/<str:action>/", views.sejour_action, name="sejour_action"),
     path("chambres/", views.chambres, name="chambres"),
     path("chambres/nouvelle/", views.chambre_form, name="chambre_nouvelle"),
+    path("chambres/photos/", views.photos_chambres, name="photos_chambres"),
     path("chambres/<int:pk>/", views.chambre_form, name="chambre_modifier"),
     path("clients/", views.clients, name="clients"),
     path("clients/nouveau/", views.client_form, name="client_nouveau"),

@@ -1,0 +1,60 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Photos des chambres{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Photos des chambres</h1>
+  <p class="etape">Touchez « Ajouter des photos » sous une chambre : le téléphone propose l'appareil photo ou la galerie.</p>
+  <p>Plusieurs photos d'un coup ({{ par_envoi }} au plus), {{ max_par_chambre }} par chambre. Prenez-les de jour,
+    lumière allumée, à l'horizontale : le lit, la salle de bain, la vue. La première photo sert de vignette.</p>
+  <p class="discret">Sur le site, les clients voient les photos par type de chambre (même catégorie, même prix) :
+    une chambre de chaque type suffit.</p></div>
+  <div class="actions"><a class="btn secondaire" href="{% url 'vitrine:reserver' %}" target="_blank" rel="noopener">Voir la réservation en ligne</a></div>
+</div>
+
+{% if types_sans_photo %}
+<div class="message warning">Encore sans photo sur le site :
+  {% for libelle, prix in types_sans_photo %}{{ libelle|lower }} à {{ prix|fcfa }}{% if not forloop.last %} · {% endif %}{% endfor %}.
+  Le site montre un dessin à la place.</div>
+{% endif %}
+
+<div class="filtres no-print">
+  <a class="btn petit {% if vue %}secondaire{% endif %}" href="?">Toutes les chambres</a>
+  <a class="btn petit {% if vue != 'sans' %}secondaire{% endif %}" href="?vue=sans">Sans photo ({{ nb_sans_photo }})</a>
+</div>
+
+{% for g in groupes %}
+<h2 class="titre-etage">{{ g.titre }}</h2>
+{% for c in g.chambres %}
+<section class="carte photos-chambre" id="chambre-{{ c.pk }}">
+  <div class="photos-chambre-tete">
+    <h3>Chambre {{ c.numero }} <small>· {{ c.get_categorie_display }} · {{ c.tarif_nuit|fcfa }} la nuit</small></h3>
+    <span class="badge {% if c.photos.all %}ok{% endif %}">{% with n=c.photos.all|length %}{{ n }} photo{{ n|pluralize }}{% endwith %}</span>
+  </div>
+  {% if c.photos.all %}
+  <div class="photos-chambre-liste">
+    {% for p in c.photos.all %}
+    <figure class="photo-chambre">
+      <img src="{{ p.url }}" alt="Chambre {{ c.numero }}, photo {{ forloop.counter }}" loading="lazy">
+      <figcaption>
+        {% if forloop.first %}<span class="badge ok">Vignette</span>{% else %}
+        <form method="post">{% csrf_token %}<input type="hidden" name="photo" value="{{ p.pk }}"><input type="hidden" name="vue" value="{{ vue }}">
+          <button class="btn petit secondaire" name="action" value="premiere">Mettre en premier</button></form>{% endif %}
+        <form method="post">{% csrf_token %}<input type="hidden" name="photo" value="{{ p.pk }}"><input type="hidden" name="vue" value="{{ vue }}">
+          <button class="btn petit danger" name="action" value="retirer" data-confirmer="Retirer cette photo de la chambre {{ c.numero }} ?" data-oui="Oui, retirer" data-non="Non">Retirer</button></form>
+      </figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="discret">Pas encore de photo.</p>{% endif %}
+  {% if c.photos.all|length < max_par_chambre %}
+  <form method="post" enctype="multipart/form-data" class="ajout-photos">{% csrf_token %}
+    <input type="hidden" name="chambre" value="{{ c.pk }}"><input type="hidden" name="vue" value="{{ vue }}">
+    <label class="btn prendre-photo">Ajouter des photos
+      <input type="file" name="photos" accept="image/*" multiple data-envoi-auto></label>
+  </form>
+  {% endif %}
+</section>
+{% endfor %}
+{% empty %}
+<div class="carte"><p class="vide">{% if vue == "sans" %}Toutes les chambres ont leur photo.{% else %}Aucune chambre active.{% endif %}</p></div>
+{% endfor %}
+{% endblock %}

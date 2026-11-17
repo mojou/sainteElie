@@ -293,7 +293,8 @@
     champ.addEventListener("change", function () {
       if (!champ.files.length) { return; }
       var etiquette = champ.closest("label");
-      if (etiquette) { etiquette.firstChild.textContent = "Envoi de la photo… "; }
+      var n = champ.files.length;
+      if (etiquette) { etiquette.firstChild.textContent = n > 1 ? "Envoi de " + n + " photos… " : "Envoi de la photo… "; }
       champ.form.submit();
     });
   });

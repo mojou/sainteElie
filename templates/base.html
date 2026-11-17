@@ -72,7 +72,8 @@
       <div class="groupe">Réception · chambres</div>
       <a href="{% url 'hotel:sejours' %}" class="{% actif '/hotel/sejours' %}">Séjours et réservations</a>
       <a href="{% url 'vitrine:demandes' %}" class="{% actif '/hotel/reservations-en-ligne' %}">Réservations en ligne{% if nb_demandes_reservation %}<span class="pastille">{{ nb_demandes_reservation }}</span>{% endif %}</a>
-      <a href="{% url 'hotel:chambres' %}" class="{% actif '/hotel/chambres' %}">Chambres</a>
+      <a href="{% url 'hotel:chambres' %}" class="{% if request.path == '/hotel/chambres/' or '/hotel/chambres/nouvelle' in request.path %}active{% endif %}">Chambres</a>
+      {% if user.est_direction or user.est_gouvernante %}<a href="{% url 'hotel:photos_chambres' %}" class="{% actif '/hotel/chambres/photos' %}">Photos des chambres</a>{% endif %}
       <a href="{% url 'hotel:clients' %}" class="{% actif '/hotel/clients' %}">Clients</a>
       <a href="{% url 'vitrine:comptes' %}" class="{% actif '/hotel/comptes-en-ligne' %}">Comptes clients en ligne{% if nb_comptes_a_relier %}<span class="pastille">{{ nb_comptes_a_relier }}</span>{% endif %}</a>
     {% endif %}
@@ -128,6 +129,7 @@
     {% if user.est_direction %}
       <div class="groupe">Site public</div>
       <a href="{% url 'vitrine:photos' %}" class="{% actif '/parametres/photos-du-site' %}">Photos du site</a>
+      <a href="{% url 'hotel:photos_chambres' %}" class="{% actif '/hotel/chambres/photos' %}">Photos des chambres</a>
       <a href="{% url 'vitrine:site' %}" target="_blank" rel="noopener">Voir la page d'accueil</a>
     {% endif %}
 

@@ -57,10 +57,12 @@ def page_vitrine(request):
         nombre = qs.count()
         if nombre:
             titre, un, plusieurs = noms[categorie]
-            avec_photo = qs.exclude(photo="").first()
+            from hotel.models import PhotoChambre
+
+            photo = PhotoChambre.objects.filter(chambre__in=qs).order_by("chambre__tarif_nuit", "ordre", "pk").first()
             offres.append({"libelle": titre, "compte": f"{nombre} {un if nombre == 1 else plusieurs}",
                            "prix": qs.filter(tarif_nuit__gt=0).aggregate(p=Min("tarif_nuit"))["p"],
-                           "photo": avec_photo.photo_url if avec_photo else ""})
+                           "photo": photo.url if photo else ""})
     from datetime import timedelta
 
     from core.utils import aujourd_hui
@@ -142,8 +144,11 @@ def dessin_article(request, pk):
     return reponse
 
 
-def image_chambre(request, pk):
-    return _image_publique(get_object_or_404(Chambre, pk=pk).photo)
+def photo_chambre(request, pk):
+    """Les photos des chambres sont publiques : elles s'affichent sur la page d'accueil et la réservation en ligne."""
+    from hotel.models import PhotoChambre
+
+    return _image_publique(get_object_or_404(PhotoChambre, pk=pk, chambre__active=True).image)
 
 
 def photo(request, pk):

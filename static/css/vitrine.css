@@ -284,3 +284,10 @@
   .v-recherche-champs label:last-child { grid-column: auto; }
 }
 .v-recap > .btn { margin: .2rem 1.1rem .4rem; }
+/* Plusieurs photos d'un type de chambre : on les fait glisser du doigt (sans script) */
+.v-type-galerie { position: relative; }
+.v-type-photos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.v-type-photos::-webkit-scrollbar { display: none; }
+.v-type-photos img { flex: 0 0 100%; scroll-snap-align: start; }
+.v-type-nombre { position: absolute; right: .6rem; bottom: .6rem; padding: .2rem .55rem; border-radius: 999px;
+  background: rgba(11, 31, 58, .72); color: #fff; font-size: .78rem; pointer-events: none; }
