@@ -56,6 +56,21 @@ def utilisateur_form(request, pk=None):
     })
 
 
+@require_POST
+@acces_requis(gerant)
+def utilisateur_supprimer(request, pk):
+    """Un compte créé par erreur (jamais utilisé) s'efface ; les autres se désactivent (historique)."""
+    from core import suppression
+
+    cible = get_object_or_404(User, pk=pk)
+    if cible.pk == request.user.pk:
+        messages.error(request, "Vous ne pouvez pas supprimer votre propre compte.")
+        return redirect("accounts:utilisateurs")
+    suppression.supprimer(request, cible, "ce compte",
+                          "Pour l'empêcher de se connecter, ouvrez « Modifier » et décochez « Compte actif ».")
+    return redirect("accounts:utilisateurs")
+
+
 @login_required
 def premiere_connexion(request):
     """Compte créé avec un mot de passe provisoire : on choisit le sien et son code PIN avant tout le reste."""

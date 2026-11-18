@@ -34,4 +34,5 @@ urlpatterns = [
     path("parametres/fond/", views.fond_nouveau, name="fond_nouveau"),
     path("parametres/tiroirs/nouveau/", views.tiroir_form, name="tiroir_nouveau"),
     path("parametres/tiroirs/<int:pk>/", views.tiroir_form, name="tiroir_modifier"),
+    path("parametres/tiroirs/<int:pk>/supprimer/", views.tiroir_supprimer, name="tiroir_supprimer"),
 ]

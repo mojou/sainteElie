@@ -121,3 +121,74 @@ class FormulaireAvecPhotoTests(BaseComptoir):
             "photo-clear": "on"})
         self.plat.refresh_from_db()
         self.assertFalse(self.plat.photo)
+
+
+class ListesModifierSupprimerTests(BaseComptoir):
+    """Chaque liste propose « Modifier » et « Supprimer » ; ce qui a servi reste, avec une explication."""
+
+    def test_les_listes_montrent_modifier_et_supprimer(self):
+        self.client.force_login(self.gerant)
+        for url in (reverse("hotel:chambres"), reverse("hotel:clients"), reverse("accounts:utilisateurs"),
+                    reverse("caisse:parametres"), reverse("stock:carte")):
+            page = self.client.get(url)
+            self.assertContains(page, "Modifier", msg_prefix=url)
+            self.assertContains(page, ">Supprimer</button>", msg_prefix=url)
+        self.sejour(statut="RESERVE", arrivee=aujourd_hui() + timedelta(days=3))
+        page = self.client.get(reverse("hotel:sejours"), {"vue": "reserves"})
+        self.assertContains(page, ">Modifier</a>")
+        self.assertContains(page, ">Supprimer</button>")
+
+    def test_photos_de_la_chambre_sur_sa_page(self):
+        from hotel.models import PhotoChambre
+
+        PhotoChambre.objects.create(chambre=self.chambre, image="chambres/x.jpg")
+        self.client.force_login(self.gerant)
+        page = self.client.get(reverse("hotel:chambre_modifier", args=[self.chambre.pk]))
+        self.assertContains(page, "Photos de la chambre")
+        self.assertContains(page, "Ajouter, changer ou retirer des photos")
+        self.assertContains(page, self.chambre.photos.get().url)
+
+    def test_supprimer_un_compte(self):
+        from accounts.models import Role, User
+
+        erreur = self.utilisateur("erreur", Role.RECEPTIONNISTE)
+        self.client.force_login(self.gerant)
+        self.client.post(reverse("accounts:utilisateur_supprimer", args=[erreur.pk]))
+        self.assertFalse(User.objects.filter(pk=erreur.pk).exists())
+        # Aïcha a tenu une caisse : son compte reste, on le désactive
+        reponse = self.client.post(reverse("accounts:utilisateur_supprimer", args=[self.aicha.pk]), follow=True)
+        self.assertContains(reponse, "Compte actif")
+        self.assertTrue(User.objects.filter(pk=self.aicha.pk).exists())
+        # Pas soi-même
+        self.client.post(reverse("accounts:utilisateur_supprimer", args=[self.gerant.pk]))
+        self.assertTrue(User.objects.filter(pk=self.gerant.pk).exists())
+
+    def test_supprimer_un_sejour(self):
+        from hotel.models import Sejour
+
+        erreur = self.sejour(statut="RESERVE", arrivee=aujourd_hui() + timedelta(days=5))
+        en_cours = self.sejour(chambre=Chambre.objects.create(numero="102", tarif_nuit=25000))
+        self.client.force_login(self.aicha)
+        self.assertEqual(self.client.post(reverse("hotel:sejour_supprimer", args=[erreur.pk])).status_code, 403)
+        self.client.force_login(self.gerant)
+        self.client.post(reverse("hotel:sejour_supprimer", args=[erreur.pk]))
+        self.assertFalse(Sejour.objects.filter(pk=erreur.pk).exists())
+        reponse = self.client.post(reverse("hotel:sejour_supprimer", args=[en_cours.pk]), follow=True)
+        self.assertContains(reponse, "reste dans l")
+        self.assertTrue(Sejour.objects.filter(pk=en_cours.pk).exists())
+        # Une réservation déjà payée (acompte) ne s'efface pas
+        paye = self.sejour(statut="RESERVE", arrivee=aujourd_hui() + timedelta(days=9),
+                           chambre=Chambre.objects.create(numero="103", tarif_nuit=25000))
+        self.encaisser_especes(self.session, paye, 5000)
+        self.client.post(reverse("hotel:sejour_supprimer", args=[paye.pk]))
+        self.assertTrue(Sejour.objects.filter(pk=paye.pk).exists())
+
+    def test_supprimer_une_caisse(self):
+        from caisse.models import Tiroir
+
+        neuve = Tiroir.objects.create(nom="Caisse en trop")
+        self.client.force_login(self.gerant)
+        self.client.post(reverse("caisse:tiroir_supprimer", args=[neuve.pk]))
+        self.assertFalse(Tiroir.objects.filter(pk=neuve.pk).exists())
+        self.client.post(reverse("caisse:tiroir_supprimer", args=[self.tiroir.pk]))
+        self.assertTrue(Tiroir.objects.filter(pk=self.tiroir.pk).exists(), "elle a des sessions : gardée")

@@ -27,7 +27,9 @@
       <td class="nombre">{{ s.nb_nuits }}</td><td class="nombre">{{ s.tarif_nuit|nombre }}</td>
       <td class="nombre">{% if s.reste_a_payer > 0 %}<span class="rouge">{{ s.reste_a_payer|nombre }}</span>{% else %}{{ s.reste_a_payer|nombre }}{% endif %}</td>
       <td><span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td>
-      <td><a class="btn petit" href="{% url 'hotel:sejour' s.pk %}">Ouvrir</a></td>
+      <td><div class="actions actions-ligne"><a class="btn petit" href="{% url 'hotel:sejour' s.pk %}">Ouvrir</a>
+        {% if s.statut == "RESERVE" or s.statut == "EN_COURS" %}<a class="btn petit secondaire" href="{% url 'hotel:sejour_modifier' s.pk %}">Modifier</a>{% endif %}
+        {% if user.est_direction and s.statut != "EN_COURS" and s.statut != "TERMINE" %}{% url 'hotel:sejour_supprimer' s.pk as url_suppr %}{% include "partials/supprimer.html" with url=url_suppr question="Supprimer ce séjour de "|add:s.client.nom|add:" ? C'est définitif." %}{% endif %}</div></td>
     </tr>
     {% empty %}<tr><td colspan="9" class="vide">Aucun séjour.</td></tr>
     {% endfor %}

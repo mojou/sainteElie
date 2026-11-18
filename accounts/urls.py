@@ -19,4 +19,5 @@ urlpatterns = [
     path("utilisateurs/", views.utilisateurs, name="utilisateurs"),
     path("utilisateurs/nouveau/", views.utilisateur_form, name="utilisateur_nouveau"),
     path("utilisateurs/<int:pk>/", views.utilisateur_form, name="utilisateur_modifier"),
+    path("utilisateurs/<int:pk>/supprimer/", views.utilisateur_supprimer, name="utilisateur_supprimer"),
 ]

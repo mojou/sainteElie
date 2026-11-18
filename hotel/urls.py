@@ -12,6 +12,7 @@ urlpatterns = [
     path("sejours/<int:pk>/annuler/", views.sejour_annuler, name="sejour_annuler"),
     path("sejours/<int:pk>/no-show/", views.sejour_annuler, {"no_show": True}, name="sejour_no_show"),
     path("sejours/<int:pk>/encaisser/", views.encaisser, name="encaisser"),
+    path("sejours/<int:pk>/supprimer/", views.sejour_supprimer, name="sejour_supprimer"),
     path("sejours/<int:pk>/<str:action>/", views.sejour_action, name="sejour_action"),
     path("chambres/", views.chambres, name="chambres"),
     path("chambres/nouvelle/", views.chambre_form, name="chambre_nouvelle"),

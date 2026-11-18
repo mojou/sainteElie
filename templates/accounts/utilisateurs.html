@@ -9,7 +9,8 @@
   <tr><td>{{ u }}</td><td>{{ u.username }}</td><td>{{ u.get_role_display }}</td><td>{{ u.telephone }}</td>
     <td>{% if u.a_un_pin %}<span class="badge ok">oui</span>{% else %}<span class="badge">non</span>{% endif %}</td>
     <td>{% if u.is_active %}<span class="badge ok">Actif</span>{% else %}<span class="badge danger">Désactivé</span>{% endif %}</td>
-    <td><a class="btn petit secondaire" href="{% url 'accounts:utilisateur_modifier' u.pk %}">Modifier</a></td></tr>
+    <td><div class="actions actions-ligne"><a class="btn petit secondaire" href="{% url 'accounts:utilisateur_modifier' u.pk %}">Modifier</a>
+      {% if u != user %}{% url 'accounts:utilisateur_supprimer' u.pk as url_suppr %}{% include "partials/supprimer.html" with url=url_suppr question="Supprimer le compte "|add:u.username|add:" ? C'est définitif." %}{% endif %}</div></td></tr>
   {% endfor %}
 </table></div>
 {% endblock %}

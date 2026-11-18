@@ -26,6 +26,9 @@
       <a class="btn secondaire" href="{% url 'hotel:sejour_annuler' sejour.pk %}">Annuler la réservation</a>
       <a class="btn secondaire" href="{% url 'hotel:sejour_no_show' sejour.pk %}">Pas venu (no-show)</a>
     {% endif %}
+    {% if user.est_direction and sejour.statut != "EN_COURS" and sejour.statut != "TERMINE" %}
+      {% url 'hotel:sejour_supprimer' sejour.pk as url_suppr %}{% include "partials/supprimer.html" with url=url_suppr question="Supprimer ce séjour ? C'est définitif (seulement pour une réservation saisie par erreur, sans paiement)." %}
+    {% endif %}
   </div>
 </div>
 {% if not session and sejour.statut != "ANNULE" and user.tient_caisse %}<div class="message info">Pour encaisser, ouvrez d'abord votre caisse. <a class="btn petit" href="{% url 'caisse:ma_caisse' %}?suite={{ request.path|urlencode }}">Ouvrir ma caisse</a></div>{% endif %}

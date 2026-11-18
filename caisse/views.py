@@ -389,6 +389,17 @@ def fond_nouveau(request):
                                    "Il s'applique à partir de sa date d'effet.")
 
 
+@require_POST
+@acces_requis(gerant)
+def tiroir_supprimer(request, pk):
+    from core import suppression
+
+    tiroir = get_object_or_404(Tiroir, pk=pk)
+    suppression.supprimer(request, tiroir, "cette caisse",
+                          "Pour ne plus l'utiliser, ouvrez « Modifier » et décochez « Actif ».")
+    return redirect("caisse:parametres")
+
+
 @acces_requis(gerant)
 def tiroir_form(request, pk=None):
     return _formulaire_admin(request, TiroirForm, "Tiroir de caisse",

@@ -14,6 +14,14 @@
     </div>
   </form>
 </div>
+{% if galerie %}
+<div class="carte">
+  <h2>{{ galerie.titre }}</h2>
+  {% if galerie.images %}<div class="miniatures-fiche">{% for url in galerie.images %}<img src="{{ url }}" alt="{{ galerie.titre }} {{ forloop.counter }}" loading="lazy">{% endfor %}</div>
+  {% else %}<p class="discret">Pas encore de photo.</p>{% endif %}
+  <a class="btn secondaire" href="{{ galerie.lien }}">{{ galerie.texte_lien }}</a>
+</div>
+{% endif %}
 {% if suppression %}
 <div class="carte zone-suppression">
   <h2>Supprimer</h2>

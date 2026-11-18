@@ -1,0 +1,2 @@
+{# Bouton « Supprimer » d'une ligne de liste. Paramètres : url, question. Ce qui a déjà servi n'est pas supprimé : l'application l'explique. #}
+<form method="post" action="{{ url }}" class="en-ligne">{% csrf_token %}<button class="btn petit danger" type="submit" data-confirmer="{{ question }}" data-oui="Oui, supprimer" data-non="Non">Supprimer</button></form>

@@ -141,6 +141,22 @@ def sejour_annuler(request, pk, no_show=False):
                  "un remboursement éventuel se fait ensuite depuis la fiche du séjour."})
 
 
+@require_POST
+@acces_requis(direction)
+def sejour_supprimer(request, pk):
+    """Une réservation saisie par erreur (jamais arrivée, rien payé) s'efface ; un séjour commencé jamais."""
+    from core import suppression
+
+    sejour = get_object_or_404(Sejour, pk=pk)
+    if sejour.statut not in (Sejour.Statut.RESERVE, Sejour.Statut.ANNULE, Sejour.Statut.NO_SHOW):
+        messages.error(request, "Un séjour commencé ou terminé reste dans l'historique : on ne le supprime pas.")
+        return redirect("hotel:sejour", pk=sejour.pk)
+    if suppression.supprimer(request, sejour, "ce séjour",
+                             "Pour une réservation qui n'aura pas lieu, touchez « Annuler la réservation »."):
+        return redirect("hotel:sejours")
+    return redirect("hotel:sejour", pk=sejour.pk)
+
+
 @acces_requis(reception)
 def encaisser(request, pk):
     sejour = get_object_or_404(Sejour, pk=pk)
@@ -188,6 +204,9 @@ def chambre_form(request, pk=None):
 
     return render(request, "form_page.html", {
         "form": form, "titre": f"Modifier la {chambre}" if chambre else "Nouvelle chambre", "retour": "hotel:chambres",
+        "galerie": {"titre": "Photos de la chambre", "images": [p.url for p in chambre.photos.all()],
+                    "lien": f"{reverse('hotel:photos_chambres')}#chambre-{chambre.pk}",
+                    "texte_lien": "Ajouter, changer ou retirer des photos"} if chambre else None,
         "suppression": suppression.bloc(reverse("hotel:chambre_supprimer", args=[chambre.pk]), "cette chambre",
                                         "Seule une chambre jamais réservée se supprime (une erreur de saisie) ; sinon, "
                                         "décochez « Active » : elle n'est plus proposée.") if chambre else None})

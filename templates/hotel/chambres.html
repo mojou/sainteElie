@@ -17,7 +17,8 @@
     {% if c.occupant %}<div>{{ c.occupant.client }}<br><small>départ {{ c.occupant.date_depart|date:"d/m" }}</small><br><a class="btn petit secondaire" href="{% url 'hotel:sejour' c.occupant.pk %}">Séjour</a></div>{% endif %}
     {% if not c.active %}<div><span class="badge danger">Inactive</span></div>{% endif %}
     <div class="actions">{% if user.est_gerant %}<a class="btn petit secondaire" href="{% url 'hotel:chambre_modifier' c.pk %}">Modifier</a>{% endif %}
-      {% if user.est_direction or user.est_gouvernante %}<a class="btn petit secondaire" href="{% url 'hotel:photos_chambres' %}#chambre-{{ c.pk }}">Photos</a>{% endif %}</div>
+      {% if user.est_direction or user.est_gouvernante %}<a class="btn petit secondaire" href="{% url 'hotel:photos_chambres' %}#chambre-{{ c.pk }}">Photos</a>{% endif %}
+      {% if user.est_gerant %}{% url 'hotel:chambre_supprimer' c.pk as url_suppr %}{% include "partials/supprimer.html" with url=url_suppr question="Supprimer la chambre "|add:c.numero|add:" ? C'est définitif." %}{% endif %}</div>
   </div>
   {% empty %}<p class="vide">Aucune chambre. {% if user.est_gerant %}Créez les chambres de l'établissement.{% endif %}</p>
   {% endfor %}

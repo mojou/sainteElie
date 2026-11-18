@@ -176,6 +176,10 @@ def plat_form(request, pk=None):
         return redirect(f"{reverse('stock:carte')}#plat-{obj.pk}")
     return render(request, "form_page.html", {
         "form": form, "titre": f"Modifier : {plat.nom}" if plat else "Ajouter un plat à la carte",
+        "galerie": {"titre": "Photo du plat" + (" (photo d'illustration)" if plat.photo_d_illustration else ""),
+                    "images": [plat.image_url],
+                    "lien": f"{reverse('stock:photos')}?categorie=RESTAURANT#article-{plat.pk}",
+                    "texte_lien": "Prendre ou changer la photo"} if plat else None,
         "retour_url": reverse("stock:carte"),
         "intro": "Ce que vous changez ici se voit tout de suite sur le site (page d'accueil et commande en ligne). "
                  "Décochez « En vente » pour retirer un plat sans le supprimer.",
