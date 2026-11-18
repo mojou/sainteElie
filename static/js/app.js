@@ -322,6 +322,13 @@
   window.activerGalerie = activerGalerie;
   document.querySelectorAll("[data-galerie]").forEach(activerGalerie);
 
+  // Menu du site (téléphone, tablette) : il se referme quand on choisit un lien, touche ailleurs ou appuie sur Échap.
+  document.querySelectorAll("details.v-menu-site").forEach(function (menu) {
+    menu.addEventListener("click", function (e) { if (e.target.closest("a")) { menu.open = false; } });
+    document.addEventListener("click", function (e) { if (menu.open && !menu.contains(e.target)) { menu.open = false; } });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { menu.open = false; } });
+  });
+
   // Photo prise : elle part tout de suite, sans bouton de plus à toucher.
   document.querySelectorAll("input[type=file][data-envoi-auto]").forEach(function (champ) {
     champ.addEventListener("change", function () {

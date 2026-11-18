@@ -15,16 +15,34 @@
   <div class="v-conteneur v-entete-ligne">
     <a class="v-marque" href="{% url 'core:accueil' %}"><span class="logo" aria-hidden="true">{{ etablissement.monogramme }}</span><span>{{ etablissement_nom }}</span></a>
     {% block navigation %}
-    <nav class="v-nav" aria-label="Sections de la page">
-      <a href="{% url 'vitrine:site' %}#galerie">En images</a>
+    {# Grand écran : 5 liens sur une ligne. Plus étroit : un bouton « Menu » qui déroule tout en gros boutons. #}
+    <nav class="v-nav" aria-label="Menu du site">
       <a href="{% url 'vitrine:reserver' %}">Réserver</a>
       <a href="{% url 'vitrine:commander' %}">Commander</a>
       <a href="{% url 'vitrine:site' %}#chambres">Chambres</a>
       <a href="{% url 'vitrine:site' %}#cuisine">La carte</a>
-      <a href="{% url 'vitrine:site' %}#services">Services</a>
-      <a href="{% url 'vitrine:site' %}#espace-client">Espace client</a>
       <a href="{% url 'vitrine:site' %}#contact">Contact</a>
     </nav>
+    <details class="v-menu-site">
+      <summary><span aria-hidden="true">☰</span> Menu</summary>
+      <nav class="v-menu-panneau" aria-label="Menu du site">
+        <a class="btn or grand" href="{% url 'vitrine:reserver' %}">Réserver une chambre</a>
+        <a class="btn or grand" href="{% url 'vitrine:commander' %}">Commander des plats</a>
+        <a class="v-menu-lien" href="{% url 'vitrine:site' %}#chambres">Nos chambres</a>
+        <a class="v-menu-lien" href="{% url 'vitrine:site' %}#cuisine">La carte</a>
+        <a class="v-menu-lien" href="{% url 'vitrine:site' %}#galerie">En images</a>
+        <a class="v-menu-lien" href="{% url 'vitrine:site' %}#contact">Contact</a>
+        <div class="v-menu-compte">
+          {% if user.is_authenticated %}
+            {% if user.est_client %}<a class="btn v-fantome" href="{% url 'vitrine:espace' %}">Mon espace</a>
+            {% else %}<a class="btn v-fantome" href="{% url 'core:accueil' %}">Ma gestion</a>{% endif %}
+          {% else %}
+            <a class="btn v-fantome" href="{% url 'accounts:connexion' %}">Se connecter</a>
+            <a class="btn v-fantome" href="{% url 'vitrine:inscription' %}">Créer un compte</a>
+          {% endif %}
+        </div>
+      </nav>
+    </details>
     {% endblock %}
     <div class="v-boutons">
       {% block boutons_entete %}

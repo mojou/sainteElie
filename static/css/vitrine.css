@@ -11,15 +11,43 @@
 .v-marque { display: flex; align-items: center; gap: .65rem; color: #fff; text-decoration: none; font-weight: 800;
   font-size: 1.12rem; letter-spacing: .01em; white-space: nowrap; }
 .v-marque .logo { width: 38px; height: 38px; font-size: 1.1rem; }
-.v-nav { display: flex; gap: 1.3rem; margin-left: auto; }
-.v-nav a { color: #d6e0ec; text-decoration: none; font-weight: 600; font-size: .95rem; }
+.v-nav { display: flex; gap: 1.4rem; margin-left: auto; order: 1; }
+.v-nav a { color: #d6e0ec; text-decoration: none; font-weight: 600; font-size: .95rem; white-space: nowrap; }
 .v-nav a:hover { color: var(--or); }
-.v-boutons { display: flex; gap: .5rem; align-items: center; margin-left: auto; }
-.v-nav + .v-boutons { margin-left: 0; }
+.v-boutons { display: flex; gap: .5rem; align-items: center; margin-left: auto; order: 2; flex-wrap: nowrap; }
+.v-boutons .btn { white-space: nowrap; }
+.v-nav ~ .v-boutons { margin-left: 0; }
+/* Le bouton « Menu » et son panneau (écrans plus étroits) */
+.v-menu-site { display: none; order: 3; position: static; }
+.v-menu-site summary {
+  list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem; min-height: 44px;
+  padding: .45rem .95rem; border: 1px solid rgba(255, 255, 255, .45); border-radius: 8px; color: #fff; font-weight: 700;
+  white-space: nowrap; user-select: none; margin: 0;
+}
+.v-menu-site summary::-webkit-details-marker { display: none; }
+.v-menu-site[open] summary { background: rgba(255, 255, 255, .12); }
+.v-menu-panneau {
+  position: absolute; left: 0; right: 0; top: 100%; display: grid; gap: .55rem; padding: 1rem 1.25rem 1.25rem;
+  background: var(--marine-fonce); border-bottom: 3px solid var(--or); box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+}
+.v-menu-panneau .btn { width: 100%; text-align: center; }
+.v-menu-lien { display: block; padding: .75rem .4rem; color: #fff; font-weight: 600; text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .1); }
+.v-menu-lien:hover { color: var(--or); }
+.v-menu-compte { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .4rem; }
+@media (max-width: 1100px) {
+  .v-nav { display: none; }
+  .v-menu-site { display: block; }
+  .v-nav ~ .v-boutons { margin-left: auto; }
+
+}
+@media (max-width: 640px) {
+  .v-entete-ligne:has(.v-menu-site) .v-boutons { display: none; }  /* le compte est dans le menu */
+  .v-menu-site { margin-left: auto; }
+}
 .btn.v-fantome { background: transparent; border-color: rgba(255, 255, 255, .45); color: #fff; }
 .btn.v-fantome:hover { background: rgba(255, 255, 255, .1); filter: none; }
 .btn.or:hover { filter: brightness(1.06); }
-@media (max-width: 900px) { .v-nav { display: none; } }
 @media (max-width: 520px) {
   .v-marque span:last-child { display: none; }
   .v-boutons .btn { padding: .4rem .6rem; font-size: .85rem; }
