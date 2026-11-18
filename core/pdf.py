@@ -127,6 +127,32 @@ class DocumentPDF:
         bloc = [Paragraph(_echapper(titre), self.style_section)] if titre else []
         self.elements.append(KeepTogether(bloc + [table]))
 
+    def totaux(self, lignes, fort=-1):
+        """Encadré des totaux à droite (total, déjà payé, reste) ; la ligne `fort` en gros caractères."""
+        if not lignes:
+            return
+        style = ParagraphStyle("t", parent=self.style_cellule, fontSize=9.5, leading=12)
+        style_fort = ParagraphStyle("tf", parent=style, fontSize=12, leading=15)
+        droite = ParagraphStyle("td", parent=style, alignment=2)
+        droite_fort = ParagraphStyle("tdf", parent=style_fort, alignment=2)
+        index_fort = fort % len(lignes)
+        donnees = []
+        for i, (libelle, valeur) in enumerate(lignes):
+            gras = i == index_fort
+            donnees.append([Paragraph(f"<b>{_echapper(libelle)}</b>" if gras else _echapper(libelle),
+                                      style_fort if gras else style),
+                            Paragraph(f"<b>{_echapper(valeur)}</b>", droite_fort if gras else droite)])
+        table = Table(donnees, colWidths=[55 * mm, 40 * mm], hAlign="RIGHT")
+        table.setStyle(TableStyle([
+            ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#12305A")),
+            ("LINEBELOW", (0, 0), (-1, -2), 0.3, colors.HexColor("#CCCCCC")),
+            ("BACKGROUND", (0, index_fort), (-1, index_fort), colors.HexColor("#F8F0DC")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        self.elements.append(Spacer(1, 3 * mm))
+        self.elements.append(table)
+
     # --- Rendu ---------------------------------------------------------------
     def rendre(self):
         tampon = BytesIO()
@@ -155,3 +181,12 @@ class DocumentPDF:
         entete.append(Spacer(1, 4 * mm))
         doc.build(entete + self.elements, onFirstPage=pied, onLaterPages=pied)
         return tampon.getvalue()
+
+
+def reponse_pdf(contenu, nom, telecharger=True):
+    """Réponse HTTP d'un PDF : téléchargé (pour l'envoyer par WhatsApp ou par e-mail) ou ouvert dans le navigateur."""
+    from django.http import HttpResponse
+
+    reponse = HttpResponse(contenu, content_type="application/pdf")
+    reponse["Content-Disposition"] = f'{"attachment" if telecharger else "inline"}; filename="{nom}"'
+    return reponse

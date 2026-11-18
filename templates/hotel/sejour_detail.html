@@ -19,6 +19,7 @@
     {% if sejour.statut != "TERMINE" or sejour.reste_a_payer != 0 %}
       <a class="btn" href="{% url 'hotel:encaisser' sejour.pk %}">{% if sejour.reste_a_payer > 0 %}Encaisser{% else %}Encaisser / rembourser{% endif %}</a>
     {% endif %}
+    <a class="btn secondaire" href="{% url 'hotel:facture' sejour.pk %}">{% if sejour.statut == "TERMINE" %}Facture{% else %}Facture provisoire{% endif %}</a>
     {% if sejour.statut == "RESERVE" or sejour.statut == "EN_COURS" %}
       <a class="btn secondaire" href="{% url 'hotel:sejour_modifier' sejour.pk %}">Modifier</a>
     {% endif %}

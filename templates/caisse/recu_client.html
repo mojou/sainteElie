@@ -1,33 +1,64 @@
 {% extends "base.html" %}{% load gestion %}
 {% block titre %}Reçu n°{{ e.numero_recu }}{% endblock %}
 {% block contenu %}
-<div class="actions no-print" style="margin-bottom:1rem">
-  <button class="btn" onclick="window.print()">Imprimer</button>
+<div class="doc-barre no-print">
+  <button class="btn grand" type="button" onclick="window.print()">Imprimer le reçu</button>
+  <a class="btn secondaire grand" href="{% url 'caisse:recu_client_pdf' e.pk %}">Télécharger en PDF</a>
+  {% if sejour %}<a class="btn secondaire" href="{% url 'hotel:facture' sejour.pk %}">Facture du séjour</a>{% endif %}
   {% if sejour %}<a class="btn secondaire" href="{% url 'hotel:sejour' sejour.pk %}">Retour au séjour</a>
-  {% elif ventes and user.tient_caisse %}<a class="btn secondaire" {% href 'caisse:ventes' %}>Retour aux ventes</a>
+  {% elif r.lignes and user.tient_caisse %}<a class="btn secondaire" {% href 'caisse:ventes' %}>Retour aux ventes</a>
   {% elif user.tient_caisse %}<a class="btn secondaire" href="{% url 'caisse:ma_caisse' %}">Retour à ma caisse</a>
   {% else %}<a class="btn secondaire" href="{% url 'caisse:sessions' %}">Retour aux sessions</a>{% endif %}
 </div>
-<div class="carte" style="max-width:420px">
-  <h2 style="margin-top:0">{{ etablissement_nom }}</h2>
-  <p><strong>Reçu n°{{ e.numero_recu }}</strong><br>{{ e.date|date:"d/m/Y à H:i" }}</p>
-  <dl class="fiche">
-    {% if sejour %}
-      <dt>Client</dt><dd>{{ sejour.client }}</dd>
-      <dt>Chambre</dt><dd>{{ sejour.chambre.numero }} ({{ sejour.date_arrivee|date:"d/m" }} au {{ sejour.date_depart|date:"d/m/Y" }})</dd>
-    {% elif e.client %}
-      <dt>Client</dt><dd>{{ e.client }}</dd>
+
+<article class="document recu">
+  {% include "partials/document_entete.html" with titre=r.titre numero=e.numero_recu date=r.date format_date="d/m/Y à H:i" %}
+
+  {% if r.annule_par %}
+  <p class="doc-alerte">Ce reçu a été <strong>annulé</strong> le {{ r.annule_par.date|date:"d/m/Y à H:i" }}
+    (reçu n°{{ r.annule_par.numero_recu }}). Il ne prouve plus aucun paiement.</p>
+  {% endif %}
+
+  <div class="doc-blocs">
+    {% if r.client %}
+    <section class="doc-bloc"><h3>Client</h3><p><strong>{{ r.client }}</strong>{% if r.telephone %}<br>{{ r.telephone }}{% endif %}</p></section>
     {% endif %}
-    <dt>Objet</dt><dd>{{ e.get_nature_display }}{% if e.annule %} du reçu n°{{ e.annule.numero_recu }}{% endif %}</dd>
-    {% for v in ventes %}<dt>{{ v.quantite }} × {{ v.article }}</dt><dd>{{ v.montant|fcfa }}</dd>{% endfor %}
-    <dt>Payé en</dt><dd>{{ e.moyen_libelle }}</dd>
-    {% if e.reference %}<dt>Référence</dt><dd>{{ e.reference }}</dd>{% endif %}
-    <dt>Montant</dt><dd style="font-size:1.3rem">{{ e.montant_signe|fcfa }}</dd>
-    <dt>En lettres</dt><dd class="montant-lettres">{{ e.montant|en_lettres }}</dd>
-    {% if sejour %}<dt>Reste à payer</dt><dd>{{ sejour.reste_a_payer|fcfa }}</dd>{% endif %}
-    {% if dette is not None %}<dt>Reste dû</dt><dd>{{ dette|fcfa }}</dd>{% endif %}
-    <dt>Reçu par</dt><dd>{{ e.utilisateur }}</dd>
-  </dl>
-  <p class="discret" style="margin-top:1rem">Merci de votre confiance.</p>
-</div>
+    <section class="doc-bloc"><h3>Objet</h3><p>{{ r.objet }}</p></section>
+  </div>
+
+  {% if r.lignes %}
+  <div class="doc-defile"><table class="doc-table">
+    <thead><tr><th>Désignation</th><th class="nombre doc-col">Qté</th><th class="nombre doc-col">Prix unitaire</th><th class="nombre">Montant</th></tr></thead>
+    <tbody>
+      {% for l in r.lignes %}<tr><td>{{ l.designation }}{% if l.quantite != 1 %}<span class="doc-qte">{{ l.quantite }} × {{ l.prix|fcfa }}</span>{% endif %}</td><td class="nombre doc-col">{{ l.quantite }}</td><td class="nombre doc-col">{{ l.prix|fcfa }}</td><td class="nombre">{{ l.montant|fcfa }}</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+
+  <div class="doc-montant{% if r.annule_par %} barre{% endif %}">
+    <div class="libelle">{{ r.libelle_montant }}</div>
+    <div class="valeur">{{ e.montant|fcfa }}</div>
+    <div class="lettres">{{ e.montant|en_lettres }}</div>
+    <div class="mode">{{ r.libelle_mode }} <strong>{{ e.get_mode_display }}</strong>{% if e.reference %} · réf. {{ e.reference }}{% endif %}</div>
+  </div>
+
+  {% if r.reste is not None %}
+  <div class="doc-bas">
+    <div class="doc-tampons">{% if r.solde and not r.annule_par %}<span class="doc-tampon">Tout est réglé</span>{% endif %}</div>
+    <div class="doc-totaux">
+      <div class="doc-totaux-titre">Situation au {{ maintenant|date:"d/m/Y à H:i" }}</div>
+      {% for libelle, montant in r.situation %}<div><span>{{ libelle }}</span><span>{{ montant|fcfa }}</span></div>{% endfor %}
+      {% if r.a_rendre %}<div class="fort"><span>À rendre au client</span><span>{{ r.a_rendre|fcfa }}</span></div>
+      {% else %}<div class="fort"><span>Reste à payer</span><span>{{ r.reste|fcfa }}</span></div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="doc-signatures">
+    <div class="doc-signature"><span>Le caissier</span><strong>{{ e.utilisateur }}</strong><span class="ligne"></span></div>
+    <div class="doc-signature"><span>Le client</span><strong>&nbsp;</strong><span class="ligne"></span></div>
+  </div>
+  <footer class="doc-pied">Merci de votre confiance et à bientôt au {{ r.etablissement.nom }} !<br>
+    Gardez ce reçu : il prouve votre paiement.</footer>
+</article>
 {% endblock %}

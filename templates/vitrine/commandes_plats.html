@@ -4,7 +4,8 @@
 <div class="entete"><div><h1>Plats commandés en ligne</h1>
   <p>Les clients commandent sur le site pour un jour et une heure. Appelez le client, confirmez ; à l'heure dite, la
     cuisine sert et encaisse à sa caisse « Cuisine / Bar », ou porte les plats sur la note de la chambre.</p></div>
-  <div class="actions"><a class="btn secondaire" href="{% url 'vitrine:commander' %}" target="_blank" rel="noopener">Voir la page de commande</a>
+  <div class="actions">{% if voit_fiche_bar %}<a class="btn secondaire" href="{% url 'fiches:bar_restaurant' %}">Fiche du jour (bar / restaurant)</a>{% endif %}
+    <a class="btn secondaire" href="{% url 'vitrine:commander' %}" target="_blank" rel="noopener">Voir la page de commande</a>
     {% if user.voit_stock %}<a class="btn secondaire" href="{% url 'stock:carte' %}">Modifier la carte</a>{% endif %}</div>
 </div>
 

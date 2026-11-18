@@ -108,3 +108,43 @@ def rapport_pdf(rapport):
         doc.tableau(["Chambre", "Faite le", "Par"],
                     [[n.chambre.numero, _date(n.fait_le), str(n.fait_par)] for n in d["menage_sans_sejour"]])
     return doc.rendre()
+
+
+def recu_client_pdf(r):
+    """Le reçu remis au client (voir caisse/recus.py), en PDF."""
+    from core.utils import montant_en_lettres
+
+    e = r.e
+    doc = DocumentPDF(f"{r.titre} n° {e.numero_recu}", f"Le {r.date:%d/%m/%Y à %H:%M}")
+    infos = []
+    if r.client:
+        infos.append(("Client", r.client + (f" - {r.telephone}" if r.telephone else "")))
+    infos.append(("Objet", r.objet))
+    doc.cles_valeurs(infos, largeur_cle=35)
+    if r.lignes:
+        doc.section("Détail")
+        doc.tableau(["Désignation", "Qté", "Prix unitaire", "Montant"],
+                    [[ligne.designation, str(ligne.quantite), montant_pdf(ligne.prix), montant_pdf(ligne.montant)]
+                     for ligne in r.lignes],
+                    total=["Total", "", "", montant_pdf(sum(ligne.montant for ligne in r.lignes))],
+                    alignement_droite=(1, 2, 3), largeurs=(9, 1.2, 2.6, 2.6))
+    paye = e.get_mode_display() + (f" (réf. {e.reference})" if e.reference else "")
+    doc.totaux([(r.libelle_mode.rstrip(" :"), paye), (r.libelle_montant, montant_pdf(e.montant))])
+    doc.espace(2)
+    doc.paragraphe(f"Soit : {montant_en_lettres(e.montant)}.")
+    if r.annule_par:
+        doc.paragraphe(f"ATTENTION : ce reçu a été annulé par le reçu n°{r.annule_par.numero_recu} "
+                       f"du {_date(r.annule_par.date)}.")
+    if r.situation or r.reste is not None:
+        doc.section(f"Situation au {timezone.localtime():%d/%m/%Y à %H:%M}")
+        lignes = [(libelle, montant_pdf(montant)) for libelle, montant in r.situation]
+        if r.a_rendre:
+            lignes.append(("À rendre au client", montant_pdf(r.a_rendre)))
+        elif r.reste is not None:
+            lignes.append(("Reste à payer", "Rien - tout est réglé" if r.solde else montant_pdf(r.reste)))
+        doc.cles_valeurs(lignes, largeur_cle=60)
+    doc.signatures([f"Le caissier : {e.utilisateur}", "Le client"])
+    doc.espace(3)
+    doc.paragraphe(f"Merci de votre confiance et à bientôt au {r.etablissement.nom}. "
+                   "Gardez ce reçu : il prouve votre paiement.", petit=True)
+    return doc.rendre()

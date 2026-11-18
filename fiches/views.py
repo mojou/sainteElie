@@ -112,12 +112,45 @@ def fiche_stock(request, categorie):
 
 @acces_requis(reception)
 def hebergement(request):
+    """La fiche recette chambres, colonne pour colonne comme la fiche papier de la réception."""
+    from hotel.models import Chambre
+
     jour = _jour(request)
+    if request.GET.get("vierge"):
+        return _pdf(pdf.recette_chambres_pdf(jour, chambres=Chambre.objects.filter(active=True).order_by("numero")),
+                    f"fiche-recette-chambres-vierge-{jour}.pdf")
     donnees = services.fiche_hebergement(jour)
     if request.GET.get("format") == "pdf":
-        return _pdf(pdf.hebergement_pdf(jour, services.receptionnistes_du_jour(jour, Tiroir.Poste.RECEPTION), donnees),
-                    f"recette-chambres-{jour}.pdf")
+        return _pdf(pdf.recette_chambres_pdf(jour, donnees), f"recette-chambres-{jour}.pdf")
     return render(request, "fiches/hebergement.html", _contexte(jour, Tiroir.Poste.RECEPTION, d=donnees))
+
+
+@acces_requis(acces_fiches)
+def bar_restaurant(request):
+    """La fiche bar / restaurant, sur le modèle de la fiche recette chambres.
+
+    Chacun voit ses propres ventes ; la direction, le chef de réception et le stock voient toute la journée.
+    """
+    if not voit_poste(request.user, Tiroir.Poste.BAR):
+        raise PermissionDenied("Cette fiche appartient à la cuisine / bar.")
+    jour = _jour(request)
+    if request.GET.get("vierge"):
+        return _pdf(pdf.bar_restaurant_pdf(jour), f"fiche-bar-restaurant-vierge-{jour}.pdf")
+    session = None
+    sessions = None
+    if request.GET.get("session"):
+        session = get_object_or_404(sessions_visibles(request.user).filter(tiroir__poste=Tiroir.Poste.BAR),
+                                    pk=request.GET["session"])
+        jour = journee_de(session)
+        sessions = [session]
+    elif not (request.user.peut_valider_caisse or stock(request.user)):
+        sessions = list(SessionCaisse.objects.filter(receptionniste=request.user, tiroir__poste=Tiroir.Poste.BAR,
+                                                     est_rectificative=False, ouverte_le__date=jour))
+    donnees = services.fiche_bar_restaurant(jour, sessions)
+    if request.GET.get("format") == "pdf":
+        return _pdf(pdf.bar_restaurant_pdf(jour, donnees), f"bar-restaurant-{jour}.pdf")
+    return render(request, "fiches/bar_restaurant.html", _contexte(jour, Tiroir.Poste.BAR, d=donnees,
+                                                                   session=session))
 
 
 @acces_requis(menage)

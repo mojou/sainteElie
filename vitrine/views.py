@@ -242,6 +242,26 @@ def espace(request):
     return render(request, "vitrine/espace.html", ctx)
 
 
+def ma_facture(request, pk):
+    """Le client télécharge la facture d'un de ses séjours (jamais celle d'un autre).
+
+    Seulement une fois son compte relié à sa fiche par la réception, comme le reste de son espace.
+    """
+    from core.pdf import reponse_pdf
+    from hotel.facturation import facture
+    from hotel.pdf import facture_pdf
+
+    if not (request.user.is_authenticated and request.user.est_client):
+        return redirect("vitrine:espace")
+    compte = request.user.compte_client
+    if compte.statut != CompteClient.Statut.RELIE or not compte.client_id:
+        return redirect("vitrine:espace")
+    sejour = get_object_or_404(Sejour.objects.select_related("client", "chambre")
+                               .exclude(statut=Sejour.Statut.ANNULE), pk=pk, client_id=compte.client_id)
+    f = facture(sejour)
+    return reponse_pdf(facture_pdf(f), f"facture-{f.numero}.pdf")
+
+
 class MotDePasseClient(auth_views.PasswordChangeView):
     template_name = "vitrine/formulaire.html"
     success_url = reverse_lazy("vitrine:espace")
@@ -644,4 +664,11 @@ def commandes_plats(request):
         "traitees": traitees, "maintenant": timezone.now(), "sejours": sejours, "paiements": commandes.PAIEMENTS,
         # Servir = encaisser à la caisse « Cuisine / Bar » : seule la personne qui la tient voit le bouton.
         "peut_servir": session is not None and Article.Categorie.RESTAURANT in session.tiroir.categories_vendues,
-        "session": session})
+        "session": session, "voit_fiche_bar": _voit_fiche_bar(request.user)})
+
+
+def _voit_fiche_bar(u):
+    from caisse.models import Tiroir
+    from fiches.views import acces_fiches, voit_poste
+
+    return acces_fiches(u) and voit_poste(u, Tiroir.Poste.BAR)

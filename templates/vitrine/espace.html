@@ -80,6 +80,7 @@
         <tr><td>Chambre : {{ s.nb_nuits }} nuit{{ s.nb_nuits|pluralize }} × {{ s.tarif_nuit|fcfa }}</td><td class="nombre">{{ s.montant_chambre_prevu|nombre }}</td></tr>
         {% for e in s.extras.all %}{% if e.statut == "ACTIF" %}<tr><td>{{ e.date_conso|date:"d/m" }} · {{ e.description }}</td><td class="nombre">{{ e.montant|nombre }}</td></tr>{% endif %}{% endfor %}
       </table></div>
+      <p><a class="btn secondaire" href="{% url 'vitrine:ma_facture' s.pk %}">Télécharger ma facture (PDF)</a></p>
     </article>
     {% endfor %}
 
@@ -92,6 +93,7 @@
         <h3>Chambre {{ s.chambre.numero }}</h3>
         <p>Du {{ s.date_arrivee|date:"l d F" }} au {{ s.date_depart|date:"l d F Y" }} · {{ s.nb_nuits }} nuit{{ s.nb_nuits|pluralize }}</p>
         <dl class="fiche"><dt>Prévu</dt><dd>{{ s.montant_chambre_prevu|fcfa }}</dd><dt>Déjà versé</dt><dd>{{ s.total_paye|fcfa }}</dd></dl>
+        <a class="btn petit secondaire" href="{% url 'vitrine:ma_facture' s.pk %}">Facture provisoire (PDF)</a>
       </div>
       {% endfor %}
     </div>
@@ -117,11 +119,12 @@
     <h2>Séjours passés</h2>
     {% if reste_passes > 0 %}<div class="message warning">Il reste <strong>{{ reste_passes|fcfa }}</strong> à régler sur vos séjours passés.</div>{% endif %}
     <div class="tableau"><table>
-      <tr><th>Chambre</th><th>Dates</th><th class="nombre">Total</th><th class="nombre">Payé</th><th class="nombre">Reste</th></tr>
+      <tr><th>Chambre</th><th>Dates</th><th class="nombre">Total</th><th class="nombre">Payé</th><th class="nombre">Reste</th><th>Facture</th></tr>
       {% for s in passes %}
       <tr><td>{{ s.chambre.numero }}</td><td>{{ s.date_arrivee|date:"d/m/Y" }} → {{ s.date_depart|date:"d/m/Y" }}</td>
         <td class="nombre">{{ s.total_facture|nombre }}</td><td class="nombre">{{ s.total_paye|nombre }}</td>
-        <td class="nombre {% if s.reste_a_payer > 0 %}rouge{% endif %}">{{ s.reste_a_payer|nombre }}</td></tr>
+        <td class="nombre {% if s.reste_a_payer > 0 %}rouge{% endif %}">{{ s.reste_a_payer|nombre }}</td>
+        <td><a class="btn petit secondaire" href="{% url 'vitrine:ma_facture' s.pk %}">PDF</a></td></tr>
       {% endfor %}
     </table></div>
     {% endif %}

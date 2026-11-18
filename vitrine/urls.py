@@ -8,6 +8,7 @@ urlpatterns = [
     path("espace-client/", views.espace, name="espace"),
     path("espace-client/inscription/", views.inscription, name="inscription"),
     path("espace-client/mot-de-passe/", views.MotDePasseClient.as_view(), name="mot_de_passe"),
+    path("espace-client/sejours/<int:pk>/facture.pdf", views.ma_facture, name="ma_facture"),
     path("hotel/comptes-en-ligne/", views.comptes, name="comptes"),
     path("hotel/reservations-en-ligne/", views.demandes, name="demandes"),
     path("reserver/", views.reserver, name="reserver"),

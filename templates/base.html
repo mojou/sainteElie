@@ -44,7 +44,7 @@
       <a href="{% url 'vitrine:commandes_plats' %}" class="{% actif '/hotel/plats-commandes' %}"><strong>Plats commandés</strong>{% if nb_commandes_plats %}<span class="pastille">{{ nb_commandes_plats }}</span>{% endif %}</a>
       {% if 'ventes' in modules_ouverts %}<a href="{% url 'caisse:ventes' %}" class="{% actif '/caisse/ventes' '/caisse/avarie' '/caisse/credits' %}"><strong>Restaurant · Bar</strong></a>{% endif %}
       <a href="{% url 'caisse:ma_caisse' %}" class="{% actif '/caisse/ma-caisse' '/caisse/remise' '/caisse/sessions' %}">Ma caisse</a>
-      {% if 'ventes' in modules_ouverts %}<a href="{% url 'fiches:index' %}" class="{% actif '/fiches' %}">Fiches du jour</a>{% endif %}
+      <a href="{% url 'fiches:bar_restaurant' %}" class="{% actif '/fiches' %}">Fiche du jour</a>
     {% elif user.departement == "MAINTENANCE" %}
       {% if 'pannes' in modules_ouverts %}<a href="{% url 'postes:maintenance' %}" class="{% actif '/poste/maintenance' %}"><strong>Saisie maintenance</strong></a>{% endif %}
     {% elif user.departement == "SECURITE" %}

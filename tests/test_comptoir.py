@@ -10,7 +10,7 @@ from django.utils import timezone
 from accounts.models import Role
 from caisse import services as caisse
 from caisse.models import Encaissement, FondCaisse, SessionCaisse, Tiroir, VenteComptoir
-from core.utils import aujourd_hui
+from core.utils import aujourd_hui, format_fcfa
 from fiches import services as fiches
 from hotel.models import Chambre, Client, Extra, Sejour
 from stock.models import Article
@@ -133,7 +133,7 @@ class ExtrasReceptionTests(BaseComptoir):
         self.assertEqual(s.reste_a_payer, s.montant_chambre_prevu + 14500, "il se paie à la réception avec la chambre")
 
         page = self.client.get(reverse("fiches:hebergement"))
-        self.assertContains(page, "Extras jr")
+        self.assertContains(page, f"extras {format_fcfa(14500, unite=False)}", msg_prefix="les extras dans « Obs. »")
         self.assertContains(page, "2 × Poulet DG")
 
 

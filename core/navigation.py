@@ -45,6 +45,8 @@ def groupes(user, request=None):
         ("Fiches à imprimer", [
             ("fiches:index", "Fiches du jour", u.tient_caisse or u.voit_stock),
             ("fiches:hebergement", "Fiche recette chambres", u.voit_reception),
+            ("fiches:bar_restaurant", "Fiche bar / restaurant",
+             (u.tient_caisse or u.voit_stock) and (u.est_bar or u.est_gerant or u.est_chef_reception or u.voit_stock)),
             ("fiches:chambres_a_faire", "Fiche des chambres à faire", permissions.menage(u)),
         ]),
         ("Boutique, restaurant · bar", [

@@ -8,11 +8,12 @@ R1, R2, R3 (fiche boutique) : les réceptionnistes du jour, dans l'ordre de leur
 """
 from datetime import datetime, timedelta
 
-from django.db.models import Sum
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from caisse.models import Encaissement, SessionCaisse, Tiroir, VenteComptoir
-from core.utils import premier_du_mois
+from core.utils import format_fcfa, premier_du_mois
 from hotel.models import Chambre, Extra, Sejour
 from stock.models import Article, MouvementStock
 
@@ -59,6 +60,38 @@ def receptionnistes_du_jour(jour, poste=None):
         if nom not in noms:
             noms.append(nom)
     return noms
+
+
+def entete_caisse(sessions):
+    """Le bandeau du haut des fiches papier : qui, espèces d'ouverture et de fermeture, heures de service.
+
+    Plusieurs personnes dans la journée : l'ouverture est celle de la première, la fermeture celle de la dernière
+    (espèces comptées à sa remise de caisse ; vide tant que la caisse est ouverte).
+    """
+    sessions = list(sessions)
+    entete = {"noms": [], "ouverture": None, "fermeture": None, "heure": ""}
+    if not sessions:
+        return entete
+    premiere, derniere = sessions[0], sessions[-1]
+    for s in sessions:
+        nom = f"{s.receptionniste} ({s.get_shift_display().lower()})"
+        if nom not in entete["noms"]:
+            entete["noms"].append(nom)
+    entete["ouverture"] = premiere.especes_ouverture_comptees
+    try:
+        remise = derniere.remise
+    except ObjectDoesNotExist:
+        remise = None
+    if remise is not None and remise.finalisee:
+        entete["fermeture"] = remise.especes_comptees
+    debut = timezone.localtime(premiere.ouverte_le).strftime("%H:%M")
+    entete["heure"] = (f"{debut} à {timezone.localtime(derniere.remise_le):%H:%M}" if derniere.remise_le
+                       else f"depuis {debut}")
+    return entete
+
+
+def _montant(valeur):
+    return format_fcfa(valeur, unite=False)
 
 
 # --- Main courante bar / boutique -----------------------------------------------------------
@@ -170,11 +203,26 @@ def fiche_hebergement(jour):
     occupants = {s.chambre_id: s for s in Sejour.objects.filter(
         statut__in=[Sejour.Statut.EN_COURS, Sejour.Statut.TERMINE], date_arrivee__lte=jour, date_depart__gt=jour)
         .select_related("client")}
+    # L'argent reçu ce jour pour les chambres (nuits, avances, extras, dettes) : colonne Mobile et MONTANT.
+    argent = Encaissement.objects.filter(session__ouverte_le__gte=debut, session__ouverte_le__lt=fin).filter(
+        Q(sejour__isnull=False) | Q(client__isnull=False))
+    mobile = argent.filter(mode__in=Encaissement.MODES_MOBILE)
+    # Colonne Mobile d'une chambre : ce qu'ont payé par mobile le client de la nuit et celui parti ce jour.
+    # Une vieille dette réglée par mobile compte seulement dans le TOTAL OM.
+    mobile_par_sejour = dict(mobile.filter(sejour__isnull=False).values_list("sejour")
+                             .annotate(s=Sum("montant_signe")))
+    partis = {s.chambre_id: s for s in Sejour.objects.filter(check_out_le__gte=debut, check_out_le__lt=fin)
+              .select_related("client").order_by("check_out_le")}
     lignes = []
     for chambre in Chambre.objects.filter(active=True).order_by("numero"):
         s = occupants.get(chambre.pk)
         ligne = {"chambre": chambre, "sejour": s, "recette": 0, "impaye": 0, "extras": 0, "offre": 0,
-                 "compensation": 0, "avance": 0, "observation": ""}
+                 "compensation": 0, "avance": 0, "observation": "", "mobile": 0,
+                 "heure_arrivee": "", "heure_depart": ""}
+        parti = partis.get(chambre.pk)
+        if parti:
+            ligne["heure_depart"] = timezone.localtime(parti.check_out_le).strftime("%H:%M")
+        ligne["mobile"] = sum(mobile_par_sejour.get(x.pk, 0) for x in {s, parti} if x)
         if s:
             paye = _paye_jusqua(s, fin)
             du_avant = _du_jusqua(s, jour, debut)
@@ -188,14 +236,22 @@ def fiche_hebergement(jour):
                 ligne["recette"] = min(max(paye - du_avant, 0), s.tarif_nuit)
                 ligne["impaye"] = s.tarif_nuit - ligne["recette"]
             ligne["avance"] = max(0, paye - (du_avant + s.tarif_nuit + extras_jour))
-            notes = []
-            if s.date_arrivee == jour:
-                notes.append("arrivée")
+            if s.check_in_le:
+                arrivee = timezone.localtime(s.check_in_le)
+                ligne["heure_arrivee"] = arrivee.strftime("%H:%M" if arrivee.date() == jour else "%d/%m")
+            elif s.date_arrivee < jour:
+                ligne["heure_arrivee"] = s.date_arrivee.strftime("%d/%m")
+        notes = []
+        if parti and parti != s:
+            notes.append(f"parti : {parti.client}")
+        if s:
+            if ligne["extras"]:
+                notes.append(f"extras {_montant(ligne['extras'])}")
             if s.date_depart == jour + timedelta(days=1):
                 notes.append("départ demain")
             if s.gratuite:
                 notes.append(s.motif_tarif)
-            ligne["observation"] = ", ".join(n for n in notes if n)
+        ligne["observation"] = ", ".join(n for n in notes if n)
         lignes.append(ligne)
 
     # Règlements de dettes : paiements du jour qui couvrent ce qui restait dû à la veille.
@@ -236,8 +292,76 @@ def fiche_hebergement(jour):
                           .select_related("sejour__chambre", "sejour__client", "saisi_par").order_by("date_conso"))
     totaux["reglements"] = sum(r["montant"] for r in reglements)
     totaux["dettes"] = sum(d["montant"] for d in dettes)
-    return {"lignes": lignes, "reglements": reglements, "dettes": sorted(dettes, key=lambda d: -d["montant"]),
+    totaux["mobile"] = mobile.aggregate(s=Sum("montant_signe"))["s"] or 0
+    totaux["montant"] = argent.aggregate(s=Sum("montant_signe"))["s"] or 0
+    dettes = sorted(dettes, key=lambda d: -d["montant"])
+
+    # Bandeau : la caisse de la réception ce jour-là. Total vente : tout ce qui y est entré (chambres et boutique).
+    sessions = list(_sessions_du_jour(jour, Tiroir.Poste.RECEPTION))
+    entete = entete_caisse(sessions)
+    entete["total_vente"] = (Encaissement.objects.filter(session__in=sessions)
+                             .aggregate(s=Sum("montant_signe"))["s"] or 0)
+
+    # Comme sur papier : les colonnes « Reg dette » et « Reste dette » sont des listes écrites ligne après ligne.
+    nb = max(len(lignes), len(reglements), len(dettes))
+    grille = [{"ligne": lignes[i] if i < len(lignes) else None,
+               "reglement": reglements[i] if i < len(reglements) else None,
+               "dette": dettes[i] if i < len(dettes) else None} for i in range(nb)]
+    return {"lignes": lignes, "reglements": reglements, "dettes": dettes, "grille": grille, "entete": entete,
             "totaux": totaux, "occupees": len(occupants), "extras_du_jour": extras_du_jour}
+
+
+# --- Fiche bar / restaurant (même présentation que la fiche recette chambres) ------------------------------
+GROUPES_BAR = ((Article.Categorie.BAR, "BOISSONS (BAR)"), (Article.Categorie.RESTAURANT, "PLATS (CUISINE)"))
+
+
+def fiche_bar_restaurant(jour, sessions=None):
+    """Ventes du jour au bar et à la cuisine, article par article : Qté V, Cash, Crédit, Offre, Total, Mobile.
+
+    `sessions` : une personne seulement (sa ou ses caisses du jour) ; sinon toute la journée de la caisse Cuisine / Bar.
+    Cash = payé tout de suite (espèces ou mobile) ; Mobile = la part payée par Orange Money ou MTN MoMo ;
+    MONTANT = l'argent reçu (Cash) ; Total vente = Cash + Crédit (les offres ne rapportent rien).
+    """
+    ventes = (VenteComptoir.objects.filter(journee=jour, annulee=False,
+                                           article__categorie__in=[c for c, _ in GROUPES_BAR])
+              .select_related("article", "encaissement", "sejour__chambre", "client").order_by("date"))
+    if sessions is not None:
+        ventes = ventes.filter(session__in=sessions)
+    par_categorie = {c: {} for c, _ in GROUPES_BAR}
+    for v in ventes:
+        ligne = par_categorie[v.article.categorie].setdefault(v.article_id, {
+            "article": v.article, "prix": v.prix_unitaire, "quantite": 0, "cash": 0, "mobile": 0, "credit": 0,
+            "offre": 0, "total": 0, "noms": [], "obs": []})
+        ligne["quantite"] += v.quantite
+        ligne["total"] += v.montant
+        if v.reglement == VenteComptoir.Reglement.COMPTANT:
+            ligne["cash"] += v.montant
+            if v.encaissement_id and v.encaissement.mode in Encaissement.MODES_MOBILE:
+                ligne["mobile"] += v.montant
+        elif v.reglement == VenteComptoir.Reglement.CREDIT:
+            ligne["credit"] += v.montant
+            nom = f"ch. {v.sejour.chambre.numero}" if v.sejour_id else str(v.client or "")
+            if nom and nom not in ligne["noms"]:
+                ligne["noms"].append(nom)
+        else:
+            ligne["offre"] += v.montant
+            texte = f"offert : {v.observation}" if v.observation else "offert"
+            if texte not in ligne["obs"]:
+                ligne["obs"].append(texte)
+    groupes = []
+    for categorie, titre in GROUPES_BAR:
+        lignes = sorted(par_categorie[categorie].values(), key=lambda x: (x["article"].ordre, x["article"].nom))
+        if lignes:
+            groupes.append({"titre": titre, "lignes": lignes})
+    toutes = [x for g in groupes for x in g["lignes"]]
+    totaux = {k: sum(x[k] for x in toutes) for k in ("quantite", "cash", "mobile", "credit", "offre", "total")}
+    totaux["montant"] = totaux["cash"]
+    totaux["especes"] = totaux["cash"] - totaux["mobile"]
+    if sessions is None:
+        sessions = _sessions_du_jour(jour, Tiroir.Poste.BAR)
+    entete = entete_caisse(sorted(sessions, key=lambda s: s.ouverte_le))
+    entete["total_vente"] = totaux["cash"] + totaux["credit"]
+    return {"groupes": groupes, "totaux": totaux, "entete": entete, "vide": not toutes}
 
 
 def chambres_a_faire(jour):

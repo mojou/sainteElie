@@ -100,6 +100,27 @@ def sejour_detail(request, pk):
     })
 
 
+@acces_requis(reception)
+def sejour_facture(request, pk):
+    """La facture du séjour (provisoire tant que le client est là) : à imprimer ou à télécharger en PDF."""
+    from .facturation import facture
+
+    sejour = get_object_or_404(Sejour.objects.select_related("client", "chambre"), pk=pk)
+    return render(request, "hotel/facture.html", {"f": facture(sejour), "sejour": sejour})
+
+
+@acces_requis(reception)
+def sejour_facture_pdf(request, pk):
+    from core.pdf import reponse_pdf
+
+    from .facturation import facture
+    from .pdf import facture_pdf
+
+    sejour = get_object_or_404(Sejour.objects.select_related("client", "chambre"), pk=pk)
+    f = facture(sejour)
+    return reponse_pdf(facture_pdf(f), f"facture-{f.numero}.pdf")
+
+
 @require_POST
 @acces_requis(reception)
 def sejour_action(request, pk, action):

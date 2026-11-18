@@ -340,6 +340,20 @@ la cuisine / bar arrive directement sur son écran de vente. Le gérant et les a
 - **Toutes les listes déroulantes se filtrent en tapant** quelques lettres (sans souci des accents ni des majuscules) :
   chambre, client, article, personne… Les flèches et Entrée fonctionnent au clavier.
 
+### Reçus et factures
+
+- **Reçu de paiement** (un par encaissement, bouton « Reçu n°… ») : en-tête de l'hôtel (nom, adresse, téléphone,
+  e-mail, NIU / RCCM pris dans Paramètres → Établissement), client, objet, détail des articles, montant en chiffres et
+  en lettres, moyen de paiement, situation du séjour (total, déjà payé, reste) et zones de signature. Un reçu annulé
+  l'affiche en rouge. Remboursements et annulations ont leur propre titre.
+- **Facture du séjour** (bouton « Facture » sur la fiche du séjour) : nuits (prix normal et remise s'il y en a),
+  extras, paiements reçus (reçus et virements), total, déjà payé, reste à payer ou à rendre, « Arrêtée la présente
+  facture à la somme de… » et tampon « Payée ». Elle est **provisoire** tant que le client est là, définitive après
+  son départ (nuits réellement passées). Numéro : année d'arrivée et numéro du séjour (`2026-0012`).
+- Les deux s'**impriment** sur une feuille A4 (bouton « Imprimer ») ou se **téléchargent en PDF** pour être envoyés
+  par WhatsApp ou par e-mail. Le client retrouve aussi la facture de ses séjours dans son **espace client**, une fois
+  son compte relié à sa fiche par la réception.
+
 ## Règles de gestion appliquées
 
 Réception et caisse suivent la version corrigée du complément au cahier des charges.
@@ -417,10 +431,21 @@ DG — 3 500 FCFA »). Un plat n'a pas de stock. Un prix modifié dans l'applica
 - **Stock boutique** : Prix, S.I, Approv, R1, R2, R3, S.F, Montant, Cumulé (depuis le 1er du mois), Crédit ; la main
   courante boutique est imprimée dessous. R1, R2, R3 = quantités vendues par chaque réceptionniste du jour, dans l'ordre de
   leur prise de service (noms en tête de fiche) ; une colonne R4 s'ajoute si quatre réceptionnistes se succèdent.
-- **Recette chambres** : pour chaque chambre, Recette jr (part de la nuit couverte par les paiements), Imp jr (part
-  impayée), Offre jr et Compensation (séjours offerts ou compensés, à la valeur de la grille), Avance (payé au-delà de la
-  nuit du jour) ; puis les règlements de dettes du jour et les restes de dettes (chambres et comptoir). Les paiements
-  règlent d'abord les dettes des jours précédents.
+- **Fiche recette chambres** (le modèle papier de la réception, colonne pour colonne) : en haut Date, Receptioniste,
+  Montant ouverture (espèces comptées à l'ouverture de la première caisse du jour), Montant fermeture (espèces comptées
+  à la remise de la dernière), Total vente (tout ce qui est entré dans la caisse de la réception : chambres et boutique),
+  Heure (de l'ouverture à la remise). Puis une ligne par chambre : N° CH, Nom client, Recette jr (part de la nuit
+  couverte par les paiements), Imp jr (part impayée), Offre jr et Comp. (séjours offerts ou compensés, à la valeur de
+  la grille), avance (payé au-delà de la nuit du jour), Nom client / Reg dette (dettes réglées ce jour, en liste),
+  Nom client / Reste dette (ce qui reste dû, en liste), Obs. (extras du jour, départ demain…), Mobile (payé par
+  Orange Money ou MTN MoMo), Heure arrivé, Heure depart. En bas : TOTAL (en jaune), TOTAL OM et MONTANT (tout l'argent
+  reçu ce jour pour les chambres : nuits, avances, extras, dettes). Les paiements règlent d'abord les dettes des jours
+  précédents. PDF sur une feuille A4 en paysage, et **fiche vierge** pour remplir à la main.
+- **Fiche bar / restaurant** (même présentation) : Date, Caissier(e), Montant ouverture, Montant fermeture, Total vente
+  (Cash + Crédit), Heure ; puis article par article, boissons puis plats : N°, Désignation, P.U, Qté V, Cash (payé tout
+  de suite), Crédit et Nom client (chambre ou client), Offre, Total, Obs., Mobile ; TOTAL, TOTAL OM et MONTANT (l'argent
+  reçu). Toujours ouverte, même quand le module « Ventes » est fermé, car les plats commandés en ligne passent par la
+  caisse Cuisine / Bar. Chacun voit ses ventes ; la direction voit la journée. Fiche vierge aussi.
 - **Offre** au comptoir : motif obligatoire, sortie de stock sans recette. **Séjour offert ou en compensation** : nuit à
   0 FCFA, motif et code PIN du chef de réception ou du gérant.
 

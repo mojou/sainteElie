@@ -1,35 +1,75 @@
 {% extends "base.html" %}{% load gestion %}
-{% block titre %}Recette chambres{% endblock %}
+{% block titre %}Fiche recette chambres{% endblock %}
 {% block contenu %}
-<div class="entete"><div><h1>Recette chambres · {{ jour|date:"d/m/Y" }}</h1>
-  <p>{{ d.occupees }} chambre{{ d.occupees|pluralize }} occupée{{ d.occupees|pluralize }} la nuit du {{ jour|date:"d/m" }}. Réceptionnistes : {{ receptionnistes|join:", "|default:"-" }}</p></div></div>
-{% include "fiches/_navigation.html" %}
-<div class="tableau"><table>
-  <tr><th>Ch</th><th>Nom client</th><th class="nombre">Recette jr</th><th class="nombre">Imp jr</th><th class="nombre">Extras jr</th><th class="nombre">Offre jr</th><th class="nombre">Compensation</th><th class="nombre">Avance</th><th>Observation</th></tr>
-  {% for x in d.lignes %}
-  <tr><td>{{ x.chambre.numero }}</td><td>{% if x.sejour %}{{ x.sejour.client }} <a class="btn petit secondaire no-print" href="{% url 'hotel:sejour' x.sejour.pk %}">Séjour</a>{% endif %}</td>
-    <td class="nombre">{{ x.recette|nv }}</td><td class="nombre {% if x.impaye %}rouge{% endif %}">{{ x.impaye|nv }}</td><td class="nombre">{{ x.extras|nv }}</td>
-    <td class="nombre">{{ x.offre|nv }}</td><td class="nombre">{{ x.compensation|nv }}</td><td class="nombre">{{ x.avance|nv }}</td>
-    <td><small>{{ x.observation }}</small></td></tr>
-  {% endfor %}
-  <tr class="total"><td>TOTAL</td><td></td><td class="nombre">{{ d.totaux.recette|nombre }}</td><td class="nombre">{{ d.totaux.impaye|nombre }}</td><td class="nombre">{{ d.totaux.extras|nombre }}</td><td class="nombre">{{ d.totaux.offre|nombre }}</td>
-    <td class="nombre">{{ d.totaux.compensation|nombre }}</td><td class="nombre">{{ d.totaux.avance|nombre }}</td><td></td></tr>
-</table></div>
-<h2>Extras du jour <small>(cuisine, réception, bar) : à encaisser à la réception</small></h2>
-<div class="tableau"><table><tr><th>Heure</th><th>Ch</th><th>Client</th><th>Ce qui a été pris</th><th>Saisi par</th><th class="nombre">Montant</th></tr>
-  {% for e in d.extras_du_jour %}<tr><td>{{ e.date_conso|date:"H:i" }}</td><td>{{ e.sejour.chambre.numero }}</td><td>{{ e.sejour.client }}</td>
-    <td>{{ e.description }}</td><td>{{ e.saisi_par }} <small>({{ e.saisi_par.get_role_display }})</small></td><td class="nombre">{{ e.montant|nombre }}</td></tr>
-  {% empty %}<tr><td colspan="6" class="vide">Aucun extra ce jour.</td></tr>{% endfor %}
-  {% if d.extras_du_jour %}<tr class="total"><td colspan="5">Total</td><td class="nombre">{{ d.totaux.extras|nombre }}</td></tr>{% endif %}
-</table></div>
-<div class="grille">
-  <div class="carte"><h3>Règlements de dettes du jour</h3>
-    {% for r in d.reglements %}<div>{{ r.nom }} : <strong>{{ r.montant|fcfa }}</strong></div>{% empty %}<p class="discret">Aucun.</p>{% endfor %}
-    <p>Total : {{ d.totaux.reglements|fcfa }}</p></div>
-  <div class="carte"><h3>Restes de dettes</h3>
-    {% for r in d.dettes %}<div>{{ r.nom }} : <strong class="rouge">{{ r.montant|fcfa }}</strong></div>{% empty %}<p class="discret">Aucune dette.</p>{% endfor %}
-    <p>Total : {{ d.totaux.dettes|fcfa }}</p></div>
+<div class="entete no-print"><div><h1>Fiche recette chambres · {{ jour|date:"d/m/Y" }}</h1>
+  <p>Remplie toute seule à partir des séjours et des paiements, comme la fiche papier de la réception.
+    {{ d.occupees }} chambre{{ d.occupees|pluralize }} occupée{{ d.occupees|pluralize }} la nuit du {{ jour|date:"d/m" }}.</p></div>
+  <div class="actions">
+    <a class="btn" href="?date={{ jour|date:'Y-m-d' }}&format=pdf">Imprimer la fiche (PDF)</a>
+    <a class="btn secondaire" href="?date={{ jour|date:'Y-m-d' }}&vierge=1">Fiche vierge à remplir à la main</a>
+  </div>
 </div>
-<p class="discret">Recette jr : part de la nuit du jour couverte par les paiements. Imp jr : part non payée. Extras jr : ce que la chambre a consommé ce jour (cuisine, bar…), payé à la réception. Offre jr et Compensation : séjours offerts ou compensés, à la valeur de la grille.
-  Avance : ce que le client a payé d'avance au-delà de la nuit du jour. Les paiements règlent d'abord les dettes des jours précédents.</p>
+{% include "fiches/_navigation.html" %}
+
+<div class="fiche-defile">
+<table class="fiche-papier">
+  <thead>
+    <tr class="bandeau"><th>Date:</th><th colspan="2">Receptioniste</th><th colspan="3">Montant ouverture</th>
+      <th colspan="3">Montant fermeture</th><th colspan="4">Total vente</th><th colspan="2">Heure</th></tr>
+    <tr class="bandeau-valeurs"><td>{{ jour|date:"d/m/Y" }}</td><td colspan="2">{{ d.entete.noms|join:", "|default:"-" }}</td>
+      <td colspan="3">{% if d.entete.ouverture is not None %}{{ d.entete.ouverture|nombre }}{% endif %}</td>
+      <td colspan="3">{% if d.entete.fermeture is not None %}{{ d.entete.fermeture|nombre }}{% else %}<small>caisse ouverte</small>{% endif %}</td>
+      <td colspan="4">{{ d.entete.total_vente|nombre }}</td><td colspan="2">{{ d.entete.heure }}</td></tr>
+    <tr class="colonnes"><th>N° CH</th><th>Nom client</th><th>Recette jr</th><th>Imp jr</th><th>Offre jr</th><th>Comp.</th>
+      <th>avance</th><th>Nom client</th><th>Reg dette</th><th>Nom client</th><th>Reste dette</th><th>Obs.</th><th>Mobile</th>
+      <th>Heure arrivé</th><th>Heure depart</th></tr>
+  </thead>
+  <tbody>
+    {% for rang in d.grille %}{% with x=rang.ligne %}
+    <tr>
+      {% if x %}
+      <td class="ch">{{ x.chambre.numero }}</td>
+      <td>{% if x.sejour %}<a href="{% url 'hotel:sejour' x.sejour.pk %}">{{ x.sejour.client }}</a>{% endif %}</td>
+      <td class="nombre">{{ x.recette|nv }}</td><td class="nombre {% if x.impaye %}rouge{% endif %}">{{ x.impaye|nv }}</td>
+      <td class="nombre">{{ x.offre|nv }}</td><td class="nombre">{{ x.compensation|nv }}</td><td class="nombre">{{ x.avance|nv }}</td>
+      {% else %}<td></td><td></td><td></td><td></td><td></td><td></td><td></td>{% endif %}
+      <td>{{ rang.reglement.nom }}</td><td class="nombre">{% if rang.reglement %}{{ rang.reglement.montant|nombre }}{% endif %}</td>
+      <td>{{ rang.dette.nom }}</td><td class="nombre rouge">{% if rang.dette %}{{ rang.dette.montant|nombre }}{% endif %}</td>
+      {% if x %}
+      <td><small>{{ x.observation }}</small></td><td class="nombre">{{ x.mobile|nv }}</td>
+      <td class="heure">{{ x.heure_arrivee }}</td><td class="heure">{{ x.heure_depart }}</td>
+      {% else %}<td></td><td></td><td></td><td></td>{% endif %}
+    </tr>
+    {% endwith %}{% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="total"><td>TOTAL</td><td></td><td class="nombre">{{ d.totaux.recette|nombre }}</td><td class="nombre">{{ d.totaux.impaye|nombre }}</td>
+      <td class="nombre">{{ d.totaux.offre|nombre }}</td><td class="nombre">{{ d.totaux.compensation|nombre }}</td>
+      <td class="nombre">{{ d.totaux.avance|nombre }}</td><td></td><td class="nombre">{{ d.totaux.reglements|nombre }}</td><td></td>
+      <td class="nombre">{{ d.totaux.dettes|nombre }}</td><td class="om">TOTAL OM</td>
+      <td class="om-valeur" colspan="3">{{ d.totaux.mobile|nombre }}</td></tr>
+    <tr class="montant"><td>MONTANT</td><td colspan="14">{{ d.totaux.montant|fcfa }}</td></tr>
+  </tfoot>
+</table>
+</div>
+
+<p class="discret">
+  <strong>Recette jr</strong> : part de la nuit du jour couverte par les paiements. <strong>Imp jr</strong> : part pas encore payée.
+  <strong>Offre jr</strong> et <strong>Comp.</strong> : séjours offerts ou en compensation, à la valeur de la grille.
+  <strong>avance</strong> : ce que le client a payé d'avance au-delà de la nuit du jour.
+  <strong>Reg dette</strong> : dettes réglées ce jour. <strong>Reste dette</strong> : ce que des clients doivent encore.
+  <strong>Mobile</strong> et <strong>TOTAL OM</strong> : payé par Orange Money ou MTN MoMo.
+  <strong>MONTANT</strong> : tout l'argent reçu ce jour pour les chambres (nuits, avances, extras, dettes).
+  <strong>Total vente</strong> : tout ce qui est entré dans la caisse de la réception (chambres et boutique).
+  Les extras (cuisine, bar…) sont notés dans « Obs. » et se paient avec la chambre.
+</p>
+
+{% if d.extras_du_jour %}
+<h2 class="no-print">Extras du jour <small>(cuisine, réception, bar) : à encaisser à la réception</small></h2>
+<div class="tableau no-print"><table><tr><th>Heure</th><th>Ch</th><th>Client</th><th>Ce qui a été pris</th><th>Saisi par</th><th class="nombre">Montant</th></tr>
+  {% for e in d.extras_du_jour %}<tr><td>{{ e.date_conso|date:"H:i" }}</td><td>{{ e.sejour.chambre.numero }}</td><td>{{ e.sejour.client }}</td>
+    <td>{{ e.description }}</td><td>{{ e.saisi_par }}</td><td class="nombre">{{ e.montant|nombre }}</td></tr>{% endfor %}
+  <tr class="total"><td colspan="5">Total</td><td class="nombre">{{ d.totaux.extras|nombre }}</td></tr>
+</table></div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Fiche bar / restaurant{% endblock %}
+{% block contenu %}
+<div class="entete no-print"><div><h1>Fiche bar / restaurant · {{ jour|date:"d/m/Y" }}</h1>
+  <p>Remplie toute seule à partir des ventes de la caisse Cuisine / Bar (boissons, plats, commandes en ligne servies),
+    sur le modèle de la fiche recette chambres.{% if session %} Caisse de {{ session.receptionniste }} seulement.{% endif %}</p></div>
+  <div class="actions">
+    <a class="btn" href="?date={{ jour|date:'Y-m-d' }}{% if session %}&session={{ session.pk }}{% endif %}&format=pdf">Imprimer la fiche (PDF)</a>
+    <a class="btn secondaire" href="?date={{ jour|date:'Y-m-d' }}&vierge=1">Fiche vierge à remplir à la main</a>
+  </div>
+</div>
+{% include "fiches/_navigation.html" %}
+
+<div class="fiche-defile">
+<table class="fiche-papier">
+  <thead>
+    <tr class="bandeau"><th>Date:</th><th>Caissier(e)</th><th colspan="3">Montant ouverture</th>
+      <th colspan="2">Montant fermeture</th><th colspan="2">Total vente</th><th colspan="2">Heure</th></tr>
+    <tr class="bandeau-valeurs"><td>{{ jour|date:"d/m/Y" }}</td><td>{{ d.entete.noms|join:", "|default:"-" }}</td>
+      <td colspan="3">{% if d.entete.ouverture is not None %}{{ d.entete.ouverture|nombre }}{% endif %}</td>
+      <td colspan="2">{% if d.entete.fermeture is not None %}{{ d.entete.fermeture|nombre }}{% elif d.entete.noms %}<small>caisse ouverte</small>{% endif %}</td>
+      <td colspan="2">{{ d.entete.total_vente|nombre }}</td><td colspan="2">{{ d.entete.heure }}</td></tr>
+    <tr class="colonnes"><th>N°</th><th>Désignation</th><th>P.U</th><th>Qté V</th><th>Cash</th><th>Crédit</th>
+      <th>Nom client (crédit)</th><th>Offre</th><th>Total</th><th>Obs.</th><th>Mobile</th></tr>
+  </thead>
+  <tbody>
+    {% for g in d.groupes %}
+    <tr class="groupe"><td colspan="11">{{ g.titre }}</td></tr>
+    {% for x in g.lignes %}
+    <tr><td class="ch">{{ forloop.counter }}</td><td>{{ x.article.nom }}</td><td class="nombre">{{ x.prix|nombre }}</td>
+      <td class="nombre">{{ x.quantite }}</td><td class="nombre">{{ x.cash|nv }}</td><td class="nombre">{{ x.credit|nv }}</td>
+      <td>{{ x.noms|join:", " }}</td><td class="nombre">{{ x.offre|nv }}</td><td class="nombre">{{ x.total|nv }}</td>
+      <td><small>{{ x.obs|join:"; " }}</small></td><td class="nombre">{{ x.mobile|nv }}</td></tr>
+    {% endfor %}
+    {% empty %}
+    <tr><td></td><td colspan="10" class="vide">Aucune vente ce jour.</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="total"><td>TOTAL</td><td></td><td></td><td class="nombre">{{ d.totaux.quantite }}</td>
+      <td class="nombre">{{ d.totaux.cash|nombre }}</td><td class="nombre">{{ d.totaux.credit|nombre }}</td><td></td>
+      <td class="nombre">{{ d.totaux.offre|nombre }}</td><td class="nombre">{{ d.totaux.total|nombre }}</td>
+      <td class="om">TOTAL OM</td><td class="om-valeur">{{ d.totaux.mobile|nombre }}</td></tr>
+    <tr class="montant"><td>MONTANT</td><td colspan="10">{{ d.totaux.montant|fcfa }}
+      <small>(dont espèces {{ d.totaux.especes|fcfa }})</small></td></tr>
+  </tfoot>
+</table>
+</div>
+
+<p class="discret">
+  <strong>Cash</strong> : payé tout de suite (espèces, Orange Money ou MTN MoMo). <strong>Crédit</strong> : sur une chambre
+  (payé à la réception avec la chambre) ou au nom d'un client. <strong>Offre</strong> : offert, ne rapporte rien.
+  <strong>Total</strong> = Cash + Crédit + Offre. <strong>Mobile</strong> et <strong>TOTAL OM</strong> : la part payée par
+  Orange Money ou MTN MoMo. <strong>MONTANT</strong> : l'argent reçu (Cash). <strong>Total vente</strong> = Cash + Crédit.
+</p>
+{% endblock %}

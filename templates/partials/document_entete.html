@@ -1,0 +1,19 @@
+{# En-tête des documents remis au client (reçu, facture). Variables : titre, numero, date, format_date. #}
+<header class="doc-entete">
+  <div class="doc-hotel">
+    <span class="doc-logo" aria-hidden="true">{{ etablissement.monogramme }}</span>
+    <div>
+      <div class="doc-nom">{{ etablissement.nom }}</div>
+      <div class="doc-coord">
+        {% if etablissement.adresse %}{{ etablissement.adresse }}<br>{% endif %}
+        {% if etablissement.telephone %}Tél. {{ etablissement.telephone }}{% endif %}{% if etablissement.telephone and etablissement.email %} · {% endif %}{% if etablissement.email %}{{ etablissement.email }}{% endif %}
+        {% if etablissement.niu %}<br>NIU / RCCM : {{ etablissement.niu }}{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="doc-titre">
+    <div class="doc-type">{{ titre }}</div>
+    <div class="doc-numero">N° {{ numero }}</div>
+    <div class="doc-date">{{ date|date:format_date }}</div>
+  </div>
+</header>

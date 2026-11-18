@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -295,16 +296,35 @@ def annuler_encaissement(request, pk):
         "bouton": "Annuler l'encaissement", "retour_url": retour})
 
 
-@acces_requis(suivi_caisse)
-def recu_client(request, pk):
-    encaissement = get_object_or_404(Encaissement.objects.select_related("sejour__client", "sejour__chambre",
-                                                                         "utilisateur", "client"), pk=pk)
+def _recu_visible(request, pk):
+    encaissement = get_object_or_404(Encaissement.objects.select_related(
+        "sejour__client", "sejour__chambre", "utilisateur", "client", "annule"), pk=pk)
     if not (request.user.voit_reception
             or services.sessions_visibles(request.user).filter(pk=encaissement.session_id).exists()):
         raise PermissionDenied("Ce reçu appartient à la caisse d'un collègue.")
-    return render(request, "caisse/recu_client.html", {
-        "e": encaissement, "sejour": encaissement.sejour, "ventes": encaissement.ventes.select_related("article"),
-        "dette": services.dette_client(encaissement.client) if encaissement.client_id else None})
+    return encaissement
+
+
+@acces_requis(suivi_caisse)
+def recu_client(request, pk):
+    """Le reçu à remettre au client : à imprimer, ou à télécharger en PDF pour l'envoyer par WhatsApp."""
+    from .recus import recu
+
+    encaissement = _recu_visible(request, pk)
+    return render(request, "caisse/recu_client.html", {"r": recu(encaissement), "e": encaissement,
+                                                       "sejour": encaissement.sejour,
+                                                       "maintenant": timezone.localtime()})
+
+
+@acces_requis(suivi_caisse)
+def recu_client_pdf(request, pk):
+    from core.pdf import reponse_pdf
+
+    from .pdf import recu_client_pdf as fabriquer
+    from .recus import recu
+
+    encaissement = _recu_visible(request, pk)
+    return reponse_pdf(fabriquer(recu(encaissement)), f"recu-{encaissement.numero_recu}.pdf")
 
 
 # --- Rapports quotidiens --------------------------------------------------------------------------

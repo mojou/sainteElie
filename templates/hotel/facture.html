@@ -1,0 +1,75 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}{{ f.titre }} n°{{ f.numero }}{% endblock %}
+{% block contenu %}
+<div class="doc-barre no-print">
+  <button class="btn grand" type="button" onclick="window.print()">Imprimer la facture</button>
+  <a class="btn secondaire grand" href="{% url 'hotel:facture_pdf' sejour.pk %}">Télécharger en PDF</a>
+  <a class="btn secondaire" href="{% url 'hotel:sejour' sejour.pk %}">Retour au séjour</a>
+</div>
+{% if not f.definitive %}
+<p class="message info no-print">Facture provisoire : le client est encore là (ou pas encore arrivé). Le montant
+  définitif est calculé à son départ, d'après les nuits passées et ses consommations.</p>
+{% endif %}
+
+<article class="document">
+  {% include "partials/document_entete.html" with titre=f.titre numero=f.numero date=f.date format_date="d/m/Y" %}
+
+  <div class="doc-blocs">
+    <section class="doc-bloc"><h3>Facturé à</h3>
+      <p><strong>{{ sejour.client.nom }}</strong>{% if sejour.client.entreprise %}<br>{{ sejour.client.entreprise }}{% endif %}
+        <br>{{ sejour.client.telephone }}{% if sejour.client.email %}<br>{{ sejour.client.email }}{% endif %}</p>
+    </section>
+    <section class="doc-bloc"><h3>Séjour</h3>
+      <p>Chambre <strong>{{ sejour.chambre.numero }}</strong> ({{ sejour.chambre.get_categorie_display|lower }})
+        <br>Du {{ sejour.date_arrivee|date:"d/m/Y" }} au {{ sejour.date_depart|date:"d/m/Y" }}
+        <br>{{ sejour.nb_nuits }} nuit{{ sejour.nb_nuits|pluralize }} · {{ sejour.nb_personnes }} personne{{ sejour.nb_personnes|pluralize }}</p>
+    </section>
+  </div>
+
+  <div class="doc-defile"><table class="doc-table">
+    <thead><tr><th>Désignation</th><th class="nombre doc-col">Qté</th><th class="nombre doc-col">Prix unitaire</th><th class="nombre">Montant</th></tr></thead>
+    <tbody>
+      {% for l in f.lignes %}
+      <tr><td>{{ l.designation }}{% if l.quantite != 1 %}<span class="doc-qte">{{ l.quantite }} × {{ l.prix|fcfa }}</span>{% endif %}{% if l.detail %}<span class="doc-detail">{{ l.detail }}</span>{% endif %}</td>
+        <td class="nombre doc-col">{{ l.quantite }}</td><td class="nombre doc-col">{{ l.prix|fcfa }}</td><td class="nombre">{{ l.montant|fcfa }}</td></tr>
+      {% empty %}
+      <tr><td colspan="4">Rien n'est facturé pour ce séjour.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr><td>Total</td><td class="doc-col"></td><td class="doc-col"></td><td class="nombre">{{ f.total|fcfa }}</td></tr></tfoot>
+  </table></div>
+
+  {% if f.paiements %}
+  <h3 class="doc-sous-titre">Paiements reçus</h3>
+  <div class="doc-defile"><table class="doc-table">
+    <thead><tr><th>Date</th><th>Détail</th><th class="nombre">Montant</th></tr></thead>
+    <tbody>
+      {% for p in f.paiements %}<tr><td>{{ p.date|date:"d/m/Y" }}</td><td>{{ p.libelle }}</td><td class="nombre">{{ p.montant|fcfa }}</td></tr>{% endfor %}
+    </tbody>
+    <tfoot><tr><td colspan="2">Total payé</td><td class="nombre">{{ f.total_paye|fcfa }}</td></tr></tfoot>
+  </table></div>
+  {% endif %}
+
+  <div class="doc-bas">
+    <div class="doc-tampons">
+      {% if f.soldee %}<span class="doc-tampon">Payée</span>
+      {% elif f.reste > 0 and f.definitive %}<span class="doc-tampon attente">À régler</span>{% endif %}
+    </div>
+    <div class="doc-totaux">
+      <div><span>Total de la facture</span><span>{{ f.total|fcfa }}</span></div>
+      <div><span>Déjà payé</span><span>{{ f.total_paye|fcfa }}</span></div>
+      {% if f.a_rendre %}<div class="fort"><span>À rendre au client</span><span>{{ f.a_rendre|fcfa }}</span></div>
+      {% else %}<div class="fort"><span>Reste à payer</span><span>{{ f.reste|fcfa }}</span></div>{% endif %}
+    </div>
+  </div>
+
+  <p class="doc-lettres">Arrêtée la présente facture à la somme de :
+    <strong>{{ f.total|en_lettres|default:"zéro franc CFA" }}</strong>.</p>
+
+  <div class="doc-signatures">
+    <div class="doc-signature"><span>Pour la direction</span><strong>&nbsp;</strong><span class="ligne"></span></div>
+    <div class="doc-signature"><span>Le client</span><strong>&nbsp;</strong><span class="ligne"></span></div>
+  </div>
+  <footer class="doc-pied">Merci de votre confiance et à bientôt au {{ f.etablissement.nom }} !</footer>
+</article>
+{% endblock %}

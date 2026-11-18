@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from caisse import services as caisse
 from caisse.models import Encaissement, VenteComptoir
+from core.utils import format_fcfa
 from hotel.models import Client, Extra
 
 from .test_comptoir import BaseComptoir
@@ -31,7 +32,7 @@ class CommandeTests(BaseComptoir):
         self.assertEqual(self.biere.quantite, 24 - 4)
         self.assertIn("4 × 33 EXPORT", enc.libelle)
         recu = self.client.get(reverse("caisse:recu_client", args=[enc.pk]))
-        for texte in ("4 × 33 EXPORT", "2 × Poulet DG", "Dix-sept mille francs CFA"):
+        for texte in ("33 EXPORT", "Poulet DG", format_fcfa(13000), "Dix-sept mille francs CFA"):
             self.assertContains(recu, texte)
 
     def test_sur_la_chambre_un_extra_par_article(self):
