@@ -91,6 +91,20 @@ def ouvert(context, cle):
 
 
 @register.filter
+def credit_photo(article):
+    """Le crédit d'une photo d'illustration, le nom de la licence en lien discret (les licences libres l'exigent)."""
+    from django.utils.html import format_html
+
+    credit = article.photo_credit or ""
+    morceaux = credit.rsplit(", ", 2)  # « titre », auteur | licence | via Wikimedia Commons
+    if not article.photo_licence_url or len(morceaux) != 3:
+        return credit
+    debut, licence, fin = morceaux
+    return format_html('{}, <a class="lien-discret" href="{}" rel="noopener nofollow" target="_blank">{}</a>, {}',
+                       debut, article.photo_licence_url, licence, fin)
+
+
+@register.filter
 def en_lettres(valeur):
     """250000 → « Deux cent cinquante mille francs CFA »."""
     from core.utils import montant_en_lettres

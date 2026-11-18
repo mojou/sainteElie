@@ -1,4 +1,4 @@
-{% extends "vitrine/base.html" %}
+{% extends "vitrine/base.html" %}{% load gestion %}
 {% block titre %}Crédits photos · {{ etablissement_nom }}{% endblock %}
 {% block contenu %}
 <section class="v-section">
@@ -14,8 +14,7 @@
         <img src="{{ a.photo_url }}" alt="{{ a.nom }} (photo d'illustration)" loading="lazy">
         <figcaption>
           <strong>{{ a.nom }}</strong>
-          <span>Photo : {{ a.photo_credit }}</span>
-          <span>{% if a.photo_licence_url %}<a href="{{ a.photo_licence_url }}" rel="noopener nofollow" target="_blank">Voir la licence</a> · {% endif %}{% if a.photo_source %}<a href="{{ a.photo_source }}" rel="noopener nofollow" target="_blank">Source</a>{% endif %}</span>
+          <span>Photo : {{ a|credit_photo }}</span>
         </figcaption>
       </figure>
       {% endfor %}

@@ -369,3 +369,4 @@
 .v-credit img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
 .v-credit figcaption { display: grid; gap: .2rem; padding: .7rem .8rem; font-size: .86rem; color: var(--discret); }
 .v-credit figcaption strong { color: var(--marine); font-size: .95rem; }
+.v-credit .lien-discret { color: inherit; text-decoration: underline dotted; }
