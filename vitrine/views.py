@@ -293,9 +293,26 @@ def _recherche(request):
 
 
 def reserver(request):
-    """Étape 1 et 2 : les dates, puis les chambres libres à ces dates, avec le prix du séjour."""
+    """Étape 1 et 2 : les dates, puis les chambres libres à ces dates, avec le prix du séjour.
+
+    Sans dates (bouton « Réserver » du site), on montre tout de suite les chambres libres cette nuit ; le client change
+    les dates en haut de la page s'il vient plus tard.
+    """
+    from datetime import timedelta
+    from urllib.parse import urlencode
+
+    from django.urls import reverse
+
+    from core.utils import aujourd_hui
+
     from . import reservations
 
+    if not request.GET.get("arrivee"):
+        jour = aujourd_hui()
+        personnes = request.GET.get("personnes", "1")
+        par_defaut = {"arrivee": jour.isoformat(), "depart": (jour + timedelta(days=1)).isoformat(),
+                      "personnes": personnes if personnes.isdigit() else "1"}
+        return redirect(f"{reverse('vitrine:reserver')}?{urlencode(par_defaut)}")
     form, d = _recherche(request)
     types = reservations.types_libres(d["arrivee"], d["depart"], d["personnes"]) if d else None
     return render(request, "vitrine/reserver.html", {

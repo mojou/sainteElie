@@ -12,7 +12,7 @@
       <p class="v-slogan">{{ etablissement.slogan|default:"Votre séjour, en toute simplicité." }}</p>
       <p class="v-intro">{% if etablissement.presentation %}{{ etablissement.presentation|linebreaksbr }}{% else %}Chambres et suites, restaurant, bar et boutique : tout est sur place. Créez votre compte client pour suivre vos séjours, ce que vous avez payé et ce qu'il reste à régler.{% endif %}</p>
       <div class="v-actions">
-        <a class="btn or grand" href="#reserver">Réserver une chambre</a>
+        <a class="btn or grand" href="{% url 'vitrine:reserver' %}">Réserver une chambre</a>
         <a class="btn or grand" href="{% url 'vitrine:commander' %}">Commander des plats</a>
         <a class="btn v-fantome grand" href="{% url 'vitrine:inscription' %}">Créer un compte</a>
         <a class="btn v-fantome grand" href="{% url 'accounts:connexion' %}">Se connecter</a>
@@ -70,7 +70,7 @@
         <h3>{{ o.libelle }}</h3>
         <p>{{ o.compte }}</p>
         <p class="v-prix">{% if o.prix %}À partir de <strong>{{ o.prix|fcfa }}</strong> la nuit{% else %}Prix à la réception{% endif %}</p>
-        <a class="btn secondaire v-carte-reserver" href="#reserver">Réserver</a>
+        <a class="btn secondaire v-carte-reserver" href="{% url 'vitrine:reserver' %}">Réserver</a>
       </article>
       {% empty %}
       <article class="v-carte v-apparait"><h3>Chambres</h3><p>Renseignez-vous à la réception.</p></article>

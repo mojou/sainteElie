@@ -13,7 +13,7 @@
     <p class="v-resume-resa">Du <strong>{{ arrivee_texte }}</strong> au <strong>{{ depart_texte }}</strong> ·
       {{ nuits }} nuit{{ nuits|pluralize }} · {{ d.personnes }} personne{{ d.personnes|pluralize }}</p>
     {% if types %}
-    <h2>Choisissez votre chambre</h2>
+    <h2 id="choisir">Choisissez votre chambre</h2>
     <div class="v-types">
       {% for t in types %}
       {% url 'vitrine:reserver_chambre' as url_chambre %}

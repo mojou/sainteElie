@@ -28,6 +28,16 @@ class ReservationEnLigneTests(BaseTest):
         page = self.client.get(reverse("vitrine:site"))
         self.assertContains(page, "Réservez votre chambre")
         self.assertContains(page, 'action="/reserver/"')
+        self.assertNotContains(page, 'href="#reserver"', msg_prefix="chaque bouton « Réserver » mène quelque part")
+        self.assertContains(page, 'class="btn or grand" href="/reserver/"')
+
+    def test_reserver_sans_dates_montre_les_chambres_libres_ce_soir(self):
+        reponse = self.client.get(reverse("vitrine:reserver"))
+        self.assertEqual(reponse.status_code, 302)
+        self.assertIn(f"arrivee={aujourd_hui().isoformat()}", reponse["Location"])
+        page = self.client.get(reponse["Location"])
+        self.assertContains(page, "Choisissez votre chambre")
+        self.assertContains(page, "Voir la chambre")
 
     def test_seules_les_chambres_libres_et_assez_grandes(self):
         self.sejour(arrivee=self.j + timedelta(days=1), depart=self.d + timedelta(days=2), chambre=self.double,
