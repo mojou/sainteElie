@@ -30,12 +30,30 @@ def est_champ_montant(nom, champ):
     return isinstance(champ, forms.IntegerField) and (nom in NOMS_MONTANT or "fcfa" in str(champ.label or "").lower())
 
 
+class FichierProtege(forms.ClearableFileInput):
+    """Champ photo ou justificatif d'une fiche déjà enregistrée.
+
+    Les fichiers sont rangés hors du site (stockage privé) : ils n'ont pas d'adresse publique, donc pas de lien
+    « fichier actuel » (le widget de Django en voudrait un, et la page planterait). On dit seulement qu'il y en a un.
+    """
+
+    template_name = "widgets/fichier_protege.html"
+    initial_text = "Photo ou fichier actuel"
+    input_text = "Pour le remplacer, choisissez-en un autre"
+    clear_checkbox_label = "Le retirer"
+
+    def is_initial(self, value):
+        return bool(value and getattr(value, "name", ""))
+
+
 class StyleMixin:
     """Champs date et heure natifs du navigateur, nombres sans flèches inutiles, montants écrits en lettres."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for nom, champ in self.fields.items():
+            if type(champ.widget) is forms.ClearableFileInput:  # champ photo ou fichier simple (pas l'envoi multiple)
+                champ.widget = FichierProtege(attrs=champ.widget.attrs)
             if est_champ_montant(nom, champ):
                 champ.widget.attrs.setdefault("data-montant", "")
                 if nom in NOMS_ARGENT_RECU:

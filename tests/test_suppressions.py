@@ -98,3 +98,26 @@ class ChambresClientsTests(BaseComptoir):
         reponse = self.client.post(reverse("hotel:client_supprimer", args=[self.client_hotel.pk]), follow=True)
         self.assertContains(reponse, "déjà servi")
         self.assertTrue(Client.objects.filter(pk=self.client_hotel.pk).exists())
+
+
+class FormulaireAvecPhotoTests(BaseComptoir):
+    """Ouvrir la fiche d'un plat qui a déjà une photo (rangée hors du site, sans adresse publique) ne plante pas."""
+
+    def test_modifier_un_plat_qui_a_une_photo(self):
+        from .test_securite import photo_png
+
+        self.plat.photo.save("plat.jpg", photo_png(), save=True)
+        self.client.force_login(self.gerant)
+        page = self.client.get(reverse("stock:plat_modifier", args=[self.plat.pk]))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "déjà enregistrée")
+        self.assertContains(page, "Le retirer")
+        self.assertEqual(self.client.get(reverse("stock:article_modifier", args=[self.biere.pk])).status_code, 200)
+        self.biere.photo.save("biere.jpg", photo_png(), save=True)
+        self.assertEqual(self.client.get(reverse("stock:article_modifier", args=[self.biere.pk])).status_code, 200)
+        # Retirer la photo depuis la fiche
+        self.client.post(reverse("stock:plat_modifier", args=[self.plat.pk]), {
+            "nom": self.plat.nom, "rubrique": "Plats", "prix_vente": 6500, "ordre": 1, "actif": "on",
+            "photo-clear": "on"})
+        self.plat.refresh_from_db()
+        self.assertFalse(self.plat.photo)
