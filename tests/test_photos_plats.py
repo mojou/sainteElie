@@ -57,10 +57,12 @@ class PhotosPlatsTests(BaseTest):
         self.assertNotContains(credits, "Voir la licence")
         self.assertNotContains(credits, ">Source</a>")
         accueil = self.client.get("/")
-        self.assertContains(accueil, "Photos d'illustration")
+        # Sur les photos des plats : le nom et le prix, rien d'autre ; les crédits, seulement par un petit lien en bas
+        self.assertContains(accueil, '<span class="v-plat-nom">Ndolé</span>')
+        self.assertNotContains(accueil, "Photos d'illustration")
+        self.assertNotContains(accueil, "Wikimedia")
         self.assertContains(accueil, reverse("vitrine:credits_photos"))
-        self.assertContains(accueil, "Feuilles de ndolé et pâte d")
-        self.assertContains(self.client.get(reverse("vitrine:commander")), "Photos d'illustration")
+        self.assertNotContains(self.client.get(reverse("vitrine:commander")), "Photos d'illustration")
 
     def test_une_vraie_photo_n_est_jamais_remplacee_et_efface_le_credit(self):
         self.charger()
