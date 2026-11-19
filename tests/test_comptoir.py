@@ -292,7 +292,7 @@ class FichesTests(BaseComptoir):
         self.assertEqual((lj["101"]["recette"], lj["101"]["avance"]), (25000, 0))
         self.assertEqual((lj["102/103"]["recette"], lj["102/103"]["impaye"]), (10000, 20000))
         self.assertEqual((lj["104"]["offre"], lj["104"]["recette"]), (20000, 0))
-        self.assertEqual(jour["reglements"], [{"nom": f"{b.client} (ch. 102/103)", "montant": 30000}])
+        self.assertEqual(jour["reglements"], [{"nom": f"{b.client} (ch. 102/103)", "montant": 30000, "mobile": 0}])
         self.assertIn({"nom": f"{parti.client} (ch. 105)", "montant": 60000}, jour["dettes"])
 
 

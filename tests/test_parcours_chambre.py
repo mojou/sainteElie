@@ -66,7 +66,7 @@ class ParcoursChambreTests(BaseTest):
 
         # 3. Il arrive : la chambre l'attend sur le plan
         self.assertContains(recep.get(reverse("postes:chambre", args=[self.chambre.pk])), "Mme Ewodo est arrivé")
-        recep.post(reverse("postes:reception"), {"action": "checkin", "sejour": sejour.pk})
+        recep.post(reverse("postes:reception"), {"action": "checkin", "heure": "14:30", "sejour": sejour.pk})
         sejour.refresh_from_db()
         self.chambre.refresh_from_db()
         self.assertEqual((sejour.statut, self.chambre.statut), (Sejour.Statut.EN_COURS, Chambre.Statut.OCCUPEE))
@@ -82,7 +82,7 @@ class ParcoursChambreTests(BaseTest):
 
         # 5. Il part : nuits constatées, chambre à faire ; le ménage la rend libre
         with mock.patch("hotel.services.aujourd_hui", return_value=self.depart):
-            recep.post(reverse("postes:reception"), {"action": "depart", "sejour": sejour.pk})
+            recep.post(reverse("postes:reception"), {"action": "depart", "heure": "11:00", "sejour": sejour.pk})
         sejour.refresh_from_db()
         self.chambre.refresh_from_db()
         self.assertEqual((sejour.statut, self.chambre.statut), (Sejour.Statut.TERMINE, Chambre.Statut.A_NETTOYER))
@@ -125,7 +125,7 @@ class ParcoursChambreTests(BaseTest):
     def test_arrivee_sans_reservation_retrouve_le_client_et_respecte_les_reservations(self):
         ancien = Client.objects.create(nom="M. Owona", telephone="699 11 22 33")
         self.client.force_login(self.aicha)
-        self.client.post(reverse("postes:arrivee"), {"nom": "Owona", "telephone": "+237699112233",
+        self.client.post(reverse("postes:arrivee"), {"heure": "14:30", "nom": "Owona", "telephone": "+237699112233",
                                                      "chambre": self.chambre.pk, "nuits": 1, "moyen": "ESPECES"})
         self.assertEqual(Sejour.objects.get().client, ancien, "même numéro écrit autrement : même client")
         # Une chambre libre ce soir mais réservée demain ne peut pas être prise pour 3 nuits
@@ -133,7 +133,7 @@ class ParcoursChambreTests(BaseTest):
         Sejour.objects.create(client=ancien, chambre=autre, date_arrivee=self.jour + timedelta(days=1),
                               date_depart=self.jour + timedelta(days=3), tarif_grille=25000, tarif_nuit=25000,
                               cree_par=self.aicha)
-        page = self.client.post(reverse("postes:arrivee"), {"nom": "X", "telephone": "655000000",
+        page = self.client.post(reverse("postes:arrivee"), {"heure": "14:30", "nom": "X", "telephone": "655000000",
                                                             "chambre": autre.pk, "nuits": 3, "moyen": "ESPECES"})
         self.assertContains(page, "déjà réservée")
         self.assertEqual(Sejour.objects.filter(chambre=autre).count(), 1)

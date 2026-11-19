@@ -7,6 +7,7 @@
   <div class="actions">
     <a class="btn" href="?date={{ jour|date:'Y-m-d' }}&format=pdf">Imprimer la fiche (PDF)</a>
     <a class="btn secondaire" href="?date={{ jour|date:'Y-m-d' }}&vierge=1">Fiche vierge à remplir à la main</a>
+    {% if user.est_direction and jour_passe %}<a class="btn secondaire" href="{% url 'caisse:jour_passe' %}?date={{ jour|date:'Y-m-d' }}">Compléter ce jour</a>{% endif %}
   </div>
 </div>
 {% include "fiches/_navigation.html" %}
@@ -33,7 +34,7 @@
       <td class="nombre">{{ x.recette|nv }}</td><td class="nombre {% if x.impaye %}rouge{% endif %}">{{ x.impaye|nv }}</td>
       <td class="nombre">{{ x.offre|nv }}</td><td class="nombre">{{ x.compensation|nv }}</td><td class="nombre">{{ x.avance|nv }}</td>
       {% else %}<td></td><td></td><td></td><td></td><td></td><td></td><td></td>{% endif %}
-      <td>{{ rang.reglement.nom }}</td><td class="nombre">{% if rang.reglement %}{{ rang.reglement.montant|nombre }}{% endif %}</td>
+      <td>{{ rang.reglement.nom }}</td><td class="nombre">{% if rang.reglement %}{{ rang.reglement.montant|nv }}{% if rang.reglement.mobile %} <small>OM {{ rang.reglement.mobile|nombre }}</small>{% endif %}{% endif %}</td>
       <td>{{ rang.dette.nom }}</td><td class="nombre rouge">{% if rang.dette %}{{ rang.dette.montant|nombre }}{% endif %}</td>
       {% if x %}
       <td><small>{{ x.observation }}</small></td><td class="nombre">{{ x.mobile|nv }}</td>
@@ -54,12 +55,15 @@
 </div>
 
 <p class="discret">
-  <strong>Recette jr</strong> : part de la nuit du jour couverte par les paiements. <strong>Imp jr</strong> : part pas encore payée.
+  <strong>Recette jr</strong> : part de la nuit du jour payée (en espèces, carte, chèque ou virement). <strong>Imp jr</strong> : part pas encore payée.
   <strong>Offre jr</strong> et <strong>Comp.</strong> : séjours offerts ou en compensation, à la valeur de la grille.
   <strong>avance</strong> : ce que le client a payé d'avance au-delà de la nuit du jour.
   <strong>Reg dette</strong> : dettes réglées ce jour. <strong>Reste dette</strong> : ce que des clients doivent encore.
-  <strong>Mobile</strong> et <strong>TOTAL OM</strong> : payé par Orange Money ou MTN MoMo.
-  <strong>MONTANT</strong> : tout l'argent reçu ce jour pour les chambres (nuits, avances, extras, dettes).
+  <strong>Mobile</strong> et <strong>TOTAL OM</strong> : payé par Orange Money ou MTN MoMo ; ce qui est payé par mobile
+  s'écrit seulement là, pas dans Recette jr, avance ou Reg dette.
+  <strong>MONTANT</strong> = Recette jr + Reg dette + avance + Mobile (TOTAL OM).
+  <strong>Heure arrivé</strong> et <strong>Heure depart</strong> : les heures du client, tapées par la réception à son
+  arrivée et à son départ.
   <strong>Total vente</strong> : tout ce qui est entré dans la caisse de la réception (chambres et boutique).
   Les extras (cuisine, bar…) sont notés dans « Obs. » et se paient avec la chambre.
 </p>

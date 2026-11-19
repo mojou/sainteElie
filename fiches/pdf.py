@@ -227,7 +227,11 @@ def recette_chambres_pdf(jour, donnees=None, chambres=None):
                               n(x["impaye"]), n(x["offre"]), n(x["compensation"]), n(x["avance"])]
                 ligne[11:15] = [x["observation"], n(x["mobile"]), x["heure_arrivee"], x["heure_depart"]]
             if reg:
-                ligne[7:9] = [reg["nom"], n(reg["montant"], False)]
+                if reg["mobile"]:   # déjà dans le TOTAL OM : seulement rappelé, pas compté dans Reg dette
+                    case = f"{n(reg['montant'])} +OM" if reg["montant"] else f"OM {n(reg['mobile'])}"
+                else:
+                    case = n(reg["montant"])
+                ligne[7:9] = [reg["nom"], case]
             if det:
                 ligne[9:11] = [det["nom"], n(det["montant"], False)]
             lignes.append(ligne)

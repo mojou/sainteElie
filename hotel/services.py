@@ -53,7 +53,25 @@ def verifier_disponibilite(chambre, arrivee, depart, exclure=None):
         )
 
 
-def check_in(sejour, user):
+def lire_heure(texte, quoi):
+    """« 14:30 » (champ heure du navigateur) → 14 h 30 ; vide ou faux : on redemande l'heure."""
+    from datetime import datetime
+
+    texte = (texte or "").strip()
+    for format_ in ("%H:%M", "%H:%M:%S", "%Hh%M", "%H h %M"):
+        try:
+            return datetime.strptime(texte, format_).time().replace(second=0)
+        except ValueError:
+            continue
+    raise ValidationError(f"Indiquez l'heure {quoi} du client (par exemple 14:30).")
+
+
+def _heure_actuelle():
+    return timezone.localtime(maintenant()).time().replace(second=0, microsecond=0)
+
+
+def check_in(sejour, user, heure=None):
+    """`heure` : l'heure réelle d'arrivée du client, tapée par la réception (sinon l'heure actuelle)."""
     if sejour.statut != Sejour.Statut.RESERVE:
         raise ValidationError("Seul un séjour réservé peut faire son check-in.")
     if sejour.date_arrivee > aujourd_hui():
@@ -69,7 +87,8 @@ def check_in(sejour, user):
     with transaction.atomic():
         sejour.statut = Sejour.Statut.EN_COURS
         sejour.check_in_le = maintenant()
-        sejour.save(update_fields=["statut", "check_in_le"])
+        sejour.heure_arrivee = heure or _heure_actuelle()
+        sejour.save(update_fields=["statut", "check_in_le", "heure_arrivee"])
         chambre.statut = Chambre.Statut.OCCUPEE
         chambre.save(update_fields=["statut"])
     journaliser(user, "Check-in", sejour)
@@ -99,7 +118,8 @@ def constater_nuitees(quand=None):
     return total
 
 
-def check_out(sejour, user):
+def check_out(sejour, user, heure=None):
+    """`heure` : l'heure réelle de départ du client, tapée par la réception (sinon l'heure actuelle)."""
     if sejour.statut != Sejour.Statut.EN_COURS:
         raise ValidationError("Seul un séjour en cours peut faire son check-out.")
     aujourd = aujourd_hui()
@@ -110,7 +130,8 @@ def check_out(sejour, user):
         _constater(sejour, sejour.date_depart, maintenant())
         sejour.statut = Sejour.Statut.TERMINE
         sejour.check_out_le = maintenant()
-        sejour.save(update_fields=["statut", "check_out_le", "date_depart"])
+        sejour.heure_depart = heure or _heure_actuelle()
+        sejour.save(update_fields=["statut", "check_out_le", "date_depart", "heure_depart"])
         chambre = sejour.chambre
         chambre.statut = Chambre.Statut.A_NETTOYER
         chambre.save(update_fields=["statut"])

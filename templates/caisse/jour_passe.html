@@ -1,0 +1,128 @@
+{% extends "base.html" %}{% load gestion %}
+{% block titre %}Saisir un jour passé{% endblock %}
+{% block contenu %}
+<div class="entete"><div><h1>Saisir un jour passé · {{ jour|date:"l d/m/Y" }}</h1>
+  <p>Pour recopier les fiches papier d'avant l'application, ou rattraper un oubli. Tout est daté de ce jour-là :
+    les fiches de ce jour se remplissent toutes seules. Chaque saisie est notée dans le journal.</p></div>
+  <div class="actions">
+    <a class="btn secondaire" href="{% url 'fiches:hebergement' %}?date={{ jour|date:'Y-m-d' }}">Fiche recette chambres de ce jour</a>
+    <a class="btn secondaire" href="{% url 'fiches:bar_restaurant' %}?date={{ jour|date:'Y-m-d' }}">Fiche bar / restaurant de ce jour</a>
+  </div>
+</div>
+
+<form class="filtres" method="get">
+  <a class="btn secondaire petit" href="?date={{ veille|date:'Y-m-d' }}">← Jour d'avant</a>
+  <label class="sr-only" for="date-passe">Jour</label>
+  <input type="date" id="date-passe" name="date" value="{{ jour|date:'Y-m-d' }}" max="{{ hier|date:'Y-m-d' }}" style="max-width:180px">
+  <button class="btn petit" type="submit">Afficher ce jour</button>
+  {% if lendemain <= hier %}<a class="btn secondaire petit" href="?date={{ lendemain|date:'Y-m-d' }}">Jour d'après →</a>{% endif %}
+</form>
+
+{# 1. Caisses #}
+<section class="carte saisie-passee" id="caisse">
+  <h2><span class="numero-etape">1</span> Les caisses de ce jour</h2>
+  <p class="discret">Qui tenait la caisse, avec quel montant à l'ouverture et à la fermeture (le haut de la fiche papier).
+    À faire en premier : les paiements et les ventes se rangent dans une caisse.</p>
+  {% if caisses %}
+  <div class="tableau"><table>
+    <tr><th>Caisse</th><th>Qui</th><th>Service</th><th>Ouverture</th><th>Fermeture</th><th class="nombre">Écart espèces</th><th></th></tr>
+    {% for s in caisses %}
+    <tr><td>{{ s.tiroir }}</td><td>{{ s.receptionniste }}</td><td>{{ s.get_shift_display }}</td>
+      <td>{{ s.ouverte_le|date:"H:i" }} · {{ s.especes_ouverture_comptees|fcfa }}</td>
+      <td>{{ s.remise_le|date:"H:i" }} · {{ s.remise.especes_comptees|fcfa }}</td>
+      <td class="nombre {% if s.remise.ecart %}rouge{% endif %}">{{ s.remise.ecart|default:0|fcfa }}</td>
+      <td><form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}">
+        <input type="hidden" name="action" value="supprimer_caisse"><input type="hidden" name="pk" value="{{ s.pk }}">
+        <button class="btn petit danger" data-confirmer="Supprimer cette caisse ? (seulement si elle n'a ni paiement ni vente)" data-oui="Oui, supprimer" data-non="Non">Supprimer</button></form></td></tr>
+    {% endfor %}
+  </table></div>
+  <p class="discret">Écart espèces : montant de fermeture moins ce que la caisse aurait dû contenir (ouverture + espèces reçues).</p>
+  {% endif %}
+  <details class="ajout" {% if ouvert == "caisse" or not caisses %}open{% endif %}>
+    <summary class="btn grand">Ajouter une caisse</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}"><input type="hidden" name="action" value="caisse">
+      <div class="grille-champs">{% include "partials/champs.html" with form=forms.caisse %}</div>
+      <button class="btn grand ok" type="submit">Enregistrer la caisse</button></form>
+  </details>
+</section>
+
+{# 2. Chambres et paiements #}
+<section class="carte saisie-passee" id="sejour">
+  <h2><span class="numero-etape">2</span> Les chambres et les paiements</h2>
+  <p class="discret">Les clients présents ce jour-là, puis ce qu'ils ont payé. Un client qui est parti depuis : donnez
+    aussi son heure de départ. Un client encore là aujourd'hui : son séjour reste « en cours ».</p>
+  {% if sejours %}
+  <div class="tableau"><table>
+    <tr><th>Ch</th><th>Client</th><th>Arrivée</th><th>Départ</th><th class="nombre">Total</th><th class="nombre">Payé</th><th></th></tr>
+    {% for s in sejours %}
+    <tr><td>{{ s.chambre.numero }}</td><td><a href="{% url 'hotel:sejour' s.pk %}">{{ s.client }}</a></td>
+      <td>{{ s.date_arrivee|date:"d/m" }}{% if s.heure_arrivee %} à {{ s.heure_arrivee|time:"H:i" }}{% endif %}</td>
+      <td>{{ s.date_depart|date:"d/m" }}{% if s.heure_depart %} à {{ s.heure_depart|time:"H:i" }}{% endif %}
+        <span class="badge {{ s.statut }}">{{ s.get_statut_display }}</span></td>
+      <td class="nombre">{{ s.total_facture|nombre }}</td><td class="nombre">{{ s.total_paye|nombre }}</td>
+      <td>{% if s.saisi_apres_coup and not s.encaissements.exists %}<form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}">
+        <input type="hidden" name="action" value="supprimer_sejour"><input type="hidden" name="pk" value="{{ s.pk }}">
+        <button class="btn petit danger" data-confirmer="Supprimer ce séjour saisi par erreur ?" data-oui="Oui, supprimer" data-non="Non">Supprimer</button></form>{% endif %}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+  <details class="ajout" {% if ouvert == "sejour" %}open{% endif %}>
+    <summary class="btn grand">Ajouter un client (séjour)</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}"><input type="hidden" name="action" value="sejour">
+      <div class="grille-champs">{% include "partials/champs.html" with form=forms.sejour %}</div>
+      <button class="btn grand ok" type="submit">Enregistrer le client</button></form>
+  </details>
+
+  <h3 id="paiement">Paiements de ce jour</h3>
+  {% if paiements %}
+  <div class="tableau"><table>
+    <tr><th>Reçu</th><th>Heure</th><th>Client</th><th>Caisse de</th><th>Payé en</th><th class="nombre">Montant</th><th></th></tr>
+    {% for e in paiements %}
+    <tr class="{% if e.est_annule or e.annule %}annule{% endif %}"><td><a class="btn petit secondaire" href="{% url 'caisse:recu_client' e.pk %}">n°{{ e.numero_recu }}</a></td>
+      <td>{{ e.date|date:"H:i" }}</td><td>Ch. {{ e.sejour.chambre.numero }} · {{ e.sejour.client }}</td>
+      <td>{{ e.session.receptionniste }}</td><td>{{ e.get_mode_display }}{% if e.annule %} <small>(annule le n°{{ e.annule.numero_recu }})</small>{% endif %}</td>
+      <td class="nombre">{{ e.montant_signe|nombre }}</td>
+      <td>{% if not e.annule and not e.est_annule %}<form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}">
+        <input type="hidden" name="action" value="annuler_paiement"><input type="hidden" name="pk" value="{{ e.pk }}">
+        <button class="btn petit danger" data-confirmer="Annuler ce paiement (erreur de saisie) ?" data-oui="Oui, annuler" data-non="Non">Annuler</button></form>{% endif %}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="discret">Aucun paiement saisi pour ce jour.</p>{% endif %}
+  {% if a_reception %}
+  <details class="ajout" {% if ouvert == "paiement" %}open{% endif %}>
+    <summary class="btn grand">Ajouter un paiement</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}"><input type="hidden" name="action" value="paiement">
+      <div class="grille-champs">{% include "partials/champs.html" with form=forms.paiement %}</div>
+      <button class="btn grand ok" type="submit">Enregistrer le paiement</button></form>
+  </details>
+  {% else %}<p class="message info">Pour saisir un paiement, ajoutez d'abord la caisse de la réception de ce jour (étape 1).</p>{% endif %}
+</section>
+
+{# 3. Bar / restaurant #}
+<section class="carte saisie-passee" id="vente">
+  <h2><span class="numero-etape">3</span> Les ventes du bar et du restaurant</h2>
+  <p class="discret">Boissons et plats vendus ce jour-là. Le stock d'aujourd'hui n'est pas touché.</p>
+  {% if ventes %}
+  <div class="tableau"><table>
+    <tr><th>Heure</th><th>Article</th><th class="nombre">Qté</th><th class="nombre">Montant</th><th>Payé</th><th>Caisse de</th><th></th></tr>
+    {% for v in ventes %}
+    <tr class="{% if v.annulee %}annule{% endif %}"><td>{{ v.date|date:"H:i" }}</td><td>{{ v.article }}</td><td class="nombre">{{ v.quantite }}</td>
+      <td class="nombre">{{ v.montant|nombre }}</td>
+      <td>{% if v.reglement == "COMPTANT" %}{{ v.encaissement.get_mode_display }}{% elif v.reglement == "CREDIT" %}sur la ch. {{ v.sejour.chambre.numero }}{% else %}offert{% endif %}{% if v.annulee %} <small>(annulée)</small>{% endif %}</td>
+      <td>{{ v.session.receptionniste }}</td>
+      <td>{% if not v.annulee %}<form method="post" class="en-ligne">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}">
+        <input type="hidden" name="action" value="annuler_vente"><input type="hidden" name="pk" value="{{ v.pk }}">
+        <button class="btn petit danger" data-confirmer="Annuler cette vente (erreur de saisie) ?" data-oui="Oui, annuler" data-non="Non">Annuler</button></form>{% endif %}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+  {% if a_bar %}
+  <details class="ajout" {% if ouvert == "vente" %}open{% endif %}>
+    <summary class="btn grand">Ajouter une vente</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ jour|date:'Y-m-d' }}"><input type="hidden" name="action" value="vente">
+      <div class="grille-champs">{% include "partials/champs.html" with form=forms.vente %}</div>
+      <button class="btn grand ok" type="submit">Enregistrer la vente</button></form>
+  </details>
+  {% else %}<p class="message info">Pour saisir une vente, ajoutez d'abord la caisse Cuisine / Bar de ce jour (étape 1).</p>{% endif %}
+</section>
+{% endblock %}

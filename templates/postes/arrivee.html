@@ -30,6 +30,9 @@
       <input type="tel" name="telephone" id="id_telephone" maxlength="30" value="{{ form.telephone.value|default:'' }}" inputmode="tel" autocomplete="off">
       <span class="aide">S'il est déjà venu, on retrouve sa fiche avec ce numéro.</span>
       {% for e in form.telephone.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+    <div class="champ{% if form.heure.errors %} en-erreur{% endif %}"><label for="id_heure">Heure d'arrivée</label>
+      <input type="time" name="heure" id="id_heure" value="{% if form.heure.value %}{{ form.heure.value|time:'H:i'|default:form.heure.value }}{% else %}{% now 'H:i' %}{% endif %}" required>
+      {% for e in form.heure.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
     <div class="pas-boutons"><button type="button" class="btn grand" data-suivant>Suivant</button></div>
   </fieldset>
 

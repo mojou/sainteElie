@@ -172,6 +172,8 @@ class SessionCaisse(models.Model):
     rapport = models.ForeignKey(RapportQuotidien, null=True, blank=True, on_delete=models.SET_NULL,
                                 related_name="sessions")
     est_rectificative = models.BooleanField(default=False)
+    # Caisse d'un jour passé, saisie après coup par la direction (fiches papier) : déjà fermée, hors rapports du jour.
+    saisie_passee = models.BooleanField("saisie après coup (jour passé)", default=False)
     rectifie_session = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT,
                                          related_name="rectifications")
     motif_rectification = models.CharField(max_length=300, blank=True)

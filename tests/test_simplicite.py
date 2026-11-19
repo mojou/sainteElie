@@ -273,7 +273,8 @@ class EnvoiUniqueTests(BaseTest):
 
     def test_un_envoi_refuse_peut_repartir(self):
         self.client.force_login(self.aicha)
-        donnees = {"nom": "", "telephone": "", "chambre": self.chambre.pk, "nuits": 1, "moyen": "ESPECES", "_envoi": "x1"}
+        donnees = {"nom": "", "telephone": "", "heure": "14:30", "chambre": self.chambre.pk, "nuits": 1, "moyen": "ESPECES",
+                   "_envoi": "x1"}
         self.assertEqual(self.client.post(reverse("postes:arrivee"), donnees).status_code, 200)
         donnees.update(nom="M. Ngo", telephone="699000111")
         self.client.post(reverse("postes:arrivee"), donnees)

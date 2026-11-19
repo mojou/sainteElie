@@ -55,6 +55,7 @@
       <a class="btn secondaire grand" {% href 'hotel:extras' sejour=sejour.pk %}>Ajouter un repas ou une boisson</a>
       <form method="post" action="{% url 'postes:reception' %}">{% csrf_token %}
         <input type="hidden" name="action" value="depart"><input type="hidden" name="sejour" value="{{ sejour.pk }}">
+        <label class="champ-heure grand">Heure de départ <input type="time" name="heure" value="{% now 'H:i' %}" required></label>
         <button class="btn secondaire grand bouton-plein" data-oui="Oui, il part" data-non="Non"
                 data-confirmer="{{ sejour.client }} quitte la chambre {{ chambre.numero }} ?{% if sejour.reste_a_payer > 0 %} Attention : il doit encore {{ sejour.reste_a_payer|fcfa }}.{% endif %}">Le client part (départ)</button>
       </form>
@@ -75,6 +76,7 @@
     <p class="etape">Réservée pour {{ attendu.client }} : {{ attendu.nb_nuits }} nuit{{ attendu.nb_nuits|pluralize }}, arrivée le {{ attendu.date_arrivee|date:"l d/m" }}.</p>
     <form method="post" action="{% url 'postes:reception' %}">{% csrf_token %}
       <input type="hidden" name="action" value="checkin"><input type="hidden" name="sejour" value="{{ attendu.pk }}">
+      <label class="champ-heure grand">Heure d'arrivée <input type="time" name="heure" value="{% now 'H:i' %}" required></label>
       <button class="btn ok grand bouton-plein" type="submit">{{ attendu.client }} est arrivé</button>
     </form>
     <p class="discret">Un autre client à la place ? Changez d'abord la réservation.</p>

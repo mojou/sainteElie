@@ -39,6 +39,7 @@ def groupes(user, request=None):
             ("caisse:ma_caisse", "Ma caisse", u.tient_caisse),
             ("caisse:sessions", "Sessions de caisse", permissions.suivi_caisse(u)),
             ("caisse:recherche", "Retrouver un reçu", u.peut_valider_caisse),
+            ("caisse:jour_passe", "Saisir un jour passé (fiches papier, oubli)", u.est_direction),
             ("caisse:rapports", "Rapports quotidiens de caisse", u.peut_valider_caisse),
             ("caisse:virements", "Virements reçus", u.est_gerant),
         ]),

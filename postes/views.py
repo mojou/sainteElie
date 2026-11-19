@@ -96,10 +96,10 @@ def reception_vue(request):
                 if action == "encaisser":
                     _encaisser(request, session, sejour)
                 elif action == "checkin":
-                    hotel.check_in(sejour, request.user)
+                    hotel.check_in(sejour, request.user, hotel.lire_heure(request.POST.get("heure"), "d'arrivée"))
                     messages.success(request, f"{sejour.client} est installé en chambre {sejour.chambre.numero}.")
                 else:
-                    hotel.check_out(sejour, request.user)
+                    hotel.check_out(sejour, request.user, hotel.lire_heure(request.POST.get("heure"), "de départ"))
                     sejour.refresh_from_db()
                     if sejour.reste_a_payer > 0:
                         messages.warning(request, f"Départ noté. {sejour.client} doit encore "
@@ -186,7 +186,7 @@ def _enregistrer_arrivee(request, session, d):
         sejour = Sejour.objects.create(client=client, chambre=chambre, date_arrivee=jour,
                                        date_depart=jour + timedelta(days=d["nuits"]), tarif_grille=chambre.tarif_nuit,
                                        tarif_nuit=chambre.tarif_nuit, cree_par=request.user)
-        hotel.check_in(sejour, request.user)
+        hotel.check_in(sejour, request.user, d["heure"])
         if d.get("montant"):
             enc = caisse.encaisser(session, request.user, sejour, "ACOMPTE", d["mode"], d["montant"])
             request.session["dernier_recu"] = enc.pk

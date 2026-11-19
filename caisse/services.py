@@ -39,7 +39,7 @@ def session_ouverte_de(user):
 
 def especes_ouverture_prevues(tiroir):
     """Ce que la session précédente a laissé dans le tiroir ; le fond si c'est la première."""
-    derniere = (tiroir.sessions.filter(est_rectificative=False, remise__finalisee=True)
+    derniere = (tiroir.sessions.filter(est_rectificative=False, saisie_passee=False, remise__finalisee=True)
                 .select_related("remise").order_by("-remise_le").first())
     if derniere:
         return derniere.remise.especes_transmises
@@ -633,7 +633,7 @@ def generer_rapports_dus(quand=None, user=None):
         debut = dernier.coupure
         jour = timezone.localtime(dernier.coupure).date() + timedelta(days=1)
     else:
-        premiere = SessionCaisse.objects.order_by("ouverte_le").first()
+        premiere = SessionCaisse.objects.filter(saisie_passee=False).order_by("ouverte_le").first()
         if premiere is None:
             return []
         jour = timezone.localtime(premiere.ouverte_le).date()
@@ -653,8 +653,9 @@ def creer_rapport(debut, coupure, user=None):
     constater_nuitees(coupure)
     with transaction.atomic():
         rapport = RapportQuotidien.objects.create(debut=debut, coupure=coupure, genere_par=user)
-        SessionCaisse.objects.filter(rapport__isnull=True, remise_le__isnull=False, remise_le__lte=coupure).update(
-            rapport=rapport)
+        # Les caisses d'un jour passé saisies après coup n'entrent pas dans le rapport du jour.
+        SessionCaisse.objects.filter(rapport__isnull=True, remise_le__isnull=False, remise_le__lte=coupure,
+                                     saisie_passee=False).update(rapport=rapport)
     from .pdf import rapport_pdf
 
     rapport.pdf.save(f"rapport-{timezone.localtime(coupure):%Y-%m-%d}.pdf", ContentFile(rapport_pdf(rapport)), save=True)

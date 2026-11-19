@@ -354,6 +354,26 @@ la cuisine / bar arrive directement sur son écran de vente. Le gérant et les a
   par WhatsApp ou par e-mail. Le client retrouve aussi la facture de ses séjours dans son **espace client**, une fois
   son compte relié à sa fiche par la réception.
 
+### Saisir un jour passé (fiches papier, oubli)
+
+Autres pages → Caisse → **Saisir un jour passé** (gérant et adjoints seulement ; chaque saisie va dans le journal).
+On choisit le jour (avant aujourd'hui, deux ans au plus), puis trois étapes :
+
+1. **Les caisses** : qui tenait la caisse (réception ou cuisine / bar), service, heure et montant d'ouverture, heure et
+   montant de fermeture (une fermeture plus tôt que l'ouverture = le lendemain matin). La caisse est déjà fermée ;
+   l'écart espèces se recalcule à chaque paiement saisi.
+2. **Les chambres et les paiements** : client, chambre, date et heure d'arrivée, nuits, heure de départ (obligatoire
+   s'il est parti ; encore là aujourd'hui = séjour en cours, chambre occupée), prix si différent (avec le motif). Les
+   nuits sont constatées comme si l'application avait tourné. Puis les paiements : client, acompte ou règlement,
+   montant, moyen, caisse, heure ; un vrai reçu numéroté, daté de ce jour-là.
+3. **Les ventes du bar et du restaurant** : caisse, article, quantité, payé (espèces, Orange Money, MoMo), sur la
+   chambre ou offert, heure. Le stock d'aujourd'hui n'est pas touché.
+
+Les fiches de ce jour (recette chambres, bar / restaurant) se remplissent toutes seules ; elles ont un bouton
+« Compléter ce jour » pour la direction. Ces caisses n'entrent ni dans le rapport quotidien d'aujourd'hui ni dans les
+espèces prévues à la prochaine ouverture. Une erreur s'annule (écriture inverse, le numéro de reçu reste) ; une caisse
+vide ou un séjour sans paiement saisis par erreur se suppriment.
+
 ## Règles de gestion appliquées
 
 Réception et caisse suivent la version corrigée du complément au cahier des charges.
@@ -438,9 +458,13 @@ DG — 3 500 FCFA »). Un plat n'a pas de stock. Un prix modifié dans l'applica
   couverte par les paiements), Imp jr (part impayée), Offre jr et Comp. (séjours offerts ou compensés, à la valeur de
   la grille), avance (payé au-delà de la nuit du jour), Nom client / Reg dette (dettes réglées ce jour, en liste),
   Nom client / Reste dette (ce qui reste dû, en liste), Obs. (extras du jour, départ demain…), Mobile (payé par
-  Orange Money ou MTN MoMo), Heure arrivé, Heure depart. En bas : TOTAL (en jaune), TOTAL OM et MONTANT (tout l'argent
-  reçu ce jour pour les chambres : nuits, avances, extras, dettes). Les paiements règlent d'abord les dettes des jours
-  précédents. PDF sur une feuille A4 en paysage, et **fiche vierge** pour remplir à la main.
+  Orange Money ou MTN MoMo), Heure arrivé, Heure depart. Un paiement Orange Money / MTN MoMo s'écrit **seulement**
+  dans « Mobile » : Recette jr, avance et Reg dette ne comptent que les espèces (et carte, chèque, virement) ; une dette
+  réglée par mobile est rappelée « OM 20 000 » dans Reg dette sans y être comptée. En bas : TOTAL (en jaune), TOTAL OM
+  et **MONTANT = Recette jr + Reg dette + avance + Mobile** (tout l'argent reçu, rien compté deux fois). Les heures
+  d'arrivée et de départ sont celles du client : la réception les tape au check-in et au check-out (le champ est déjà
+  rempli avec l'heure actuelle, à corriger si le client est arrivé plus tôt). Les paiements règlent d'abord les dettes
+  des jours précédents. PDF sur une feuille A4 en paysage, et **fiche vierge** pour remplir à la main.
 - **Fiche bar / restaurant** (même présentation) : Date, Caissier(e), Montant ouverture, Montant fermeture, Total vente
   (Cash + Crédit), Heure ; puis article par article, boissons puis plats : N°, Désignation, P.U, Qté V, Cash (payé tout
   de suite), Crédit et Nom client (chambre ou client), Offre, Total, Obs., Mobile ; TOTAL, TOTAL OM et MONTANT (l'argent

@@ -198,12 +198,28 @@ def _du_jusqua(sejour, jour_exclu, avant_extras):
     return nuits * sejour.tarif_nuit + _extras(sejour, avant_extras)
 
 
+# MONTANT (dernière ligne de la fiche recette chambres) = Recette jr + Reg dette + avance + Mobile (TOTAL OM).
+# Un paiement Orange Money / MTN MoMo s'écrit seulement dans « Mobile » : Recette jr, avance et Reg dette ne
+# comptent que les espèces (et carte, chèque, virement). Ainsi rien n'est compté deux fois.
+COLONNES_MONTANT = ("recette", "reglements", "avance", "mobile")
+
+
+def _heure(valeur):
+    return valeur.strftime("%H:%M") if valeur else ""
+
+
+def _reglement(nom, especes, mobile):
+    """Une ligne « Reg dette » : `montant` en espèces (compté dans le total) ; `mobile`, déjà dans le TOTAL OM, est
+    seulement rappelé dans la case (« OM 20 000 »)."""
+    return {"nom": nom, "montant": especes, "mobile": mobile}
+
+
 def fiche_hebergement(jour):
     debut, fin = debut_journee(jour), debut_journee(jour + timedelta(days=1))
     occupants = {s.chambre_id: s for s in Sejour.objects.filter(
         statut__in=[Sejour.Statut.EN_COURS, Sejour.Statut.TERMINE], date_arrivee__lte=jour, date_depart__gt=jour)
         .select_related("client")}
-    # L'argent reçu ce jour pour les chambres (nuits, avances, extras, dettes) : colonne Mobile et MONTANT.
+    # L'argent reçu ce jour pour les chambres (nuits, avances, extras, dettes) : colonne Mobile et TOTAL OM.
     argent = Encaissement.objects.filter(session__ouverte_le__gte=debut, session__ouverte_le__lt=fin).filter(
         Q(sejour__isnull=False) | Q(client__isnull=False))
     mobile = argent.filter(mode__in=Encaissement.MODES_MOBILE)
@@ -221,10 +237,12 @@ def fiche_hebergement(jour):
                  "heure_arrivee": "", "heure_depart": ""}
         parti = partis.get(chambre.pk)
         if parti:
-            ligne["heure_depart"] = timezone.localtime(parti.check_out_le).strftime("%H:%M")
+            ligne["heure_depart"] = _heure(parti.heure_depart or timezone.localtime(parti.check_out_le).time())
         ligne["mobile"] = sum(mobile_par_sejour.get(x.pk, 0) for x in {s, parti} if x)
         if s:
             paye = _paye_jusqua(s, fin)
+            # Le mobile reçu ce jour va seulement dans « Mobile » : les autres colonnes comptent le reste.
+            paye_hors_mobile = paye - mobile_par_sejour.get(s.pk, 0)
             du_avant = _du_jusqua(s, jour, debut)
             extras_jour = _extras(s, fin) - _extras(s, debut)
             ligne["extras"] = extras_jour
@@ -233,12 +251,16 @@ def fiche_hebergement(jour):
             elif s.gratuite == Sejour.Gratuite.COMPENSATION:
                 ligne["compensation"] = s.tarif_grille
             else:
-                ligne["recette"] = min(max(paye - du_avant, 0), s.tarif_nuit)
-                ligne["impaye"] = s.tarif_nuit - ligne["recette"]
-            ligne["avance"] = max(0, paye - (du_avant + s.tarif_nuit + extras_jour))
+                ligne["recette"] = min(max(paye_hors_mobile - du_avant, 0), s.tarif_nuit)
+                # Impayé : ce que personne n'a payé, ni en espèces ni par mobile.
+                ligne["impaye"] = s.tarif_nuit - min(max(paye - du_avant, 0), s.tarif_nuit)
+            ligne["avance"] = max(0, paye_hors_mobile - (du_avant + s.tarif_nuit + extras_jour))
             if s.check_in_le:
                 arrivee = timezone.localtime(s.check_in_le)
-                ligne["heure_arrivee"] = arrivee.strftime("%H:%M" if arrivee.date() == jour else "%d/%m")
+                if arrivee.date() == jour:
+                    ligne["heure_arrivee"] = _heure(s.heure_arrivee or arrivee.time())
+                else:
+                    ligne["heure_arrivee"] = arrivee.strftime("%d/%m")
             elif s.date_arrivee < jour:
                 ligne["heure_arrivee"] = s.date_arrivee.strftime("%d/%m")
         notes = []
@@ -264,11 +286,14 @@ def fiche_hebergement(jour):
         dette_veille = max(0, _du_jusqua(s, jour, debut) - paye_veille)
         montant = min(max(paye_jour, 0), dette_veille)
         if montant:
-            reglements.append({"nom": f"{s.client} (ch. {s.chambre.numero})", "montant": montant})
+            # La part payée en espèces dans « Reg dette » ; la part mobile est déjà dans le TOTAL OM.
+            especes = min(max(paye_jour - mobile_par_sejour.get(s.pk, 0), 0), dette_veille)
+            reglements.append(_reglement(f"{s.client} (ch. {s.chambre.numero})", especes, montant - especes))
     for e in Encaissement.objects.filter(nature=Encaissement.Nature.REGLEMENT_CREDIT, session__ouverte_le__gte=debut,
                                          session__ouverte_le__lt=fin).select_related("client"):
         if not e.est_annule:
-            reglements.append({"nom": f"{e.client} (comptoir)", "montant": e.montant})
+            mobile_e = e.montant if e.mode in Encaissement.MODES_MOBILE else 0
+            reglements.append(_reglement(f"{e.client} (comptoir)", e.montant - mobile_e, mobile_e))
 
     # Restes de dettes : séjours partis avec un solde dû, crédits de comptoir non réglés.
     dettes = []
@@ -293,7 +318,7 @@ def fiche_hebergement(jour):
     totaux["reglements"] = sum(r["montant"] for r in reglements)
     totaux["dettes"] = sum(d["montant"] for d in dettes)
     totaux["mobile"] = mobile.aggregate(s=Sum("montant_signe"))["s"] or 0
-    totaux["montant"] = argent.aggregate(s=Sum("montant_signe"))["s"] or 0
+    totaux["montant"] = sum(totaux[k] for k in COLONNES_MONTANT)
     dettes = sorted(dettes, key=lambda d: -d["montant"])
 
     # Bandeau : la caisse de la réception ce jour-là. Total vente : tout ce qui y est entré (chambres et boutique).

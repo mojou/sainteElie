@@ -70,7 +70,7 @@ class SaisieReceptionTests(BaseTest):
         self.url = reverse("postes:reception")
 
     def test_client_sans_reservation_installe_et_encaisse_en_une_fois(self):
-        donnees = {"nom": "M. Biya Paul", "telephone": "677001122", "chambre": self.chambre.pk,
+        donnees = {"heure": "14:30", "nom": "M. Biya Paul", "telephone": "677001122", "chambre": self.chambre.pk,
                    "nuits": 2, "montant": 50000, "moyen": "ESPECES"}
         reponse = self.client.post(reverse("postes:arrivee"), donnees, follow=True)
         self.assertContains(reponse, "abord votre caisse")
@@ -86,7 +86,7 @@ class SaisieReceptionTests(BaseTest):
         self.assertContains(reponse, "Dernier reçu")
 
     def test_arrivee_sans_paiement_possible_meme_caisse_fermee(self):
-        reponse = self.client.post(reverse("postes:arrivee"), {"nom": "Mme Ngo", "telephone": "699",
+        reponse = self.client.post(reverse("postes:arrivee"), {"heure": "14:30", "nom": "Mme Ngo", "telephone": "699",
                                               "chambre": self.chambre.pk, "nuits": 1, "moyen": "ESPECES"}, follow=True)
         self.assertContains(reponse, "encore été payé")
         self.assertEqual(Sejour.objects.get().reste_a_payer, 25000)
@@ -100,7 +100,7 @@ class SaisieReceptionTests(BaseTest):
         self.client.post(self.url, {"action": "encaisser", "sejour": s.pk, f"s{s.pk}-montant": 20000,
                                     f"s{s.pk}-moyen": "ORANGE_MONEY"})
         self.assertEqual(Encaissement.objects.get().moyen_libelle, "Orange Money")
-        reponse = self.client.post(self.url, {"action": "depart", "sejour": s.pk}, follow=True)
+        reponse = self.client.post(self.url, {"action": "depart", "heure": "11:00", "sejour": s.pk}, follow=True)
         self.assertContains(reponse, "doit encore")
         s.refresh_from_db()
         self.assertEqual(s.statut, "TERMINE")
@@ -108,7 +108,7 @@ class SaisieReceptionTests(BaseTest):
     def test_reservation_attendue_installee_d_un_geste(self):
         s = self.sejour(statut=Sejour.Statut.RESERVE)
         self.assertContains(self.client.get(self.url), "Il est arrivé")
-        self.client.post(self.url, {"action": "checkin", "sejour": s.pk})
+        self.client.post(self.url, {"action": "checkin", "heure": "14:30", "sejour": s.pk})
         s.refresh_from_db()
         self.assertEqual(s.statut, "EN_COURS")
 

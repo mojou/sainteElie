@@ -50,7 +50,7 @@ def _pdf(contenu, nom):
 
 
 def _contexte(jour, poste=None, **extra):
-    return {"jour": jour, "veille": (jour - timedelta(days=1)).isoformat(),
+    return {"jour": jour, "jour_passe": jour < aujourd_hui(), "veille": (jour - timedelta(days=1)).isoformat(),
             "lendemain": (jour + timedelta(days=1)).isoformat(),
             "receptionnistes": services.receptionnistes_du_jour(jour, poste), **extra}
 

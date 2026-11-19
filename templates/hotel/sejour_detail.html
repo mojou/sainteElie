@@ -9,10 +9,10 @@
   </div>
   <div class="actions">
     {% if sejour.statut == "RESERVE" %}
-      <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-in' %}">{% csrf_token %}<button class="btn ok" data-confirmer="{{ sejour.client }} est arrivé ? La chambre {{ sejour.chambre.numero }} devient occupée." data-oui="Oui, il est arrivé" data-non="Non">Le client est arrivé</button></form>
+      <form class="en-ligne form-heure" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-in' %}">{% csrf_token %}<label class="champ-heure">Heure d'arrivée <input type="time" name="heure" value="{% now 'H:i' %}" required></label><button class="btn ok" data-confirmer="{{ sejour.client }} est arrivé ? La chambre {{ sejour.chambre.numero }} devient occupée." data-oui="Oui, il est arrivé" data-non="Non">Le client est arrivé</button></form>
     {% endif %}
     {% if sejour.statut == "EN_COURS" %}
-      <form class="en-ligne" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-out' %}">{% csrf_token %}
+      <form class="en-ligne form-heure" method="post" action="{% url 'hotel:sejour_action' sejour.pk 'check-out' %}">{% csrf_token %}<label class="champ-heure">Heure de départ <input type="time" name="heure" value="{% now 'H:i' %}" required></label>
         <button class="btn ok" data-oui="Oui, il part" data-non="Non" data-confirmer="{{ sejour.client }} quitte la chambre {{ sejour.chambre.numero }} ? Les nuits passées sont facturées.{% if sejour.reste_a_payer > 0 %} Attention : il doit encore {{ sejour.reste_a_payer|fcfa }}.{% endif %}">Le client part (départ)</button></form>
       <a class="btn secondaire" {% href 'hotel:extras' sejour=sejour.pk %}>Ajouter un extra</a>
     {% endif %}
@@ -51,8 +51,8 @@
       {% if sejour.gratuite %}<dt>Type de séjour</dt><dd><span class="badge alerte">{{ sejour.get_gratuite_display }}</span></dd>{% endif %}
       <dt>Tarif appliqué</dt><dd>{{ sejour.tarif_nuit|fcfa }}{% if sejour.tarif_nuit != sejour.tarif_grille %} <small>(grille {{ sejour.tarif_grille|fcfa }}, −{{ sejour.remise_pct }} %)</small>{% endif %}</dd>
       {% if sejour.motif_tarif %}<dt>Motif du tarif</dt><dd>{{ sejour.motif_tarif }}{% if sejour.tarif_valide_par %} · validé par {{ sejour.tarif_valide_par }}{% endif %}</dd>{% endif %}
-      <dt>Check-in</dt><dd>{{ sejour.check_in_le|date:"d/m/Y H:i"|default:"-" }}</dd>
-      <dt>Check-out</dt><dd>{{ sejour.check_out_le|date:"d/m/Y H:i"|default:"-" }}</dd>
+      <dt>Arrivée du client</dt><dd>{% if sejour.check_in_le %}{% if sejour.heure_arrivee %}à {{ sejour.heure_arrivee|time:"H:i" }} {% endif %}<small>(noté le {{ sejour.check_in_le|date:"d/m/Y H:i" }})</small>{% else %}-{% endif %}</dd>
+      <dt>Départ du client</dt><dd>{% if sejour.check_out_le %}{% if sejour.heure_depart %}à {{ sejour.heure_depart|time:"H:i" }} {% endif %}<small>(noté le {{ sejour.check_out_le|date:"d/m/Y H:i" }})</small>{% else %}-{% endif %}</dd>
       {% if sejour.motif_annulation %}<dt>Motif</dt><dd>{{ sejour.motif_annulation }}</dd>{% endif %}
       {% if sejour.notes %}<dt>Notes</dt><dd>{{ sejour.notes|linebreaksbr }}</dd>{% endif %}
     </dl>

@@ -113,7 +113,10 @@
       if (!champNom.value.trim()) { return erreur(champNom, "Écrivez le nom du client."); }
       erreur(champNom, "");
       if (!champTel.value.trim()) { return erreur(champTel, "Écrivez son numéro de téléphone."); }
-      return erreur(champTel, "");
+      erreur(champTel, "");
+      var champHeure = form.elements.heure;
+      if (champHeure && !champHeure.value) { return erreur(champHeure, "Écrivez l'heure d'arrivée du client."); }
+      return champHeure ? erreur(champHeure, "") : true;
     }
     if (i === 1) {
       if (nuits() < 1 || nuits() > 90) { return erreur(champNuits, "Entre 1 et 90 nuits."); }
@@ -140,6 +143,7 @@
     var m = montant(), lignes = [
       ["Chambre", numeroChambre() + (tarif() ? " · " + enChiffres(tarif()) + " la nuit" : "")],
       ["Client", champNom.value.trim() + " · " + champTel.value.trim()],
+      ["Arrivé à", form.elements.heure ? form.elements.heure.value.replace(":", " h ") : ""],
       ["Nuits", n + " · départ le " + depart()],
       ["Prix du séjour", enChiffres(t)],
       ["Payé maintenant", m ? enChiffres(m) + " (" + enLettres(m) + ") en " + moyen() : "Rien pour l'instant"],

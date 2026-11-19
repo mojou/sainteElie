@@ -19,9 +19,12 @@ def _libelle_chambre(c):
 class ArriveeForm(MoyenPaiementForm, Formulaire):
     """Un client arrive sans réservation : on l'installe et on encaisse en une fois."""
 
-    ordre_champs = ["nom", "telephone", "chambre", "nuits", "montant", "moyen"]
+    ordre_champs = ["nom", "telephone", "heure", "chambre", "nuits", "montant", "moyen"]
     nom = forms.CharField(label="Nom du client", max_length=120)
     telephone = forms.CharField(label="Téléphone", max_length=30)
+    heure = forms.TimeField(label="Heure d'arrivée", input_formats=["%H:%M", "%H:%M:%S"],
+                            error_messages={"required": "Indiquez l'heure d'arrivée du client (par exemple 14:30).",
+                                            "invalid": "Indiquez l'heure d'arrivée du client (par exemple 14:30)."})
     chambre = forms.ModelChoiceField(label="Chambre (libres)", queryset=Chambre.objects.none())
     nuits = forms.IntegerField(label="Nombre de nuits", min_value=1, max_value=90, initial=1)
     montant = forms.IntegerField(label="Payé maintenant (FCFA)", min_value=0, required=False,

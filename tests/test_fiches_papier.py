@@ -35,9 +35,13 @@ class FicheRecetteChambresTests(BaseComptoir):
 
         d = fiches.fiche_hebergement(j)
         ligne = next(x for x in d["lignes"] if x["chambre"] == self.chambre)
-        self.assertEqual((ligne["recette"], ligne["avance"], ligne["mobile"]), (25000, 5000, 30000))
+        # Payé par Orange Money : seulement dans « Mobile » (ni dans Recette jr, ni dans avance), et rien d'impayé.
+        self.assertEqual((ligne["recette"], ligne["avance"], ligne["impaye"], ligne["mobile"]), (0, 0, 0, 30000))
         self.assertEqual(d["totaux"]["mobile"], 30000)
-        self.assertEqual(d["totaux"]["montant"], 45000, "tout l'argent reçu ce jour pour les chambres")
+        # MONTANT = Recette jr + Reg dette + avance + Mobile : 0 + 15 000 (espèces) + 0 + 30 000 (Orange Money)
+        t = d["totaux"]
+        self.assertEqual(t["montant"], t["recette"] + t["reglements"] + t["avance"] + t["mobile"])
+        self.assertEqual(t["montant"], 45000, "tout l'argent reçu, sans rien compter deux fois")
         self.assertEqual(d["entete"]["noms"], ["Aicha (matin)"])
         self.assertEqual((d["entete"]["ouverture"], d["entete"]["fermeture"]), (20000, None))
         self.assertEqual(d["entete"]["total_vente"], 45000)
@@ -70,11 +74,44 @@ class FicheRecetteChambresTests(BaseComptoir):
         hotel.check_out(s, self.aicha)
         Chambre.objects.filter(pk=self.chambre.pk).update(statut=Chambre.Statut.LIBRE)  # le ménage est passé
         self.chambre.refresh_from_db()
-        nouveau =self.sejour(arrivee=j, depart=j + timedelta(days=1), statut=Sejour.Statut.RESERVE)
+        nouveau = self.sejour(arrivee=j, depart=j + timedelta(days=1), statut=Sejour.Statut.RESERVE)
         hotel.check_in(nouveau, self.aicha)
         ligne = next(x for x in fiches.fiche_hebergement(j)["lignes"] if x["chambre"] == self.chambre)
         self.assertRegex(ligne["heure_arrivee"], r"^\d\d:\d\d$")
         self.assertRegex(ligne["heure_depart"], r"^\d\d:\d\d$")
+
+    def test_la_reception_tape_l_heure_d_arrivee_et_de_depart_du_client(self):
+        j = aujourd_hui()
+        s = self.sejour(arrivee=j, depart=j + timedelta(days=1), statut=Sejour.Statut.RESERVE)
+        self.client.force_login(self.aicha)
+        page = self.client.get(reverse("hotel:sejour", args=[s.pk]))
+        self.assertContains(page, 'type="time" name="heure"', msg_prefix="l'écran demande l'heure d'arrivée")
+        reponse = self.client.post(reverse("hotel:sejour_action", args=[s.pk, "check-in"]), follow=True)
+        self.assertContains(reponse, "Indiquez l&#x27;heure d&#x27;arrivée du client")
+        s.refresh_from_db()
+        self.assertEqual(s.statut, Sejour.Statut.RESERVE, "sans heure, rien n'est fait")
+        self.client.post(reverse("hotel:sejour_action", args=[s.pk, "check-in"]), {"heure": "13:15"})
+        s.refresh_from_db()
+        self.assertEqual((s.statut, s.heure_arrivee.strftime("%H:%M")), (Sejour.Statut.EN_COURS, "13:15"))
+        ligne = next(x for x in fiches.fiche_hebergement(j)["lignes"] if x["chambre"] == self.chambre)
+        self.assertEqual(ligne["heure_arrivee"], "13:15")
+
+        self.client.post(reverse("postes:reception"), {"action": "depart", "heure": "10:40", "sejour": s.pk})
+        s.refresh_from_db()
+        self.assertEqual(s.heure_depart.strftime("%H:%M"), "10:40")
+        ligne = next(x for x in fiches.fiche_hebergement(j)["lignes"] if x["chambre"] == self.chambre)
+        self.assertEqual(ligne["heure_depart"], "10:40")
+
+    def test_especes_et_mobile_le_meme_jour(self):
+        j = aujourd_hui()
+        s = self.sejour(arrivee=j, depart=j + timedelta(days=2))
+        self.encaisser_especes(self.session, s, 10000)
+        caisse.encaisser(self.session, self.aicha, s, Encaissement.Nature.ACOMPTE, Encaissement.Mode.MTN_MOMO, 30000)
+        d = fiches.fiche_hebergement(j)
+        ligne = next(x for x in d["lignes"] if x["chambre"] == self.chambre)
+        # Nuit de 25 000 : 10 000 en espèces dans Recette jr, le reste payé par MoMo ; rien d'impayé.
+        self.assertEqual((ligne["recette"], ligne["impaye"], ligne["avance"], ligne["mobile"]), (10000, 0, 0, 30000))
+        self.assertEqual(d["totaux"]["montant"], 40000, "MONTANT = tout l'argent reçu : 10 000 + 30 000")
 
 
 class FicheBarRestaurantTests(BaseComptoir):

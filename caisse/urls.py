@@ -25,6 +25,7 @@ urlpatterns = [
     path("encaissements/<int:pk>/annuler/", views.annuler_encaissement, name="annuler_encaissement"),
     path("encaissements/<int:pk>/recu/", views.recu_client, name="recu_client"),
     path("encaissements/<int:pk>/recu.pdf", views.recu_client_pdf, name="recu_client_pdf"),
+    path("jour-passe/", views.jour_passe, name="jour_passe"),
     path("encaissements/recherche/", views.recherche_encaissements, name="recherche"),
     path("rapports/", views.rapports, name="rapports"),
     path("rapports/<int:pk>/", views.rapport_detail, name="rapport"),

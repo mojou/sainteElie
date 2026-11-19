@@ -280,3 +280,103 @@ class TiroirForm(FormulaireModele):
     class Meta:
         model = Tiroir
         fields = ["nom", "poste", "actif"]
+
+
+# --- Saisie après coup d'un jour passé (direction) : voir caisse/passe.py -------------------------------------------
+def _titulaires():
+    from accounts.models import Role, User
+
+    return User.objects.filter(is_active=True, role__in=[Role.ADMIN, Role.ADJOINT, Role.CHEF_RECEPTION,
+                                                         Role.RECEPTIONNISTE, Role.BAR_RESTAURANT]).order_by("first_name")
+
+
+def _libelle_session(s):
+    from django.utils import timezone
+
+    return (f"{s.tiroir} · {s.receptionniste} ({s.get_shift_display().lower()}, "
+            f"ouverte à {timezone.localtime(s.ouverte_le):%H:%M})")
+
+
+def _libelle_sejour(s):
+    return f"Ch. {s.chambre.numero} · {s.client} ({s.date_arrivee:%d/%m} → {s.date_depart:%d/%m})"
+
+
+class CaissePasseeForm(Formulaire):
+    tiroir = forms.ModelChoiceField(label="Caisse", queryset=Tiroir.objects.all())
+    titulaire = forms.ModelChoiceField(label="Qui tenait la caisse", queryset=None)
+    shift = forms.ChoiceField(label="Service", choices=Shift.choices)
+    heure_ouverture = forms.TimeField(label="Heure d'ouverture")
+    ouverture = forms.IntegerField(label="Montant d'ouverture (FCFA, espèces)", min_value=0)
+    heure_fermeture = forms.TimeField(label="Heure de fermeture",
+                                      help_text="Plus tôt que l'ouverture : la caisse a fermé le lendemain matin.")
+    fermeture = forms.IntegerField(label="Montant de fermeture (FCFA, espèces comptées)", min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["titulaire"].queryset = _titulaires()
+
+
+class SejourPasseForm(Formulaire):
+    nom = forms.CharField(label="Nom du client", max_length=120)
+    telephone = forms.CharField(label="Téléphone", max_length=30)
+    chambre = forms.ModelChoiceField(label="Chambre", queryset=None)
+    date_arrivee = forms.DateField(label="Date d'arrivée")
+    heure_arrivee = forms.TimeField(label="Heure d'arrivée")
+    nuits = forms.IntegerField(label="Nombre de nuits", min_value=1, max_value=90, initial=1)
+    heure_depart = forms.TimeField(label="Heure de départ", required=False,
+                                   help_text="Obligatoire si le client est déjà parti.")
+    tarif_nuit = forms.IntegerField(label="Prix de la nuit (FCFA)", min_value=0, required=False,
+                                    help_text="Vide : le prix de la chambre.")
+    motif_tarif = forms.CharField(label="Pourquoi un autre prix ?", max_length=200, required=False)
+
+    def __init__(self, *args, **kwargs):
+        from hotel.models import Chambre
+
+        super().__init__(*args, **kwargs)
+        self.fields["chambre"].queryset = Chambre.objects.filter(active=True).order_by("numero")
+        self.fields["chambre"].label_from_instance = (
+            lambda c: f"{c.numero} — {c.tarif_nuit:,} FCFA la nuit".replace(",", " "))
+
+
+class PaiementPasseForm(MoyenPaiementForm, Formulaire):
+    carte_cheque = True
+    ordre_champs = ["sejour", "nature", "montant", "moyen", "reference", "session", "heure"]
+    sejour = forms.ModelChoiceField(label="Client (chambre)", queryset=Sejour.objects.none())
+    nature = forms.ChoiceField(label="C'est", choices=[("ACOMPTE", "Un acompte (avant ou pendant le séjour)"),
+                                                     ("REGLEMENT", "Le règlement (au départ)")])
+    montant = forms.IntegerField(label="Montant (FCFA)", min_value=1)
+    reference = forms.CharField(label="Référence (carte, chèque)", required=False, max_length=80)
+    session = forms.ModelChoiceField(label="Payé à la caisse de", queryset=SessionCaisse.objects.none())
+    heure = forms.TimeField(label="Heure du paiement")
+
+    def __init__(self, *args, sejours=None, sessions=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["sejour"].queryset = sejours if sejours is not None else Sejour.objects.none()
+        self.fields["sejour"].label_from_instance = _libelle_sejour
+        self.fields["session"].queryset = sessions if sessions is not None else SessionCaisse.objects.none()
+        self.fields["session"].label_from_instance = _libelle_session
+
+
+class VentePasseeForm(Formulaire):
+    session = forms.ModelChoiceField(label="Caisse", queryset=SessionCaisse.objects.none())
+    article = forms.ModelChoiceField(label="Boisson ou plat", queryset=Article.objects.none())
+    quantite = forms.IntegerField(label="Quantité", min_value=1, max_value=500, initial=1)
+    paiement = forms.ChoiceField(label="Payé comment")
+    sejour = forms.ModelChoiceField(label="Chambre (si « sur la chambre »)", queryset=Sejour.objects.none(),
+                                    required=False)
+    motif = forms.CharField(label="Pourquoi (si offert)", max_length=200, required=False)
+    heure = forms.TimeField(label="Heure de la vente")
+
+    def __init__(self, *args, sejours=None, sessions=None, **kwargs):
+        from .passe import PAIEMENTS_VENTE
+
+        super().__init__(*args, **kwargs)
+        self.fields["paiement"].choices = PAIEMENTS_VENTE
+        self.fields["session"].queryset = sessions if sessions is not None else SessionCaisse.objects.none()
+        self.fields["session"].label_from_instance = _libelle_session
+        self.fields["sejour"].queryset = sejours if sejours is not None else Sejour.objects.none()
+        self.fields["sejour"].label_from_instance = _libelle_sejour
+        self.fields["article"].queryset = Article.objects.filter(
+            actif=True, categorie__in=[Article.Categorie.BAR, Article.Categorie.RESTAURANT]).order_by("categorie", "nom")
+        self.fields["article"].label_from_instance = (
+            lambda a: f"{a.nom}{' ' + a.code if a.code else ''} — {a.prix_vente:,} FCFA".replace(",", " "))

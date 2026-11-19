@@ -35,7 +35,8 @@
   {% for s in attendus %}
   <div class="ligne-a-faire">
     <span><strong>Chambre {{ s.chambre.numero }}</strong> · {{ s.client }} · {{ s.nb_nuits }} nuit{{ s.nb_nuits|pluralize }}{% if s.date_arrivee < jour %} <span class="badge danger">en retard</span>{% endif %}</span>
-    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="checkin"><input type="hidden" name="sejour" value="{{ s.pk }}">
+    <form method="post" class="form-heure">{% csrf_token %}<input type="hidden" name="action" value="checkin"><input type="hidden" name="sejour" value="{{ s.pk }}">
+      <label class="champ-heure">Heure d'arrivée <input type="time" name="heure" value="{% now 'H:i' %}" required></label>
       <button class="btn ok">Il est arrivé</button></form>
   </div>
   {% endfor %}

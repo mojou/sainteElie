@@ -122,6 +122,11 @@ class Sejour(models.Model):
     motif_annulation = models.CharField(max_length=200, blank=True)
     check_in_le = models.DateTimeField(null=True, blank=True)
     check_out_le = models.DateTimeField(null=True, blank=True)
+    # Heures tapées par la réception (le client a pu arriver avant qu'on touche le bouton) : fiche recette chambres.
+    heure_arrivee = models.TimeField("heure d'arrivée du client", null=True, blank=True)
+    heure_depart = models.TimeField("heure de départ du client", null=True, blank=True)
+    # Saisi après coup par la direction (jour passé, fiche papier) : peut être supprimé s'il n'a aucun paiement.
+    saisi_apres_coup = models.BooleanField("saisi après coup", default=False)
     cree_par = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     cree_le = models.DateTimeField(auto_now_add=True)
 

@@ -11,10 +11,10 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from core.forms import MotifForm
-from core.permissions import acces_requis, gerant, stock, suivi_caisse, validateur_caisse
+from core.permissions import acces_requis, direction, gerant, stock, suivi_caisse, validateur_caisse
 from core.permissions import caisse as tient_caisse
 from core.stockage import reponse_fichier
-from core.utils import format_fcfa, journaliser, maintenant
+from core.utils import aujourd_hui, format_fcfa, journaliser, maintenant
 from hotel.models import Client
 from stock.models import Article, MouvementStock
 from stock.services import enregistrer_mouvement
@@ -261,6 +261,12 @@ def session_detail(request, pk):
 def recu_remise(request, pk):
     session = _session_visible(request, pk)
     remise = get_object_or_404(RemiseCaisse, session=session, finalisee=True)
+    if session.saisie_passee or not remise.recu_pdf:
+        # Caisse d'un jour passé saisie après coup : le reçu se refait à chaque fois, à jour des saisies.
+        from core.pdf import reponse_pdf
+
+        from .pdf import recu_remise_pdf
+        return reponse_pdf(recu_remise_pdf(session), f"remise-{session.pk}.pdf", telecharger=False)
     return reponse_fichier(remise.recu_pdf, f"remise-{session.pk}.pdf")
 
 
@@ -590,3 +596,103 @@ def recherche_encaissements(request):
             filtre |= Q(numero_recu=int(q))
         resultats = Encaissement.objects.filter(filtre).select_related("sejour__client", "utilisateur")[:100]
     return render(request, "caisse/recherche.html", {"q": q, "resultats": resultats})
+
+
+# --- Saisie après coup d'un jour passé (gérant et adjoints) --------------------------------------------------------
+def _jour_demande(request):
+    from datetime import date
+
+    hier = aujourd_hui() - timedelta(days=1)
+    try:
+        jour = date.fromisoformat(request.GET.get("date") or request.POST.get("date") or "")
+    except ValueError:
+        return hier
+    return min(jour, hier)
+
+
+@acces_requis(direction)
+def jour_passe(request):
+    """Saisir un jour passé (fiches papier, oubli) : les caisses, les chambres et les paiements, les ventes du bar."""
+    from . import passe
+    from .forms import CaissePasseeForm, PaiementPasseForm, SejourPasseForm, VentePasseeForm
+
+    jour = _jour_demande(request)
+    caisses = list(passe.caisses_du_jour(jour))
+    reception = SessionCaisse.objects.filter(pk__in=[s.pk for s in caisses if s.tiroir.poste == Tiroir.Poste.RECEPTION])
+    bar = SessionCaisse.objects.filter(pk__in=[s.pk for s in caisses if s.tiroir.poste == Tiroir.Poste.BAR])
+    sejours = passe.sejours_du_jour(jour)
+
+    def seule(qs):
+        return qs.first() if qs.count() == 1 else None
+
+    data = request.POST if request.method == "POST" else None
+    action = request.POST.get("action") if data else None
+    forms = {
+        "caisse": CaissePasseeForm(data if action == "caisse" else None, prefix="caisse",
+                                   initial={"tiroir": Tiroir.objects.filter(poste=Tiroir.Poste.RECEPTION).first(),
+                                            "shift": "MATIN"}),
+        "sejour": SejourPasseForm(data if action == "sejour" else None, prefix="sejour",
+                                  initial={"date_arrivee": jour, "nuits": 1}),
+        "paiement": PaiementPasseForm(data if action == "paiement" else None, prefix="paiement", sejours=sejours,
+                                      sessions=reception, initial={"session": seule(reception), "moyen": "ESPECES",
+                                                                   "nature": "ACOMPTE"}),
+        "vente": VentePasseeForm(data if action == "vente" else None, prefix="vente", sejours=sejours,
+                                 sessions=bar, initial={"session": seule(bar), "paiement": "ESPECES", "quantite": 1}),
+    }
+    if data:
+        form = forms.get(action)
+        try:
+            if form is not None and form.is_valid():
+                d = form.cleaned_data
+                if action == "caisse":
+                    passe.ajouter_caisse(request.user, jour, d["tiroir"], d["titulaire"], d["shift"],
+                                         d["heure_ouverture"], d["ouverture"], d["heure_fermeture"], d["fermeture"])
+                    messages.success(request, f"Caisse de {d['titulaire']} du {jour:%d/%m/%Y} enregistrée.")
+                elif action == "sejour":
+                    s = passe.sejour_passe(request.user, nom=d["nom"], telephone=d["telephone"], chambre=d["chambre"],
+                                           arrivee=d["date_arrivee"], nuits=d["nuits"],
+                                           heure_arrivee=d["heure_arrivee"], heure_depart=d["heure_depart"],
+                                           tarif=d["tarif_nuit"], motif_tarif=d["motif_tarif"])
+                    messages.success(request, f"{s.client} enregistré en chambre {s.chambre.numero} "
+                                              f"({s.get_statut_display().lower()}).")
+                elif action == "paiement":
+                    e = passe.paiement_passe(request.user, d["session"], d["sejour"], d["nature"], d["mode"],
+                                             d["montant"], d["heure"], d.get("reference", ""))
+                    messages.success(request, f"Paiement de {format_fcfa(e.montant)} enregistré : reçu n°{e.numero_recu}.")
+                elif action == "vente":
+                    v = passe.vente_passee(request.user, d["session"], d["article"], d["quantite"], d["paiement"],
+                                           d["heure"], sejour=d.get("sejour"), motif=d.get("motif", ""))
+                    messages.success(request, f"Vente enregistrée : {v}.")
+                return redirect(f"{reverse('caisse:jour_passe')}?date={jour.isoformat()}#{action}")
+            if form is None and action in ("supprimer_caisse", "annuler_paiement", "annuler_vente", "supprimer_sejour"):
+                cible = request.POST.get("pk")
+                if action == "supprimer_caisse":
+                    passe.supprimer_caisse(request.user, get_object_or_404(SessionCaisse, pk=cible, saisie_passee=True))
+                    messages.success(request, "Caisse supprimée.")
+                elif action == "annuler_paiement":
+                    passe.annuler_paiement(request.user, get_object_or_404(Encaissement, pk=cible,
+                                                                           session__saisie_passee=True))
+                    messages.success(request, "Paiement annulé.")
+                elif action == "annuler_vente":
+                    passe.annuler_vente(request.user, get_object_or_404(VenteComptoir, pk=cible,
+                                                                        session__saisie_passee=True))
+                    messages.success(request, "Vente annulée.")
+                else:
+                    from hotel.models import Sejour
+
+                    passe.supprimer_sejour(request.user, get_object_or_404(Sejour, pk=cible, saisi_apres_coup=True))
+                    messages.success(request, "Séjour supprimé.")
+                return redirect(f"{reverse('caisse:jour_passe')}?date={jour.isoformat()}")
+        except ValidationError as exc:
+            if form is not None:
+                form.add_error(None, exc)
+            else:
+                messages.error(request, " ".join(exc.messages))
+    paiements = (Encaissement.objects.filter(session__in=reception, sejour__isnull=False)
+                 .select_related("sejour__chambre", "sejour__client", "annule", "session__receptionniste")
+                 .order_by("date", "pk"))
+    return render(request, "caisse/jour_passe.html", {
+        "jour": jour, "veille": jour - timedelta(days=1), "lendemain": jour + timedelta(days=1),
+        "hier": aujourd_hui() - timedelta(days=1), "caisses": caisses,
+        "sejours": sejours, "paiements": paiements, "ventes": passe.ventes_du_jour(jour), "forms": forms,
+        "ouvert": action if data else "", "a_reception": reception.exists(), "a_bar": bar.exists()})

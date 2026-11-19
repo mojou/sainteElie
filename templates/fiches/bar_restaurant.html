@@ -7,6 +7,7 @@
   <div class="actions">
     <a class="btn" href="?date={{ jour|date:'Y-m-d' }}{% if session %}&session={{ session.pk }}{% endif %}&format=pdf">Imprimer la fiche (PDF)</a>
     <a class="btn secondaire" href="?date={{ jour|date:'Y-m-d' }}&vierge=1">Fiche vierge à remplir à la main</a>
+    {% if user.est_direction and jour_passe %}<a class="btn secondaire" href="{% url 'caisse:jour_passe' %}?date={{ jour|date:'Y-m-d' }}">Compléter ce jour</a>{% endif %}
   </div>
 </div>
 {% include "fiches/_navigation.html" %}

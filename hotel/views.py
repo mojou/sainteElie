@@ -127,10 +127,12 @@ def sejour_action(request, pk, action):
     sejour = get_object_or_404(Sejour, pk=pk)
     try:
         if action == "check-in":
-            services.check_in(sejour, request.user)
+            services.check_in(sejour, request.user,
+                              services.lire_heure(request.POST.get("heure"), "d'arrivée"))
             messages.success(request, f"Check-in fait : {sejour.chambre} occupée.")
         elif action == "check-out":
-            services.check_out(sejour, request.user)
+            services.check_out(sejour, request.user,
+                               services.lire_heure(request.POST.get("heure"), "de départ"))
             sejour.refresh_from_db()
             if sejour.reste_a_payer > 0:
                 messages.warning(request, f"Check-out fait. Reste à payer : {sejour.reste_a_payer:,} FCFA "
