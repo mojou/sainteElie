@@ -143,3 +143,54 @@ class JourPasseTests(BaseComptoir):
         self.assertContains(self.client.get(reverse("core:pages")), self.url)
         self.client.force_login(self.aicha)
         self.assertNotContains(self.client.get(reverse("fiches:hebergement"), {"date": self.j.isoformat()}), self.url)
+
+
+class SejourPasseDepuisLaReservationTests(BaseComptoir):
+    """« Nouvelle réservation » avec des dates passées : enregistré directement « Libéré », chambre libre."""
+
+    def donnees(self, **extra):
+        j = aujourd_hui()
+        return {"nouveau_client_nom": "M. Papier", "nouveau_client_telephone": "690112233",
+                "chambre": self.chambre.pk, "date_arrivee": (j - timedelta(days=4)).isoformat(),
+                "date_depart": (j - timedelta(days=2)).isoformat(), "nb_personnes": 1, **extra}
+
+    def test_la_direction_enregistre_un_sejour_passe_libere(self):
+        self.client.force_login(self.gerant)
+        page = self.client.get(reverse("hotel:sejour_nouveau"))
+        self.assertContains(page, "Heure d&#x27;arrivée du client")
+        reponse = self.client.post(reverse("hotel:sejour_nouveau"),
+                                   self.donnees(heure_arrivee="15:10", heure_depart="10:45"), follow=True)
+        s = Sejour.objects.get(client__nom="M. Papier")
+        self.assertEqual((s.statut, s.get_statut_display(), s.saisi_apres_coup), (Sejour.Statut.TERMINE, "Libéré", True))
+        self.assertEqual(s.nuitees.count(), 2)
+        self.assertEqual((s.heure_arrivee.strftime("%H:%M"), s.heure_depart.strftime("%H:%M")), ("15:10", "10:45"))
+        self.assertEqual(s.check_out_le.date(), s.date_depart)
+        self.chambre.refresh_from_db()
+        self.assertEqual(self.chambre.statut, Chambre.Statut.LIBRE, "pas de ménage à faire : la chambre reste libre")
+        self.assertContains(reponse, "libérée")
+        self.assertContains(reponse, '<span class="badge TERMINE">Libéré</span>', html=False)
+        ligne = next(x for x in fiches.fiche_hebergement(s.date_arrivee)["lignes"] if x["chambre"] == self.chambre)
+        self.assertEqual((ligne["sejour"], ligne["heure_arrivee"]), (s, "15:10"))
+
+    def test_heures_obligatoires_et_chambre_deja_prise(self):
+        self.client.force_login(self.gerant)
+        page = self.client.post(reverse("hotel:sejour_nouveau"), self.donnees())
+        self.assertContains(page, "indiquez l&#x27;heure d&#x27;arrivée du client")
+        self.assertFalse(Sejour.objects.exists())
+        self.client.post(reverse("hotel:sejour_nouveau"), self.donnees(heure_arrivee="15:00", heure_depart="10:00"))
+        page = self.client.post(reverse("hotel:sejour_nouveau"),
+                                self.donnees(nouveau_client_nom="M. Doublon", heure_arrivee="16:00", heure_depart="9:00"))
+        self.assertContains(page, "était déjà prise par M. Papier")
+
+    def test_la_reception_ne_saisit_pas_le_passe(self):
+        self.client.force_login(self.aicha)
+        page = self.client.post(reverse("hotel:sejour_nouveau"), self.donnees(heure_arrivee="15:00", heure_depart="10:00"))
+        self.assertContains(page, "seuls le gérant, le PDG et les adjoints")
+        self.assertFalse(Sejour.objects.exists())
+
+    def test_une_reservation_a_venir_reste_reservee(self):
+        self.client.force_login(self.gerant)
+        j = aujourd_hui()
+        self.client.post(reverse("hotel:sejour_nouveau"), self.donnees(
+            date_arrivee=(j + timedelta(days=1)).isoformat(), date_depart=(j + timedelta(days=3)).isoformat()))
+        self.assertEqual(Sejour.objects.get().statut, Sejour.Statut.RESERVE)

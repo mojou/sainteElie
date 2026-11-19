@@ -374,6 +374,14 @@ la cuisine / bar arrive directement sur son écran de vente. Le gérant et les a
   par WhatsApp ou par e-mail. Le client retrouve aussi la facture de ses séjours dans son **espace client**, une fois
   son compte relié à sa fiche par la réception.
 
+### Séjour aux dates passées : directement « Libéré »
+
+Dans « Nouvelle réservation », des dates déjà passées (départ aujourd'hui ou avant) font apparaître « Heure d'arrivée
+du client » et « Heure de départ du client » : le séjour est enregistré directement **« Libéré »** (le badge d'un
+client parti), sans arrivée ni départ à faire, sans ménage (la chambre reste libre) ; ses nuits sont constatées et il
+figure sur la fiche recette chambres de ces jours-là. Réservé au gérant, au PDG et aux adjoints ; une chambre déjà prise
+à ces dates est refusée. Les paiements de ce séjour se saisissent dans « Saisir un jour passé ».
+
 ### Saisir un jour passé (fiches papier, oubli)
 
 Autres pages → Caisse → **Saisir un jour passé** (gérant et adjoints seulement ; chaque saisie va dans le journal).

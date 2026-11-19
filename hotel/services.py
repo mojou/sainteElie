@@ -53,6 +53,45 @@ def verifier_disponibilite(chambre, arrivee, depart, exclure=None):
         )
 
 
+def nuitees_passees(sejour):
+    """Les nuits déjà écoulées d'un séjour saisi après coup, chacune constatée le lendemain matin."""
+    from datetime import datetime, time
+
+    jour = sejour.date_arrivee
+    while jour < min(sejour.date_depart, aujourd_hui()):
+        constatee = min(timezone.make_aware(datetime.combine(jour + timedelta(days=1), time(8, 0))),
+                        sejour.check_out_le or maintenant())
+        Nuitee.objects.get_or_create(sejour=sejour, date_nuit=jour,
+                                     defaults={"montant": sejour.tarif_nuit, "constatee_le": constatee})
+        jour += timedelta(days=1)
+
+
+def liberer_sejour_passe(sejour, user, heure_arrivee, heure_depart):
+    """Un séjour aux dates déjà passées (fiche papier) : enregistré directement « libéré ».
+
+    Pas d'arrivée ni de départ à faire, pas de ménage : la chambre reste libre. Les nuits sont constatées.
+    """
+    from datetime import datetime
+
+    if sejour.date_depart > aujourd_hui():
+        raise ValidationError("Ce séjour n'est pas fini : le client part après aujourd'hui.")
+    if not user.est_direction:
+        raise ValidationError("Un séjour déjà passé s'enregistre par le gérant, le PDG ou un adjoint.")
+    with transaction.atomic():
+        sejour.statut = Sejour.Statut.TERMINE
+        sejour.saisi_apres_coup = True
+        sejour.check_in_le = timezone.make_aware(datetime.combine(sejour.date_arrivee, heure_arrivee))
+        sejour.check_out_le = timezone.make_aware(datetime.combine(sejour.date_depart, heure_depart))
+        sejour.heure_arrivee, sejour.heure_depart = heure_arrivee, heure_depart
+        sejour.save(update_fields=["statut", "saisi_apres_coup", "check_in_le", "check_out_le", "heure_arrivee",
+                                   "heure_depart"])
+        nuitees_passees(sejour)
+    journaliser(user, "Séjour passé saisi (libéré)", sejour,
+                f"du {sejour.date_arrivee:%d/%m/%Y} {heure_arrivee:%H:%M} au {sejour.date_depart:%d/%m/%Y} "
+                f"{heure_depart:%H:%M}")
+    return sejour
+
+
 def lire_heure(texte, quoi):
     """« 14:30 » (champ heure du navigateur) → 14 h 30 ; vide ou faux : on redemande l'heure."""
     from datetime import datetime

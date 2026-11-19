@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load static %}
 {% block titre %}{% if sejour %}Modifier le séjour{% else %}Nouvelle réservation{% endif %}{% endblock %}
 {% block contenu %}
 <div class="entete"><div>
@@ -20,6 +20,21 @@
       <div class="champ{% if field.errors %} en-erreur{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for e in field.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
     {% endif %}{% endfor %}
   </div>
+  {% if not sejour %}
+  <div class="bloc-passe" data-si-passe data-aujourdhui="{% now 'Y-m-d' %}">
+    {% if f.heure_arrivee %}
+    <p class="message info">Dates déjà passées : le séjour sera enregistré directement <strong>« Libéré »</strong>
+      (pas d'arrivée ni de départ à faire, la chambre reste libre). Indiquez les heures du client.</p>
+    <div class="ligne-champs">
+      {% for field in f %}{% if field.name == "heure_arrivee" or field.name == "heure_depart" %}
+        <div class="champ{% if field.errors %} en-erreur{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }} *</label>{{ field }}{% for e in field.errors %}<div class="erreur">{{ e }}</div>{% endfor %}</div>
+      {% endif %}{% endfor %}
+    </div>
+    {% else %}
+    <p class="message warning">Ces dates sont déjà passées : un séjour passé s'enregistre par le gérant, le PDG ou un adjoint.</p>
+    {% endif %}
+  </div>
+  {% endif %}
   <h3>Tarif</h3>
   <div class="ligne-champs">
     {% for field in f %}{% if field.name == "gratuite" or field.name == "tarif_nuit" or field.name == "motif_tarif" or field.name == "valideur" or field.name == "valideur_pin" %}
@@ -34,3 +49,14 @@
   </div>
 </form>
 {% endblock %}
+{% block scripts %}<script>
+/* Les heures du client n'apparaissent que si le départ est aujourd'hui ou avant (séjour déjà passé). */
+(function () {
+  var bloc = document.querySelector("[data-si-passe]"), depart = document.getElementById("id_date_depart");
+  if (!bloc || !depart) { return; }
+  function maj() { bloc.hidden = !(depart.value && depart.value <= bloc.getAttribute("data-aujourdhui")); }
+  depart.addEventListener("change", maj);
+  depart.addEventListener("input", maj);
+  maj();
+})();
+</script>{% endblock %}

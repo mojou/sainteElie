@@ -92,7 +92,7 @@ class Sejour(models.Model):
     class Statut(models.TextChoices):
         RESERVE = "RESERVE", "Réservé"
         EN_COURS = "EN_COURS", "En cours"
-        TERMINE = "TERMINE", "Terminé"
+        TERMINE = "TERMINE", "Libéré"  # le client est parti, la chambre est libérée
         ANNULE = "ANNULE", "Annulé"
         NO_SHOW = "NO_SHOW", "No-show"
 

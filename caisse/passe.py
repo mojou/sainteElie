@@ -18,7 +18,7 @@ from django.utils import timezone
 
 from core.models import Compteur
 from core.utils import aujourd_hui, format_fcfa, journaliser, maintenant
-from hotel.models import Chambre, Extra, Nuitee, Sejour
+from hotel.models import Chambre, Extra, Sejour
 
 from .models import Encaissement, ParametreCaisse, RemiseCaisse, SessionCaisse, Tiroir, VenteComptoir
 from .services import comparaison, journee_de
@@ -129,7 +129,7 @@ def supprimer_caisse(user, session):
 def sejour_passe(user, *, nom, telephone, chambre, arrivee, nuits, heure_arrivee, heure_depart=None, tarif=None,
                  motif_tarif=""):
     """Un client d'un jour passé : il est parti (séjour terminé) ou il est encore là (séjour en cours)."""
-    from hotel.services import client_au_numero
+    from hotel.services import client_au_numero, nuitees_passees
 
     verifier_droit(user)
     verifier_jour(arrivee)
@@ -161,11 +161,7 @@ def sejour_passe(user, *, nom, telephone, chambre, arrivee, nuits, heure_arrivee
             check_out_le=a(depart, heure_depart) if parti else None, heure_depart=heure_depart if parti else None,
             notes=f"{MOTIF} par {user}.")
         # Les nuits passées sont constatées, chacune le lendemain matin, comme l'aurait fait l'application.
-        jour = arrivee
-        while jour < min(depart, aujourd_hui()):
-            constatee = min(a(jour + timedelta(days=1), time(8, 0)), sejour.check_out_le or maintenant())
-            Nuitee.objects.create(sejour=sejour, date_nuit=jour, montant=tarif, constatee_le=constatee)
-            jour += timedelta(days=1)
+        nuitees_passees(sejour)
         if not parti:
             chambre.statut = Chambre.Statut.OCCUPEE
             chambre.save(update_fields=["statut"])

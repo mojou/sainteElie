@@ -6,6 +6,8 @@ from caisse.models import Encaissement, ParametreCaisse
 from core.forms import (Formulaire, FormulaireModele, champ_pin, champ_signataire, controler_signature,
                         validateurs_caisse)
 
+from core.utils import aujourd_hui
+
 from . import services
 from .models import Chambre, Client, Sejour
 
@@ -26,6 +28,28 @@ class ClientForm(FormulaireModele):
 
 
 class SejourForm(FormulaireModele):
+    """Réservation : le tarif vient de la fiche chambre ; un autre tarif exige un motif (et un visa au-delà du plafond).
+
+    Dates déjà passées (départ aujourd'hui ou avant) : le séjour est enregistré directement « Libéré ».
+    """
+
+    def _clean_passe(self, d, chambre, arrivee, depart):
+        """Séjour déjà fini : la direction donne les heures du client ; il sera enregistré « Libéré »."""
+        if "heure_arrivee" not in self.fields:
+            self.add_error(None, f"Ce séjour est déjà passé (départ le {depart:%d/%m/%Y}) : seuls le gérant, le PDG "
+                                 "et les adjoints peuvent l'enregistrer.")
+            return
+        for champ, quoi in (("heure_arrivee", "d'arrivée"), ("heure_depart", "de départ")):
+            if not d.get(champ):
+                self.add_error(champ, f"Séjour déjà passé : indiquez l'heure {quoi} du client.")
+        if chambre and arrivee:
+            autre = (Sejour.objects.filter(chambre=chambre, statut=Sejour.Statut.TERMINE, date_arrivee__lt=depart,
+                                           date_depart__gt=arrivee).select_related("client").first())
+            if autre:
+                self.add_error(None, f"La chambre {chambre.numero} était déjà prise par {autre.client} du "
+                                     f"{autre.date_arrivee:%d/%m} au {autre.date_depart:%d/%m/%Y}.")
+        d["_passe"] = True
+
     """Réservation : le tarif vient de la fiche chambre ; un autre tarif exige un motif (et un visa au-delà du plafond)."""
 
     nouveau_client_nom = forms.CharField(label="… ou nouveau client : nom", required=False, max_length=120)
@@ -34,6 +58,9 @@ class SejourForm(FormulaireModele):
                                     help_text="Laisser vide pour appliquer le tarif de la chambre.")
     valideur = champ_signataire("Remise validée par", validateurs_caisse(), required=False)
     valideur_pin = champ_pin("Code PIN du valideur", required=False)
+    # Séjour aux dates déjà passées (fiche papier) : enregistré directement « Libéré » (direction seulement).
+    heure_arrivee = forms.TimeField(label="Heure d'arrivée du client", required=False)
+    heure_depart = forms.TimeField(label="Heure de départ du client", required=False)
 
     class Meta:
         model = Sejour
@@ -53,7 +80,10 @@ class SejourForm(FormulaireModele):
         if self.instance.pk and self.instance.statut == Sejour.Statut.EN_COURS:
             self.fields["date_arrivee"].disabled = True
         if self.instance.pk:
-            for nom in ("nouveau_client_nom", "nouveau_client_telephone"):
+            for nom in ("nouveau_client_nom", "nouveau_client_telephone", "heure_arrivee", "heure_depart"):
+                self.fields.pop(nom)
+        elif not (user and user.est_direction):
+            for nom in ("heure_arrivee", "heure_depart"):
                 self.fields.pop(nom)
 
     def clean(self):
@@ -67,6 +97,9 @@ class SejourForm(FormulaireModele):
                 services.verifier_disponibilite(chambre, arrivee, depart, exclure=self.instance)
             except ValidationError as exc:
                 self.add_error(None, exc)
+        d["_passe"] = False
+        if not self.instance.pk and depart and depart <= aujourd_hui():
+            self._clean_passe(d, chambre, arrivee, depart)
         if chambre:
             tarif = d.get("tarif_nuit")
             grille = chambre.tarif_nuit

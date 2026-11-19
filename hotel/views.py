@@ -75,6 +75,10 @@ def sejour_form(request, pk=None):
             if not obj.pk:
                 obj.cree_par = request.user
             obj.save()
+            passe = form.cleaned_data.get("_passe")
+            if passe:  # dates déjà passées : enregistré directement « Libéré », la chambre reste libre
+                services.liberer_sejour_passe(obj, request.user, form.cleaned_data["heure_arrivee"],
+                                              form.cleaned_data["heure_depart"])
             if sejour and obj.statut == Sejour.Statut.EN_COURS and ancienne_chambre.pk != obj.chambre_id:
                 ancienne_chambre.statut = Chambre.Statut.A_NETTOYER
                 ancienne_chambre.save(update_fields=["statut"])
@@ -82,7 +86,11 @@ def sejour_form(request, pk=None):
                 obj.chambre.save(update_fields=["statut"])
         journaliser(request.user, "Séjour modifié" if sejour else "Réservation créée", obj,
                     f"tarif {obj.tarif_nuit} (grille {obj.tarif_grille})")
-        messages.success(request, "Séjour enregistré.")
+        if passe:
+            messages.success(request, f"Séjour passé enregistré, chambre {obj.chambre.numero} libérée : {obj.client} "
+                                      f"parti le {obj.date_depart:%d/%m/%Y} à {obj.heure_depart:%H:%M}.")
+        else:
+            messages.success(request, "Séjour enregistré.")
         return redirect("hotel:sejour", pk=obj.pk)
     return render(request, "hotel/sejour_form.html", {"form": form, "sejour": sejour})
 
