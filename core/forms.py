@@ -107,13 +107,13 @@ def champ_pin(label="Code PIN", required=True):
 
 
 def validateurs_caisse():
-    return User.objects.filter(Q(role__in=[Role.ADMIN, Role.ADJOINT, Role.GOUVERNANTE, Role.CHEF_RECEPTION])
+    return User.objects.filter(Q(role__in=[Role.PDG, Role.ADMIN, Role.ADJOINT, Role.GOUVERNANTE, Role.CHEF_RECEPTION])
                                | Q(is_superuser=True),
                                is_active=True)
 
 
 def gerants():
-    return User.objects.filter(Q(role=Role.ADMIN) | Q(is_superuser=True), is_active=True)
+    return User.objects.filter(Q(role__in=[Role.ADMIN, Role.PDG]) | Q(is_superuser=True), is_active=True)
 
 
 def controler_signature(form, champ_user, champ_code):

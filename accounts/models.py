@@ -4,6 +4,7 @@ from django.db import models
 
 
 class Role(models.TextChoices):
+    PDG = "PDG", "PDG (propriétaire)"
     ADMIN = "ADMIN", "Gérant (admin)"
     ADJOINT = "ADJOINT", "Adjoint de direction"
     GOUVERNANTE = "GOUVERNANTE", "Gouvernante"
@@ -55,7 +56,8 @@ class User(AbstractUser):
     # --- Rôles ----------------------------------------------------------------
     @property
     def est_gerant(self):
-        return self.is_superuser or self.role == Role.ADMIN
+        """Gérant (admin) et PDG : tous les droits, y compris paie, finances, paramètres et comptes du personnel."""
+        return self.is_superuser or self.role in (Role.ADMIN, Role.PDG)
 
     @property
     def est_client(self):

@@ -42,6 +42,26 @@ départ** (Stock → Inventaire / livraison groupée) : c'est le S.I. des premi�
 - Tests : `.\.venv\Scripts\python manage.py test tests`
 - `creer_equipe` accepte `--mot-de-passe` et `--pin` pour choisir le mot de passe et le code PIN provisoires.
 
+### Comptes numérotés : réception, bar, admin, PDG
+
+```
+python manage.py creer_comptes                          # reception1-3, bar1-3, admin, pdg, client
+python manage.py creer_comptes --reception 4 --bar 4    # un de plus de chaque côté (les autres ne bougent pas)
+```
+
+| Identifiant | Rôle | Droits |
+|---|---|---|
+| `pdg` | PDG (propriétaire) | Tout, comme le gérant : paie, finances, paramètres, comptes, jour passé |
+| `admin` | Gérant (admin) | Tout |
+| `reception1`, `reception2`… | Réceptionniste | Chambres, réservations, boutique, sa caisse |
+| `bar1`, `bar2`… | Cuisine / Bar | Plats commandés, ventes, sa caisse, sa fiche du jour |
+| `client` | Client du site | Son espace : réserver, commander des plats, ses séjours, paiements et factures (déjà relié à la fiche « Client test ») |
+
+Chaque compte reçoit un mot de passe provisoire affiché **une seule fois** (à noter) ; à la première connexion, la
+personne choisit son mot de passe et son code PIN (le compte client change le sien dans « Mon espace → Changer mon mot
+de passe »). Les vrais noms se mettent dans Administration → Utilisateurs
+(« Modifier »), où l'on peut aussi créer d'autres comptes (le rôle « PDG » y est proposé) ou désactiver un compte.
+
 ### Les comptes du personnel (démonstration comme mise en service)
 
 Démonstration (`seed_demo`) : mot de passe `Demo1234!`, code PIN `1234` pour tous. En service : chacun reçoit un

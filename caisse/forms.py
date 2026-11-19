@@ -137,7 +137,8 @@ class FinalisationForm(Formulaire):
 
         self.fields["entrant"].queryset = User.objects.filter(
             is_active=True,
-            role__in=[Role.RECEPTIONNISTE, Role.CHEF_RECEPTION, Role.BAR_RESTAURANT, Role.ADJOINT, Role.ADMIN]
+            role__in=[Role.RECEPTIONNISTE, Role.CHEF_RECEPTION, Role.BAR_RESTAURANT, Role.ADJOINT, Role.ADMIN,
+                      Role.PDG]
         ).exclude(pk=user.pk)
 
     def clean(self):
@@ -286,7 +287,7 @@ class TiroirForm(FormulaireModele):
 def _titulaires():
     from accounts.models import Role, User
 
-    return User.objects.filter(is_active=True, role__in=[Role.ADMIN, Role.ADJOINT, Role.CHEF_RECEPTION,
+    return User.objects.filter(is_active=True, role__in=[Role.PDG, Role.ADMIN, Role.ADJOINT, Role.CHEF_RECEPTION,
                                                          Role.RECEPTIONNISTE, Role.BAR_RESTAURANT]).order_by("first_name")
 
 
